@@ -38,10 +38,27 @@ Only Christopher's decisions go here (20 Nov 2026 unless dated). Proposals live 
 - **The look to keep:** the 10 is an amorphous blob; the 500 BRUTE on thermal is frightening, a mass walking. They aren't dots:
   they're a hive creature we render as dots. That look carries all the way up to the Host.
 - **The Host:** the reveal, the static, the glitches and the shifting are right. The first body was too pointy and not frightening:
-  it should be a blob, a mass, not spikes. Its design is being explored with five open ChatGPT directions
-  (`docs/art-requests/RMD_HOST_DIRECTIONS.html`).
+  it should be a blob, a mass, not spikes.
+- **The Host as reworked is the direction** (20 Nov, evening): lumps instead of spikes; a crawling, undulating, pulsating mass with
+  tentacles going in every direction, as massive as it is. **It is not always the same shape.** Claude designs the models freely.
+  (The five ChatGPT directions didn't produce useful pictures; not needed for now.)
+- **The 50K gives the first taste of that shapelessness:** a BRUTE that is tendrilling out.
+
+## Bosses and difficulty (20 Nov)
+- **10K is the light (first) boss, 50K the mid boss**, the Host the end of chapter 1. Each should be an interesting story reveal.
+- Focus on balancing combat difficulty. **Anyone should be able to reach the end**, but beating the Host should be hard and
+  **require understanding one or more mechanics** that the game develops and presents along the way, so a player will have learned them.
+- The Wraith has to be **heavily upgraded** by the time it faces the Host.
+
+## Lore direction (20 Nov)
+- **Cosmic horror:** something beyond time and space, multidimensional, geometry that isn't Euclidean. Lovecraft's own lore isn't
+  needed; the concept is what matters.
+- **The AI thread:** the only reason we can fight this is that we developed AI. Lean into fate or a conscious-universe idea: we were
+  destined to reach this point.
+- Proposal built on this (lore, boss reveals, the mechanics, the Host fight): https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3 (not decided yet).
 
 ## Open questions (not decided)
+- The open questions at the end of the lore proposal (https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3): a name for the thing, cause or fate, OVERWATCH's voice, squads.
 - Creature names. The viewer uses placeholders: MOTE, KNOT, SKEIN, RUNNER, STALKER, BRUTE, THE HOST.
 - How damage works on a cluster (proposal: shots knock dots off, so a 100-dot creature shrinks as it's hurt).
 - What the real-world view shows of a swarm (proposal: nothing directly, only heat shimmer, churned ground and the wreckage).

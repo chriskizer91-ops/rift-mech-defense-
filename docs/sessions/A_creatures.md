@@ -20,6 +20,9 @@ The session that built `concept/swarm-viewer.src.html` (20 Nov 2026). If this ch
     lopsided heap of about 2,000 brute-sized clumps (220 to 740 dots each) that crawl over each other. A huge hump, the head sunk low
     in front, one arm heavier than the other, two tendrils trailing behind, a dim core, a throat that glows when the jaw opens.
     Moving parts lag (`uPartL`, the pose half a second ago) so motion smears; a few dots drip off and crawl back.
+    Later the same evening: 12 tentacles (part 6, drawn in the shader from `uTB`/`uTD`, the table `TENT`) from all over the body,
+    and three forms it drifts between about once a minute after the reveal (`hostForms`): hunched, risen (stands, arms and
+    tentacles spread like a dead tree), spread (sinks into a low mound, tentacles crawl out flat).
     Its lower half is a funnel still pouring up out of the rift.
     The contact sequence: the count climbs, the sensor chokes (static, pixelation, real dropped frames), the dots resolve into
     the shape, "It's one mass." AGGRO: it raises an arm and slams, with a roar and a core pulse.
@@ -28,8 +31,8 @@ The session that built `concept/swarm-viewer.src.html` (20 Nov 2026). If this ch
 - **Round-1 image request:** `docs/art-requests/RMD_ROUND1_IMAGE_REQUEST.html`.
 
 ## Next
-1. When Christopher picks a Host direction (`RMD_HOST_DIRECTIONS.html`, A to E): write its turnaround request, then build the real
-   model the Ironhowl 4 way (trace → shape → fill with a million dots in brute-sized clumps), keeping the funnel and the reveal.
+1. Christopher likes the Host as it is now and wants Claude to design freely (the ChatGPT directions were dropped). Keep pushing it:
+   more forms, tentacles that reach for squads, the Host's look in each phase of the fight in the lore proposal.
 2. Rework the small rigs from the S01 and S02 line-ups.
 3. Make `game/creatures/`: one module the game uses for every cluster. Sessions B and C copy the viewer until then.
 4. Proposal for C and D: dot count = hit points. A hit knocks dots off, so the creature shrinks.

@@ -109,20 +109,21 @@ const dotMat=new T.ShaderMaterial(Object.assign({uniforms:{uSize:{value:.3},uSca
 // THE HOST: one million dots, all motion on the GPU
 const NPART=12;
 const hostMat=new T.ShaderMaterial(Object.assign({uniforms:{uPart:{value:Array.from({length:NPART},()=>new T.Matrix4())},uPartL:{value:Array.from({length:NPART},()=>new T.Matrix4())},
-  uT:{value:0},uRes:{value:1},uQ:{value:0},uPulse:{value:0},uCoreC:{value:new T.Vector3()},uMaw:{value:0},uReach:{value:0},uAg:{value:0},
+  uT:{value:0},uRes:{value:1},uQ:{value:0},uPulse:{value:0},uCoreC:{value:new T.Vector3()},uMaw:{value:0},uReach:{value:0},uAg:{value:0},uTB:{value:Array.from({length:12},()=>new T.Vector4())},uTD:{value:Array.from({length:12},()=>new T.Vector4())},
   uSize:{value:.45},uScale:{value:1},uMin:{value:1.2},uMax:{value:6},uSoft:{value:0},uGain:{value:.03},uCG:{value:6},uCloud:{value:new T.Vector3(0,0,0)}},
- vertexShader:`attribute vec4 aSeed;attribute float aPart;uniform mat4 uPart[${NPART}];uniform mat4 uPartL[${NPART}];
+ vertexShader:`attribute vec4 aSeed;attribute float aPart;uniform mat4 uPart[${NPART}];uniform mat4 uPartL[${NPART}];uniform vec4 uTB[12];uniform vec4 uTD[12];
  uniform float uT,uRes,uQ,uPulse,uSize,uScale,uMin,uMax,uGain,uCG,uMaw,uReach,uAg;uniform vec3 uCoreC,uCloud;varying vec3 vC;varying float vA;${HASH}
  void main(){int pi=int(aPart+.5);vec3 tp;float hot=0.;float lag=aSeed.z*aSeed.z*.85;
   if(pi==8){float Hh=60.;float y=mod(position.y*Hh+uT*(5.+aSeed.y*9.),Hh);float f=y/Hh;   // the rift column it pours up out of
     float rad=mix(64.,17.,pow(f,.5))*(.15+.85*position.z);float ang=position.x+uT*(.3+.45*aSeed.x)+f*6.;
     tp=vec3(cos(ang)*rad,y,sin(ang)*rad*.8-6.);hot=.3*(1.-f);}
   else if(pi==9){vec4 q=vec4(uCoreC+position*(1.+.16*uPulse),1.);tp=mix((uPart[0]*q).xyz,(uPartL[0]*q).xyz,lag);hot=1.;}
-  else if(pi==6||pi==7){float sd=pi==6?-1.:1.;float u=position.x;          // tendrils out of its back, feeling around
-    vec3 base=(uPart[0]*vec4(sd*20.,122.,-24.,1.)).xyz;float tw=uT*(.8+.2*sd)+u*3.6;
-    vec3 dir=normalize(vec3(sd*(.62+.12*sin(uT*.31+sd)),-.38+.12*sin(uT*.4+sd*2.)+uReach*.55,-.55+uReach*2.));
-    vec3 c=base+dir*u*(84.+uReach*36.)+vec3(sin(tw)*12.,sin(tw*1.3+1.)*10.-u*u*22.,cos(tw*.8)*12.)*u;
-    float rad=mix(8.,1.8,u)*(.2+.8*position.z);c+=vec3(cos(position.y),sin(position.y),sin(position.y*1.7)*.5)*rad;tp=c;}
+  else if(pi==6){int ki=int(floor(position.x)+.5);float u=fract(position.x);           // tentacles: 12 of them, from all over the body
+    vec4 B=uTB[ki],D=uTD[ki];vec3 base=(uPart[0]*vec4(B.xyz,1.)).xyz;vec3 d0=normalize(mat3(uPart[0])*D.xyz);float len=B.w;
+    vec3 a1=normalize(cross(d0,vec3(.0013,1.,.0021)));vec3 a2=cross(d0,a1);float tw=uT*(.65+.2*sin(D.w*3.))+u*3.3+D.w;
+    vec3 c=base+d0*u*len+(a1*sin(tw)+a2*sin(tw*1.27+1.))*.24*u*len;
+    c.y-=u*u*len*.14*(1.-uReach);c.z+=uReach*u*u*len*.55;
+    float rad=mix(len*.085,1.1,pow(u,.8))*(.2+.8*position.z);c+=(a1*cos(position.y)+a2*sin(position.y))*rad;tp=c;}
   else{vec4 q=vec4(position,1.);tp=mix((uPart[pi]*q).xyz,(uPartL[pi]*q).xyz,lag);if(pi==11)hot=uMaw;}
   vec3 w=tp*.045;tp+=vec3(sin(w.y*1.7+uT*1.1)+sin(w.z*2.3-uT*.8),sin(w.z*1.9+uT*.9)+sin(w.x*2.1+uT*1.3),sin(w.x*1.5-uT*1.2)+sin(w.y*2.5+uT*.7))*(1.5+uAg*1.3);
   if(aSeed.w>.983&&pi!=8){float dk=fract(uT*.11+aSeed.y*7.);tp+=vec3((aSeed.x-.5)*12.*dk,-dk*dk*75.,(aSeed.z-.5)*12.*dk);}  // drips that fall and crawl back
@@ -312,7 +313,7 @@ const TIERS=[
     const fs=Math.sin(ph)*2.2*g.stride,fu=Math.max(0,Math.cos(ph))*1.6*g.stride;
     k[s+'hp']=V(x*2.3,6,-.5);k[s+'kn']=V(x*2.9,3.3+fu*.5,1.2+fs*.4);k[s+'ft']=V(x*2.6,1.2+fu,fs);}
    return k;}},
- {id:'behemoth',n:10000,name:'BEHEMOTH',cls:'10,000 dots · four-legged mass',desc:'Thirty metres of it, built like a bison. It does not go around buildings.',
+ {id:'behemoth',n:10000,name:'BEHEMOTH',cls:'10,000 dots · the first boss',desc:'Thirty metres of it, built like a bison. It does not go around buildings. The first time something this size comes ashore.',
   size:28,grid:150,cam:[95,.24,9],yaw:1.2,minD:18,maxD:600,base:.16,dot:.33,gain:.39,reach:13,lane:80,
   seg:[['hip','mid',5.2,6.2,5],['mid','hump',6.2,7.2,5],['hump','hd',4.4,3.0,2],['hd','sn',3.0,2.0,1],['hip','tl',2.6,1.4,.6],
     ['l0','l0',3.6,3.6,.7],['l1','l1',3.1,3.1,.6],['l2','l2',2.7,2.7,.5]]
@@ -324,11 +325,11 @@ const TIERS=[
    legs(k,g,[['fl',4.2,11+bob,6,0,1],['fr',-4.2,11+bob,6,Math.PI,-1],['bl',4,9.5+bob,-11,Math.PI,1],['br',-4,9.5+bob,-11,0,-1]],[.6,-5.4,.3,1.2],2.4,0,3.2);
    for(const s of ['fl','fr','bl','br'])k[s+'f'].y+=2.3;
    return k;}},
- {id:'titan',n:50000,name:'TITAN',cls:'50,000 dots · a walking hill',desc:'Sixty metres tall. Arms like the BRUTE’s, and two more that grow out of its back and feel for you.',
+ {id:'titan',n:50000,name:'TITAN',cls:'50,000 dots · the mid boss',desc:'The mid boss. Sixty metres of BRUTE that has started to come apart into tendrils, out of its back, its shoulders, its hips. The first one that isn’t one shape.',
   size:60,grid:320,cam:[205,.2,26],yaw:.75,minD:35,maxD:1100,base:.18,dot:.4,gain:.31,reach:24,lane:170,
   seg:[['pel','tor',9.5,12.5,5],['tor','hump',12.5,11.5,4],['tor','hd',6.5,4.8,1.4],['hump','hump',10.5,10.5,1]]
    .concat(['l','r'].flatMap(s=>[[s+'s',s+'e',6.2,5.4,2],[s+'e',s+'f',5.4,6.2,2],[s+'f',s+'f',6.4,6.4,.8],[s+'hp',s+'kn',6,4.8,1.2],[s+'kn',s+'ft',4.8,4.2,1],
-     [s+'t0',s+'t1',3.0,2.1,.7],[s+'t1',s+'t2',2.1,1.1,.6]])),
+     [s+'t0',s+'t1',3.0,2.1,1.6],[s+'t1',s+'t2',2.1,1.1,1.4],[s+'u0',s+'u1',2.4,1.6,1.3],[s+'u1',s+'u2',1.6,.8,1.1],[s+'v0',s+'v1',2.6,1.8,1.4],[s+'v1',s+'v2',1.8,.9,1.2]])),
   pose(t,g){const k={};const L=g.low;const br=Math.sin(t*.5)*.8;const bob=Math.abs(Math.sin(g.phi))*1.6*g.stride;
    k.pel=V(0,21+bob-2*L,-4);k.tor=V(0,40+br+bob-4*L,4+3*L+g.stretch*4);k.hump=V(0,48+br+bob-3.5*L,-4+2*L);
    k.hd=V(Math.sin(t*.25)*2,41+bob-5*L,15+4*L+g.stretch*8);
@@ -338,7 +339,12 @@ const TIERS=[
     k[s+'hp']=V(x*7,20,-4);k[s+'kn']=V(x*9,10+fu*.5,3+fs*.4);k[s+'ft']=V(x*8,4+fu,-1+fs);
     const w1=t*.9+o,w2=t*1.3+o*1.7,rch=(aggro?1:0)*(.4+g.stretch+L*.5);
     k[s+'t0']=V(x*7,52+br,-8);k[s+'t1']=V(x*(22+4*Math.sin(w1)),74+5*Math.sin(w1*1.2)-rch*10,-20+7*Math.sin(w1*.8)+rch*26);
-    k[s+'t2']=V(x*(38+6*Math.sin(w2)),80+8*Math.sin(w2*.9)-rch*30,-8+12*Math.sin(w2*.7)+rch*60);}
+    k[s+'t2']=V(x*(38+6*Math.sin(w2)),80+8*Math.sin(w2*.9)-rch*30,-8+12*Math.sin(w2*.7)+rch*60);
+    const w3=t*.7+o*2.3,w4=t*1.1+o*.9,w5=t*.6+o*1.3,w6=t*.95+o*2.7;      // more tendrils: from the shoulders, and from the hips trailing on the ground
+    k[s+'u0']=V(x*13,k.tor.y+9,k.tor.z-6);k[s+'u1']=V(x*(24+4*Math.sin(w3)),k.tor.y+22+5*Math.sin(w3*1.3)-rch*6,k.tor.z-2+8*Math.sin(w3*.8)+rch*18);
+    k[s+'u2']=V(x*(30+7*Math.sin(w4)),k.tor.y+38+7*Math.sin(w4*.9)-rch*24,k.tor.z+6+12*Math.sin(w4*.6)+rch*46);
+    k[s+'v0']=V(x*9,24,-10);k[s+'v1']=V(x*(20+4*Math.sin(w5)),8+3*Math.sin(w5*1.4),-22+6*Math.sin(w5*.7)+rch*20);
+    k[s+'v2']=V(x*(34+8*Math.sin(w6)),2.5+2*Math.max(0,Math.sin(w6*1.2)),-34+12*Math.sin(w6*.8)+rch*58);}
    return k;}},
  {id:'host',n:1000000,name:'THE HOST',cls:'1,000,000 dots · end of chapter one',desc:'The first contact the sensor ever resolved into a shape, and only because it is so big and so far away. Its lower half never finishes forming: it is still pouring up out of the rift.',
   size:170,grid:520,cam:[430,.17,70],minD:60,maxD:1400,base:.18},
@@ -371,7 +377,7 @@ function buildCreature(tier){
   const P=[];let cl=null,clLeft=0,nCl=0;const gsz=tier.n>=10000?60:tier.n>=5000?40:16;
   segs.forEach((s,si)=>{clLeft=0;for(let j=0;j<flo[si];j++){
     let u=flo[si]>1?(j+.2+.6*rnd())/flo[si]:.5;let a=rnd()*Math.PI*2;let rr=.72+.28*Math.sqrt(rnd());let cap=0,ci=-1;
-    if(big){if(clLeft<=0){cl={u:rnd(),a:rnd()*Math.PI*2,rr:1-.5*Math.pow(rnd(),1.4),cap:rnd()<.22?(rnd()<.5?-1:1):0,cr:rnd(),i:nCl++};clLeft=Math.round(gsz*(.4+rnd()*1.2));}
+    if(big){const thin=s.ra<3.5;if(clLeft<=0){cl={u:rnd(),a:rnd()*Math.PI*2,rr:1-.5*Math.pow(rnd(),1.4),cap:rnd()<.22?(rnd()<.5?-1:1):0,cr:rnd(),i:nCl++};clLeft=Math.round((thin?Math.max(4,gsz/8):gsz)*(.4+rnd()*1.2));}
       clLeft--;ci=cl.i;cap=cl.cap;u=cap?(cap<0?0:1):clamp(cl.u+gauss()*.045,0,1);a=cl.a+gauss()*.28;rr=clamp(cl.rr+gauss()*.12,.2,1.08);}
     const sph=[gauss(),gauss(),gauss()];const sl=Math.hypot(...sph)||1;
     P.push({s:si,u,ox:Math.cos(a)*rr,oy:Math.sin(a)*rr,sx:sph[0]/sl*rr,sy:sph[1]/sl*rr,sz:sph[2]/sl*rr,
@@ -484,7 +490,7 @@ function makeHost(){
   const geo=new T.BufferGeometry();
   const pos=new Float32Array(HOST_N*3),seed=new Float32Array(HOST_N*4),part=new Float32Array(HOST_N);
   geo.setAttribute('position',new T.BufferAttribute(pos,3));geo.setAttribute('aSeed',new T.BufferAttribute(seed,4));geo.setAttribute('aPart',new T.BufferAttribute(part,1));
-  const NF=170000,NC=12000,NM=6000,NT=70000;   // rift column, core, throat, tendrils; the rest is body
+  const NF=160000,NC=12000,NM=6000,NT=120000;   // rift column, core, throat, tendrils; the rest is body
   let made=0;const q=V(),n1=V(),n2=V(),dd=V();
   const put=(x,y,z,pt,sy)=>{const i=made++;pos[i*3]=x;pos[i*3+1]=y;pos[i*3+2]=z;part[i]=pt;
     seed[i*4]=Math.random();seed[i*4+1]=sy!=null?sy:Math.random();seed[i*4+2]=Math.random();seed[i*4+3]=Math.random();};
@@ -495,7 +501,7 @@ function makeHost(){
       if(ty<NF){put(Math.random()*6.2832,Math.random(),Math.pow(Math.random(),.6),8);continue;}
       if(ty<NF+NC){const g=[gauss(),gauss(),gauss()];const s2=Math.pow(Math.random(),.5)*11/(Math.hypot(...g)||1);put(g[0]*s2*1.2,g[1]*s2*.8,g[2]*s2,9);continue;}
       if(ty<NF+NC+NM){const g=[gauss(),gauss(),gauss()];const s2=Math.pow(Math.random(),.5)/(Math.hypot(...g)||1);put(4+g[0]*s2*6,80.5+g[1]*s2*2.5,45+g[2]*s2*7,11);continue;}
-      if(ty<NF+NC+NM+NT){put(Math.pow(Math.random(),.85),Math.random()*6.2832,Math.pow(Math.random(),.5),Math.random()<.5?6:7);continue;}
+      if(ty<NF+NC+NM+NT){const kk=Math.floor(Math.random()*12);put(kk+Math.min(.999,Math.pow(Math.random(),.8)),Math.random()*6.2832,Math.pow(Math.random(),.5),6);continue;}
       if(cLeft>0){const g=[gauss(),gauss(),gauss()];const rr=cR*Math.pow(Math.random(),.35)/(Math.hypot(...g)||1);put(cc.x+g[0]*rr,cc.y+g[1]*rr*.8,cc.z+g[2]*rr,cPart,cPh);cLeft--;continue;}
       const r=Math.random();let pi=0;while(cdf[pi]<r)pi++;const pr=prims[pi];const sh=radial();
       if(pr.t===0){_b.subVectors(pr.b,pr.a);const L=pr.L;dd.copy(_b).multiplyScalar(1/L);
@@ -513,25 +519,40 @@ function makeHost(){
   return {pts,geo,chunk,get made(){return made;}};
 }
 const _m=new T.Matrix4(),_m2=new T.Matrix4(),_e=new T.Euler();
-function pivotRot(out,pv,rx,ry,rz,parent){_e.set(rx,ry,rz,'XYZ');out.makeTranslation(pv.x,pv.y,pv.z).multiply(_m.makeRotationFromEuler(_e)).multiply(_m2.makeTranslation(-pv.x,-pv.y,-pv.z));
+const _s=new T.Matrix4();
+function pivotRot(out,pv,rx,ry,rz,parent,sc,off){_e.set(rx,ry,rz,'XYZ');out.makeTranslation(pv.x+(off?off.x:0),pv.y+(off?off.y:0),pv.z+(off?off.z:0)).multiply(_m.makeRotationFromEuler(_e));
+  if(sc)out.multiply(_s.makeScale(sc.x,sc.y,sc.z));out.multiply(_m2.makeTranslation(-pv.x,-pv.y,-pv.z));
   if(parent)out.premultiply(parent);return out;}
 let hostSlamFlash=0;
 function hostState(t){let ag=0,raise=0,slam=0,roar=0,pulse=.5+.5*Math.sin(t*1.6);
   if(aggro){const c=((t-aggroT0)%7+7)%7;ag=1;raise=ss(.2,2.1,c)*(1-ss(2.25,2.55,c));slam=ss(2.25,2.5,c)*(1-ss(3.6,6,c));roar=ss(1.0,1.8,c)*(1-ss(3.6,4.6,c));
     pulse=Math.max(pulse,c>2.4?1-ss(2.4,3.6,c):roar*.6);}
   return {ag,raise,slam,roar,pulse};}
-function poseHost(t,M){const {ag,raise,slam,roar}=hostState(t);
-  const pullL=Math.max(0,Math.sin(t*.32)),pullR=Math.max(0,Math.sin(t*.32+Math.PI));   // idle: hauls itself on one arm, then the other
-  const heave=Math.sin(t*.55);
-  pivotRot(M[0],PIV[0],.04*heave+.05*(pullL+pullR)+ag*.1+slam*.1,.06*Math.sin(t*.21)+.05*(pullL-pullR),.03*Math.sin(t*.37)+.03*(pullL-pullR));
-  pivotRot(M[1],PIV[1],.05*Math.sin(t*.43)-roar*.3+slam*.12,.22*Math.sin(t*.27)*(1-roar),.05*Math.sin(t*.61),M[0]);
-  pivotRot(M[10],PIV[10],.04+.03*Math.sin(t*1.1)+roar*.55,0,0,M[1]);M[11].copy(M[1]);
-  pivotRot(M[2],PIV[2],-.32*pullL+.04*heave,.08*pullL,-.06*pullL,M[0]);pivotRot(M[3],PIV[3],.22*pullL-.04*Math.sin(t*.4),0,0,M[2]);
-  pivotRot(M[4],PIV[4],-.32*pullR*(1-raise)-raise*1.85+slam*.28,raise*.3-.08*pullR,.06*pullR+raise*.32,M[0]);
-  pivotRot(M[5],PIV[5],.22*pullR*(1-raise)-raise*.85+slam*.12,0,0,M[4]);
+// It isn't always the same shape. Three forms it drifts between, about a minute round:
+// hunched (on its fists), risen (stands up, arms and tentacles spread like a dead tree), spread (sinks into a low mound, tentacles crawl out flat).
+function hostForms(t){if(contact&&simT-contact.t0<18)return [1,0,0];const c=((t-(contact?contact.t0+18:0))%60+60)%60;
+  const rise=ss(14,22,c)*(1-ss(28,35,c)),spread=ss(38,44,c)*(1-ss(52,58,c));return [Math.max(0,1-rise-spread),rise,spread];}
+const TENT=[ // base (body space), length; direction, phase
+ [[0,138,-12],95,[.1,1,-.35],0],[[16,132,-16],85,[.7,.8,-.3],1.1],[[-17,126,-25],90,[-.7,.6,-.6],2.3],[[30,112,-14],80,[1,.2,-.4],3.1],[[-30,110,-16],85,[-1,.15,-.5],4.2],
+ [[0,104,-34],100,[.1,.1,-1],5.3],[[22,82,-12],70,[1,-.35,.1],.6],[[-22,84,-14],75,[-1,-.3,-.05],1.7],[[14,62,-18],95,[.6,-.55,-.6],2.8],[[-16,60,-20],90,[-.65,-.5,-.6],3.9],
+ [[6,98,-30],70,[.4,.5,-1],4.9],[[-6,120,-30],75,[-.3,.9,-.8],5.9]];
+const _td=V();
+function poseHost(t,M){const {ag,raise,slam,roar}=hostState(t);const [f0,f1,f2]=hostForms(t);
+  const pullL=Math.max(0,Math.sin(t*.32))*f0,pullR=Math.max(0,Math.sin(t*.32+Math.PI))*f0;   // hunched: hauls itself on one arm, then the other
+  const heave=Math.sin(t*.55),br=1+.025*Math.sin(t*.9);
+  const sc=V(br*(1+.28*f2),br*(1+.2*f1-.32*f2),br*(1+.22*f2)),off=V(0,8*f1-22*f2,0);
+  pivotRot(M[0],PIV[0],.04*heave+.05*(pullL+pullR)+ag*.1+slam*.1-.32*f1+.12*f2,.06*Math.sin(t*.21)+.05*(pullL-pullR),.03*Math.sin(t*.37)+.03*(pullL-pullR),null,sc,off);
+  pivotRot(M[1],PIV[1],.05*Math.sin(t*.43)-roar*.3+slam*.12-.35*f1+.25*f2,.22*Math.sin(t*.27)*(1-roar),.05*Math.sin(t*.61),M[0]);
+  pivotRot(M[10],PIV[10],.04+.03*Math.sin(t*1.1)+roar*.55+.2*f1,0,0,M[1]);M[11].copy(M[1]);
+  pivotRot(M[2],PIV[2],-.32*pullL+.04*heave-.5*f1,.08*pullL,-.06*pullL-1.15*f1-.75*f2,M[0]);pivotRot(M[3],PIV[3],.22*pullL-.04*Math.sin(t*.4)+.3*f1+.5*f2,0,0,M[2]);
+  pivotRot(M[4],PIV[4],-.32*pullR*(1-raise)-raise*1.85+slam*.28-.5*f1,raise*.3-.08*pullR,.06*pullR+raise*.32+1.15*f1+.75*f2,M[0]);
+  pivotRot(M[5],PIV[5],.22*pullR*(1-raise)-raise*.85+slam*.12+.3*f1+.5*f2,0,0,M[4]);
   M[6].identity();M[7].identity();M[8].identity();M[9].copy(M[0]);
+  return [f0,f1,f2];
 }
-function poseHostAll(t){const U=hostMat.uniforms;poseHost(t,U.uPart.value);poseHost(t-.5,U.uPartL.value);
+function poseHostAll(t){const U=hostMat.uniforms;const [f0,f1,f2]=poseHost(t,U.uPart.value);poseHost(t-.5,U.uPartL.value);
+  TENT.forEach(([b,len,d,ph],i)=>{const w=.8+.2*Math.sin(t*.23+ph*2.1);U.uTB.value[i].set(b[0],b[1],b[2],len*w*(1+.35*f1+.7*f2));
+    _td.set(d[0]*(1+.4*f2),d[1]+.7*f1-.95*f2,d[2]).normalize();U.uTD.value[i].set(_td.x,_td.y,_td.z,ph);});
   const st=hostState(t);U.uPulse.value=st.pulse;U.uMaw.value=st.roar*1.2;U.uReach.value=st.ag*(.35+.65*Math.max(st.raise,st.slam));U.uAg.value=st.ag;
   if(aggro){const c=((t-aggroT0)%7+7)%7;if(c>2.45&&c<2.62&&!poseHostAll.f){hostSlamFlash=1;poseHostAll.f=1;}if(c<2.4)poseHostAll.f=0;}}
 
@@ -609,7 +630,7 @@ function contactState(dt){ // returns {res,q,interf,stut,count}
   else if(c<13.5){s.res=1;s.q=.3;s.interf=.95;s.stut=1;}
   else{const f=ss(13.5,17,c);s.res=1;s.q=.35*(1-f)+.06;s.interf=.6*(1-f)+tier.base;s.stut=.55*(1-f)+.1;}
   // camera pushes in through the sequence
-  if(!orb.idleUser){const f=ss(2,14,c);orb.dist=lerp(1150,440,f);orb.pitch=lerp(.11,.16,f);orb.ty=lerp(55,84,f);}
+  if(!orb.idleUser){const f=ss(2,14,c);orb.dist=lerp(1150,W<H?560:440,f);orb.pitch=lerp(.11,.16,f);orb.ty=lerp(55,84,f);}
   for(const [tt,l] of LINES)if(c>=tt)s.line=l;
   if(c>14.5)orb.auto=true;
   return s;}
