@@ -5,7 +5,8 @@ Christopher's top-down mech game: an alternate-universe Ironhowl (not a sequel).
 magma glows under the water, and swarms pour up out of the rifts. You never see them directly: on your threat overlay
 they are dots.
 
-**Open first:** `builds/swarm-viewer.html` (one self-contained file, works offline, made for a phone): the threat library.
+**Open first:** `builds/swarm-viewer.html` (one self-contained file, works offline, made for a phone; also at
+https://claude.ai/artifact/TTjCztKET9MYQkawNMNBAX): the threat library.
 Every creature in it is made of dots: a MOTE (1), the KNOT (10), SKEIN (20), RUNNER (50), STALKER (100) and BRUTE (500),
 THE HOST (1,000,000) with its contact sequence, and INTEL BRIEF 00. IDLE or AGGRO, SENSOR or THERMAL; get close and the sensor
 breaks up. A link with `#host`, `#brute,aggro`, `#stalker,thermal` and so on opens a creature directly.
