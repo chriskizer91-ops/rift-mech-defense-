@@ -98,27 +98,35 @@ void main(){vec2 d=gl_PointCoord-.5;float r=length(d)*2.;if(r>1.)discard;
 const HASH=`float hs(float n){return fract(sin(n)*43758.5453);}`;
 
 // CPU-driven dots (motes 10..500, allies, trails). aCol = channel mix (r hostile, g grid, b ally)
-const dotMat=new T.ShaderMaterial(Object.assign({uniforms:{uSize:{value:.3},uScale:{value:1},uMin:{value:2},uMax:{value:48},uSoft:{value:0},uGain:{value:1}},
- vertexShader:`attribute vec3 aCol;attribute float aI;uniform float uSize,uScale,uMin,uMax,uGain;varying vec3 vC;varying float vA;
- void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;
+const dotMat=new T.ShaderMaterial(Object.assign({uniforms:{uSize:{value:.3},uScale:{value:1},uMin:{value:2},uMax:{value:48},uSoft:{value:0},uGain:{value:1},uT:{value:0},uBoil:{value:0},uBF:{value:1}},
+ vertexShader:`attribute vec3 aCol;attribute float aI;uniform float uSize,uScale,uMin,uMax,uGain,uT,uBoil,uBF;varying vec3 vC;varying float vA;
+ void main(){vec3 p0=position;if(uBoil>0.){vec3 w=p0*uBF;p0+=vec3(sin(w.y*1.7+uT*1.1)+sin(w.z*2.3-uT*.8),sin(w.z*1.9+uT*.9)+sin(w.x*2.1+uT*1.3),sin(w.x*1.5-uT*1.2)+sin(w.y*2.5+uT*.7))*uBoil*aCol.r*(1.-aCol.b);}
+  vec4 mv=modelViewMatrix*vec4(p0,1.);gl_Position=projectionMatrix*mv;
   float px=uSize*uScale/max(.001,-mv.z);float cl=clamp(px,uMin,uMax);
   vA=aI*uGain*min(1.,px*px/(cl*cl)+.4);gl_PointSize=cl;vC=aCol;}`,
  fragmentShader:DOT_FRAG},ADD));
 
 // THE HOST: one million dots, all motion on the GPU
 const NPART=12;
-const hostMat=new T.ShaderMaterial(Object.assign({uniforms:{uPart:{value:Array.from({length:NPART},()=>new T.Matrix4())},
-  uT:{value:0},uRes:{value:1},uQ:{value:0},uPulse:{value:0},uCoreC:{value:new T.Vector3()},
+const hostMat=new T.ShaderMaterial(Object.assign({uniforms:{uPart:{value:Array.from({length:NPART},()=>new T.Matrix4())},uPartL:{value:Array.from({length:NPART},()=>new T.Matrix4())},
+  uT:{value:0},uRes:{value:1},uQ:{value:0},uPulse:{value:0},uCoreC:{value:new T.Vector3()},uMaw:{value:0},uReach:{value:0},uAg:{value:0},
   uSize:{value:.45},uScale:{value:1},uMin:{value:1.2},uMax:{value:6},uSoft:{value:0},uGain:{value:.03},uCG:{value:6},uCloud:{value:new T.Vector3(0,0,0)}},
- vertexShader:`attribute vec4 aSeed;attribute float aPart;uniform mat4 uPart[${NPART}];
- uniform float uT,uRes,uQ,uPulse,uSize,uScale,uMin,uMax,uGain,uCG;uniform vec3 uCoreC,uCloud;varying vec3 vC;varying float vA;${HASH}
- void main(){int pi=int(aPart+.5);vec3 tp;float hot=0.;
-  if(pi==8){float Hh=60.;float y=mod(position.y*Hh+uT*(5.+aSeed.y*9.),Hh);float f=y/Hh;
-    float rad=mix(52.,10.,pow(f,.5))*(.18+.82*position.z);float ang=position.x+uT*(.3+.45*aSeed.x)+f*6.;
-    tp=vec3(cos(ang)*rad,y,sin(ang)*rad*.8-2.);hot=.35*(1.-f);}
-  else if(pi==9){tp=(uPart[0]*vec4(uCoreC+position*(1.+.16*uPulse),1.)).xyz;hot=1.;}
-  else{tp=(uPart[pi]*vec4(position,1.)).xyz;if(pi==11)hot=.9;}
-  float ph=aSeed.y*6.2832;tp+=vec3(sin(uT*1.7+ph),sin(uT*1.3+ph*1.7),cos(uT*1.5+ph))*(.3+.7*aSeed.w);
+ vertexShader:`attribute vec4 aSeed;attribute float aPart;uniform mat4 uPart[${NPART}];uniform mat4 uPartL[${NPART}];
+ uniform float uT,uRes,uQ,uPulse,uSize,uScale,uMin,uMax,uGain,uCG,uMaw,uReach,uAg;uniform vec3 uCoreC,uCloud;varying vec3 vC;varying float vA;${HASH}
+ void main(){int pi=int(aPart+.5);vec3 tp;float hot=0.;float lag=aSeed.z*aSeed.z*.85;
+  if(pi==8){float Hh=60.;float y=mod(position.y*Hh+uT*(5.+aSeed.y*9.),Hh);float f=y/Hh;   // the rift column it pours up out of
+    float rad=mix(64.,17.,pow(f,.5))*(.15+.85*position.z);float ang=position.x+uT*(.3+.45*aSeed.x)+f*6.;
+    tp=vec3(cos(ang)*rad,y,sin(ang)*rad*.8-6.);hot=.3*(1.-f);}
+  else if(pi==9){vec4 q=vec4(uCoreC+position*(1.+.16*uPulse),1.);tp=mix((uPart[0]*q).xyz,(uPartL[0]*q).xyz,lag);hot=1.;}
+  else if(pi==6||pi==7){float sd=pi==6?-1.:1.;float u=position.x;          // tendrils out of its back, feeling around
+    vec3 base=(uPart[0]*vec4(sd*20.,122.,-24.,1.)).xyz;float tw=uT*(.8+.2*sd)+u*3.6;
+    vec3 dir=normalize(vec3(sd*(.62+.12*sin(uT*.31+sd)),-.38+.12*sin(uT*.4+sd*2.)+uReach*.55,-.55+uReach*2.));
+    vec3 c=base+dir*u*(84.+uReach*36.)+vec3(sin(tw)*12.,sin(tw*1.3+1.)*10.-u*u*22.,cos(tw*.8)*12.)*u;
+    float rad=mix(8.,1.8,u)*(.2+.8*position.z);c+=vec3(cos(position.y),sin(position.y),sin(position.y*1.7)*.5)*rad;tp=c;}
+  else{vec4 q=vec4(position,1.);tp=mix((uPart[pi]*q).xyz,(uPartL[pi]*q).xyz,lag);if(pi==11)hot=uMaw;}
+  vec3 w=tp*.045;tp+=vec3(sin(w.y*1.7+uT*1.1)+sin(w.z*2.3-uT*.8),sin(w.z*1.9+uT*.9)+sin(w.x*2.1+uT*1.3),sin(w.x*1.5-uT*1.2)+sin(w.y*2.5+uT*.7))*(1.5+uAg*1.3);
+  if(aSeed.w>.983&&pi!=8){float dk=fract(uT*.11+aSeed.y*7.);tp+=vec3((aSeed.x-.5)*12.*dk,-dk*dk*75.,(aSeed.z-.5)*12.*dk);}  // drips that fall and crawl back
+  float ph=aSeed.y*6.2832,ca2=1.6+2.4*fract(aSeed.y*7.31);tp+=vec3(sin(uT*.55+ph),sin(uT*.43+ph*1.7),cos(uT*.5+ph*2.3))*(pi==8?.4:ca2)+vec3(sin(uT*2.1+aSeed.w*40.),cos(uT*1.9+aSeed.x*40.),sin(uT*2.3+aSeed.z*40.))*.35;
   float ca=aSeed.w*6.2832+uT*.04*(.5+aSeed.x);float cr=40.+aSeed.z*aSeed.z*620.;
   vec3 cp=uCloud+vec3(cos(ca)*cr,1.+aSeed.y*aSeed.y*70.,sin(ca)*cr*.55);
   float k=clamp(uRes*1.7-aSeed.x*.7,0.,1.);k=k*k*(3.-2.*k);
@@ -127,7 +135,7 @@ const hostMat=new T.ShaderMaterial(Object.assign({uniforms:{uPart:{value:Array.f
   p+=(vec3(hs(st+aSeed.y*91.7),hs(st*1.3+aSeed.z*57.1),hs(st*.7+aSeed.w*33.3))-.5)*q*(3.+aSeed.x*14.);
   vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
   float un=1.-k;float px=uSize*(1.+hot*.7+un*1.6)*uScale/max(.001,-mv.z);float cl=clamp(px,uMin+un*.8,uMax);
-  vA=uGain*mix(1.,uCG,un)*(1.+hot*3.5*(.55+.45*uPulse)*k)*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);}`,
+  vA=uGain*mix(1.,uCG,un)*(1.+hot*2.2*(.5+.5*uPulse)*k)*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);}`,
  fragmentShader:DOT_FRAG},ADD));
 
 // The unmeasurable: dots made of dots, rotating through four dimensions (mote close-up and the intel brief)
@@ -281,6 +289,57 @@ const TIERS=[
    for(let i=0;i<5;i++){const f=i/4;const bx=lerp(k.pel.x,k.hump.x,f),by=lerp(k.pel.y+1.2,k.hump.y+.9,f),bz=lerp(k.pel.z,k.hump.z,f)-.6;
     k['b'+i]=V(bx,by,bz);k['bt'+i]=V(bx,by+1.4+Math.sin(f*3)*.8,bz-1.6-f*.4);}
    return k;}},
+ {id:'drag',n:1000,name:'DRAG',cls:'1,000 dots · hauls itself',desc:'A bloated mass that drags itself forward on two huge arms. Slow, until it reaches you.',
+  size:12,grid:70,cam:[40,.3,3],yaw:1.15,minD:8,maxD:260,base:.12,dot:.3,gain:.62,reach:5.5,lane:34,
+  seg:[['tail','belly',1.9,2.7,4],['belly','chest',2.7,2.4,4],['chest','hd',1.5,1.1,1.2],['b0','b0',1.7,1.7,.8],['b1','b1',1.4,1.4,.6]]
+   .concat(['l','r'].flatMap(s=>[[s+'s',s+'e',1.1,.95,1.4],[s+'e',s+'h',.95,1.2,1.4],[s+'h',s+'h',1.1,1.1,.5],[s+'hp',s+'ft',.85,.65,.6]])),
+  pose(t,g){const k={};const L=g.low;const br=Math.sin(t*.8)*.15;const surge=Math.abs(Math.sin(g.phi))*.5*g.stride;
+   k.tail=V(Math.sin(t*.6)*.4,1.9+br*.5,-5.6+surge*.3);k.belly=V(0,2.7+br,-2.1+surge*.6);k.chest=V(0,3.7-.6*L+br,1.2+surge+g.stretch*1.2);
+   k.hd=V(Math.sin(t*.4)*.4,3.1-.8*L,3.4+surge+g.stretch*2.0);k.b0=V(0,4.6+br,-.6);k.b1=V(.8,4.0+br,-3);
+   for(const [s,x,o] of [['l',1,0],['r',-1,Math.PI]]){const ph=g.phi+o;const rch=Math.sin(ph)*g.stride;const up=Math.max(0,Math.cos(ph))*g.stride;const sl=g.slam*(s==='l'?1:.5);
+    k[s+'s']=V(x*2.3,3.7-.4*L,1.4+surge);k[s+'e']=V(x*4.2,3.4+up*1.2+sl*3,3.3+rch*1.2+surge);
+    k[s+'h']=V(x*3.8,.9+up*1.6+sl*4,5.4+rch*2.2+surge+g.stretch*2.4);k[s+'hp']=V(x*1.7,1.9,-2.3);k[s+'ft']=V(x*2.3,.4,-2.8+Math.sin(ph+1)*.3*g.stride);}
+   return k;}},
+ {id:'hulk',n:5000,name:'HULK',cls:'5,000 dots · upright mass',desc:'Nearly three Wraiths tall. Its head is sunk into its shoulders and its arms reach the ground.',
+  size:18,grid:100,cam:[62,.22,8],yaw:.95,minD:12,maxD:400,base:.14,dot:.28,gain:.35,reach:7,lane:50,
+  seg:[['pel','ch',3.1,4.0,5],['ch','hump',4.0,3.6,4],['ch','hd',2.3,1.7,1.4],['hump','hump',3.5,3.5,1.2]]
+   .concat(['l','r'].flatMap(s=>[[s+'s',s+'e',2.1,1.8,2],[s+'e',s+'f',1.8,2.1,2],[s+'f',s+'f',2.1,2.1,.9],[s+'hp',s+'kn',2.0,1.6,1.4],[s+'kn',s+'ft',1.6,1.4,1]])),
+  pose(t,g){const k={};const L=g.low;const br=Math.sin(t*.7)*.25;const bob=Math.abs(Math.sin(g.phi))*.5*g.stride;
+   k.pel=V(0,6.3+bob-.6*L,-.6);k.ch=V(0,12.6+br+bob-1.4*L,1.6+1.2*L+g.stretch*1.2);k.hump=V(0,15.2+br+bob-1.2*L,-.6+.6*L);
+   k.hd=V(Math.sin(t*.35)*.6,13.0+bob-1.8*L,4.4+1.6*L+g.stretch*2.6);
+   for(const [s,x,o] of [['l',1,0],['r',-1,Math.PI]]){const ph=g.phi+o;const sw=Math.sin(ph+Math.PI)*g.stride;const up=Math.max(0,Math.cos(ph+Math.PI))*g.stride;const sl=g.slam*(s==='l'?1:.5);
+    k[s+'s']=V(x*4.6,k.ch.y+1.2,k.ch.z-.2);k[s+'e']=V(x*6.3,8.6+up*2+sl*9,3.2+sw*1.5+sl*3);k[s+'f']=V(x*5.9,2.1+up*2.4+sl*14,4.8+sw*3+g.stretch*3+sl*4);
+    const fs=Math.sin(ph)*2.2*g.stride,fu=Math.max(0,Math.cos(ph))*1.6*g.stride;
+    k[s+'hp']=V(x*2.3,6,-.5);k[s+'kn']=V(x*2.9,3.3+fu*.5,1.2+fs*.4);k[s+'ft']=V(x*2.6,1.2+fu,fs);}
+   return k;}},
+ {id:'behemoth',n:10000,name:'BEHEMOTH',cls:'10,000 dots · four-legged mass',desc:'Thirty metres of it, built like a bison. It does not go around buildings.',
+  size:28,grid:150,cam:[95,.24,9],yaw:1.2,minD:18,maxD:600,base:.16,dot:.33,gain:.39,reach:13,lane:80,
+  seg:[['hip','mid',5.2,6.2,5],['mid','hump',6.2,7.2,5],['hump','hd',4.4,3.0,2],['hd','sn',3.0,2.0,1],['hip','tl',2.6,1.4,.6],
+    ['l0','l0',3.6,3.6,.7],['l1','l1',3.1,3.1,.6],['l2','l2',2.7,2.7,.5]]
+   .concat(['fl','fr','bl','br'].flatMap(s=>[[s+'h',s+'k',2.8,2.3,1.4],[s+'k',s+'f',2.3,2.5,1.2]])),
+  pose(t,g){const k={};const L=g.low;const br=Math.sin(t*.6)*.35;const bob=Math.abs(Math.sin(g.phi))*.7*g.stride;
+   k.hip=V(0,10+bob,-11);k.mid=V(0,11.4+br+bob,-3);k.hump=V(0,15+br+bob-1.5*L,4+g.stretch*1.5);
+   k.hd=V(Math.sin(t*.3)*.8,8.6+bob-2.5*L,12+g.stretch*4+L*1.5);k.sn=V(Math.sin(t*.3),6.6+bob-3*L,15+g.stretch*5.5+L*2);
+   k.tl=V(Math.sin(t*1.1)*1.5,7,-17);k.l0=V(0,19.3+br+bob-1.2*L,2.5);k.l1=V(1,18+br+bob,-2.5);k.l2=V(-.8,16+bob,-6.5);
+   legs(k,g,[['fl',4.2,11+bob,6,0,1],['fr',-4.2,11+bob,6,Math.PI,-1],['bl',4,9.5+bob,-11,Math.PI,1],['br',-4,9.5+bob,-11,0,-1]],[.6,-5.4,.3,1.2],2.4,0,3.2);
+   for(const s of ['fl','fr','bl','br'])k[s+'f'].y+=2.3;
+   return k;}},
+ {id:'titan',n:50000,name:'TITAN',cls:'50,000 dots · a walking hill',desc:'Sixty metres tall. Arms like the BRUTE’s, and two more that grow out of its back and feel for you.',
+  size:60,grid:320,cam:[205,.2,26],yaw:.75,minD:35,maxD:1100,base:.18,dot:.4,gain:.31,reach:24,lane:170,
+  seg:[['pel','tor',9.5,12.5,5],['tor','hump',12.5,11.5,4],['tor','hd',6.5,4.8,1.4],['hump','hump',10.5,10.5,1]]
+   .concat(['l','r'].flatMap(s=>[[s+'s',s+'e',6.2,5.4,2],[s+'e',s+'f',5.4,6.2,2],[s+'f',s+'f',6.4,6.4,.8],[s+'hp',s+'kn',6,4.8,1.2],[s+'kn',s+'ft',4.8,4.2,1],
+     [s+'t0',s+'t1',3.0,2.1,.7],[s+'t1',s+'t2',2.1,1.1,.6]])),
+  pose(t,g){const k={};const L=g.low;const br=Math.sin(t*.5)*.8;const bob=Math.abs(Math.sin(g.phi))*1.6*g.stride;
+   k.pel=V(0,21+bob-2*L,-4);k.tor=V(0,40+br+bob-4*L,4+3*L+g.stretch*4);k.hump=V(0,48+br+bob-3.5*L,-4+2*L);
+   k.hd=V(Math.sin(t*.25)*2,41+bob-5*L,15+4*L+g.stretch*8);
+   for(const [s,x,o] of [['l',1,0],['r',-1,Math.PI]]){const ph=g.phi+o;const sw=Math.sin(ph+Math.PI)*g.stride;const up=Math.max(0,Math.cos(ph+Math.PI))*g.stride;const sl=g.slam*(s==='l'?1:.5);
+    k[s+'s']=V(x*14,k.tor.y+5,k.tor.z);k[s+'e']=V(x*20,26+up*6+sl*28,10+sw*5+sl*9);k[s+'f']=V(x*18,6.4+up*7+sl*44,16+sw*9+g.stretch*10+sl*12);
+    const fs=Math.sin(ph)*7*g.stride,fu=Math.max(0,Math.cos(ph))*5*g.stride;
+    k[s+'hp']=V(x*7,20,-4);k[s+'kn']=V(x*9,10+fu*.5,3+fs*.4);k[s+'ft']=V(x*8,4+fu,-1+fs);
+    const w1=t*.9+o,w2=t*1.3+o*1.7,rch=(aggro?1:0)*(.4+g.stretch+L*.5);
+    k[s+'t0']=V(x*7,52+br,-8);k[s+'t1']=V(x*(22+4*Math.sin(w1)),74+5*Math.sin(w1*1.2)-rch*10,-20+7*Math.sin(w1*.8)+rch*26);
+    k[s+'t2']=V(x*(38+6*Math.sin(w2)),80+8*Math.sin(w2*.9)-rch*30,-8+12*Math.sin(w2*.7)+rch*60);}
+   return k;}},
  {id:'host',n:1000000,name:'THE HOST',cls:'1,000,000 dots · end of chapter one',desc:'The first contact the sensor ever resolved into a shape, and only because it is so big and so far away. Its lower half never finishes forming: it is still pouring up out of the rift.',
   size:170,grid:520,cam:[430,.17,70],minD:60,maxD:1400,base:.18},
  {id:'brief',n:1048576,name:'INTEL BRIEF 00',cls:'Recovered sensor log · survey drone 3',desc:'This is everything we have on what they are. The drone tried to resolve one contact up close.',
@@ -289,9 +348,9 @@ const TIERS=[
 
 // one buffer for the active CPU creature: creature dots + ally dots, each with 4 trail copies
 const HIST=5,TRAIL=[1,.42,.24,.13,.07];
-const MAXP=640;
+const MAXP=50016; // points in the buffer: 50,000 dots and their allies, or up to 640 small-creature dots with 5 trail copies each
 const cpuGeo=new T.BufferGeometry();
-const cpuPos=new Float32Array(MAXP*HIST*3),cpuCol=new Float32Array(MAXP*HIST*3),cpuI=new Float32Array(MAXP*HIST);
+const cpuPos=new Float32Array(MAXP*3),cpuCol=new Float32Array(MAXP*3),cpuI=new Float32Array(MAXP);
 cpuGeo.setAttribute('position',new T.BufferAttribute(cpuPos,3).setUsage(T.DynamicDrawUsage));
 cpuGeo.setAttribute('aCol',new T.BufferAttribute(cpuCol,3).setUsage(T.DynamicDrawUsage));
 cpuGeo.setAttribute('aI',new T.BufferAttribute(cpuI,1).setUsage(T.DynamicDrawUsage));
@@ -308,21 +367,25 @@ function buildCreature(tier){
   // stratified allocation so every segment gets its share
   const cnt=segs.map(s=>s.w/tot*tier.n);const flo=cnt.map(Math.floor);let left=tier.n-flo.reduce((a,b)=>a+b,0);
   cnt.map((c,i)=>[c-flo[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,left).forEach(([,i])=>flo[i]++);
-  const P=[];segs.forEach((s,si)=>{for(let j=0;j<flo[si];j++){
-    const u=flo[si]>1?(j+.2+.6*rnd())/flo[si]:.5;const a=rnd()*Math.PI*2,rr=.72+.28*Math.sqrt(rnd());
+  const big=tier.n>500,hist=big?1:HIST;
+  const P=[];let cl=null,clLeft=0,nCl=0;const gsz=tier.n>=10000?60:tier.n>=5000?40:16;
+  segs.forEach((s,si)=>{clLeft=0;for(let j=0;j<flo[si];j++){
+    let u=flo[si]>1?(j+.2+.6*rnd())/flo[si]:.5;let a=rnd()*Math.PI*2;let rr=.72+.28*Math.sqrt(rnd());let cap=0,ci=-1;
+    if(big){if(clLeft<=0){cl={u:rnd(),a:rnd()*Math.PI*2,rr:1-.5*Math.pow(rnd(),1.4),cap:rnd()<.22?(rnd()<.5?-1:1):0,cr:rnd(),i:nCl++};clLeft=Math.round(gsz*(.4+rnd()*1.2));}
+      clLeft--;ci=cl.i;cap=cl.cap;u=cap?(cap<0?0:1):clamp(cl.u+gauss()*.045,0,1);a=cl.a+gauss()*.28;rr=clamp(cl.rr+gauss()*.12,.2,1.08);}
     const sph=[gauss(),gauss(),gauss()];const sl=Math.hypot(...sph)||1;
     P.push({s:si,u,ox:Math.cos(a)*rr,oy:Math.sin(a)*rr,sx:sph[0]/sl*rr,sy:sph[1]/sl*rr,sz:sph[2]/sl*rr,
-      k:70+rnd()*110,d:11+rnd()*7,ph:rnd()*6.283,jf:.7+rnd()*1.6,p:V(0,0,0),v:V(0,0,0),h:[V(),V(),V(),V(),V()]});}});
+      cap,cr:big&&cap?clamp(cl.cr+gauss()*.12,0,1):rnd(),ci,k:(big?40:70)+rnd()*(big?90:110),d:(big?9:11)+rnd()*7,ph:rnd()*6.283,jf:.7+rnd()*1.6,p:V(0,0,0),v:V(0,0,0),h:big?null:[V(),V(),V(),V(),V()]});}});
   // links: consecutive dots along each segment, and segment ends that meet at a key point
-  const L=[];const bySeg=segs.map(()=>[]);P.forEach((p,i)=>bySeg[p.s].push(i));
+  const L=[];const bySeg=segs.map(()=>[]);if(!big){P.forEach((p,i)=>bySeg[p.s].push(i));
   bySeg.forEach(a=>{a.sort((x,y)=>P[x].u-P[y].u);for(let i=1;i<a.length;i++)L.push([a[i-1],a[i]]);});
   for(let i=0;i<segs.length;i++)for(let j=i+1;j<segs.length;j++){const A=segs[i],B=segs[j];const ai=bySeg[i],bi=bySeg[j];if(!ai.length||!bi.length)continue;
     const pick=(arr,seg,key)=>seg.a===key?arr[0]:arr[arr.length-1];
     for(const key of [A.a,A.b])if(key===B.a||key===B.b){L.push([pick(ai,A,key),pick(bi,B,key)]);break;}}
-  if(tier.n<=10)for(let i=0;i<P.length;i++)L.push([i,(i+3)%P.length]);
-  const nA=tier.n<=10?2:tier.n<=50?3:4;
-  const A=[];for(let i=0;i<nA;i++)A.push({off:V((i-(nA-1)/2)*Math.min(1.6,tier.size*.3),0,(rnd()-.5)*1.2),state:0,t0:0,j:0,p:V(),v:V(),h:[V(),V(),V(),V(),V()],ph:rnd()*6.283});
-  return {tier,segs,P,A,L:L.slice(0,MAXL),phi:0,root:V(0,0,0),first:true,absorbed:0,dartT:0,dartTo:0,dartFrom:0};
+  if(tier.n<=10)for(let i=0;i<P.length;i++)L.push([i,(i+3)%P.length]);}
+  const nA=tier.n<=10?2:tier.n<=50?3:tier.n<=500?4:6;
+  const A=[];for(let i=0;i<nA;i++)A.push({off:V((i-(nA-1)/2)*Math.min(1.6,tier.size*.3),0,(rnd()-.5)*1.2),state:0,t0:0,j:0,p:V(),v:V(),h:tier.n>500?null:[V(),V(),V(),V(),V()],ph:rnd()*6.283});
+  return {tier,segs,P,A,big,hist,nCl,cw:new Float32Array(Math.max(1,nCl)*3),cph:Float32Array.from({length:Math.max(1,nCl)},()=>rnd()*6.283),L:L.slice(0,MAXL),phi:0,root:V(0,0,0),first:true,absorbed:0,dartT:0,dartTo:0,dartFrom:0};
 }
 const _a=V(),_b=V(),_d=V(),_n1=V(),_n2=V(),_up=V(0,1,0),_t=V();
 let aggro=false,thermal=false,simT=0,aggroT0=0;
@@ -349,104 +412,100 @@ function stepCreature(dt,t){
   const F=C.segs.map(s=>{const A=kp[s.a].clone().add(C.root),B=kp[s.b].clone().add(C.root);const d=B.clone().sub(A);const L=d.length();
     if(L>1e-4)d.multiplyScalar(1/L);const n1=new T.Vector3().crossVectors(Math.abs(d.y)>.9?V(1,0,0):_up,d).normalize();const n2=new T.Vector3().crossVectors(d,n1);
     return {A,B,d,L,n1,n2,ra:s.ra,rb:s.rb};});
-  const jit=(aggro?.16:.07)*(1+g.thrash*2.2)*Math.max(.5,tier.size/4);
+  const jit=C.big?0:(aggro?.16:.07)*(1+g.thrash*2.2)*Math.max(.5,tier.size/4);
   const sub=Math.max(1,Math.ceil(dt/(1/90)));const h=dt/sub;
+  if(C.big){const am=tier.size*.035*(aggro?1.4:1);for(let c=0;c<C.nCl;c++){const ph=C.cph[c];C.cw[c*3]=Math.sin(t*.7+ph)*am;C.cw[c*3+1]=Math.sin(t*.55+ph*1.7)*am*.7;C.cw[c*3+2]=Math.cos(t*.62+ph*2.3)*am;}}
   for(const p of C.P){const f=F[p.s];let tx,ty,tz;
     if(f.L<1e-4){const r=f.ra;tx=f.A.x+p.sx*r;ty=f.A.y+p.sy*r;tz=f.A.z+p.sz*r;}
-    else{const r=lerp(f.ra,f.rb,p.u);tx=f.A.x+f.d.x*f.L*p.u+(f.n1.x*p.ox+f.n2.x*p.oy)*r;ty=f.A.y+f.d.y*f.L*p.u+(f.n1.y*p.ox+f.n2.y*p.oy)*r;tz=f.A.z+f.d.z*f.L*p.u+(f.n1.z*p.ox+f.n2.z*p.oy)*r;}
-    const w=t*p.jf*(aggro?5.5:2.2)+p.ph;tx+=Math.sin(w)*jit;ty+=Math.sin(w*1.31+1.7)*jit*.7;tz+=Math.cos(w*.87)*jit;
-    if(C.first){p.p.set(tx,ty,tz);p.h.forEach(q=>q.set(tx,ty,tz));continue;}
+    else{let r=lerp(f.ra,f.rb,p.u),along=f.L*p.u;
+      if(p.cap){const re=p.cap<0?f.ra:f.rb;const o=p.cr*re;along+=p.cap*o;r=Math.sqrt(Math.max(0,re*re-o*o))/Math.max(.001,re)*re;}
+      tx=f.A.x+f.d.x*along+(f.n1.x*p.ox+f.n2.x*p.oy)*r;ty=f.A.y+f.d.y*along+(f.n1.y*p.ox+f.n2.y*p.oy)*r;tz=f.A.z+f.d.z*along+(f.n1.z*p.ox+f.n2.z*p.oy)*r;}
+    if(p.ci>=0){tx+=C.cw[p.ci*3];ty+=C.cw[p.ci*3+1];tz+=C.cw[p.ci*3+2];}
+    if(jit>0){const w=t*p.jf*(aggro?5.5:2.2)+p.ph;tx+=Math.sin(w)*jit;ty+=Math.sin(w*1.31+1.7)*jit*.7;tz+=Math.cos(w*.87)*jit;}
+    if(C.first){p.p.set(tx,ty,tz);if(p.h)p.h.forEach(q=>q.set(tx,ty,tz));continue;}
     for(let s=0;s<sub;s++){p.v.x+=((tx-p.p.x)*p.k-p.v.x*p.d)*h;p.v.y+=((ty-p.p.y)*p.k-p.v.y*p.d)*h;p.v.z+=((tz-p.p.z)*p.k-p.v.z*p.d)*h;
       p.p.x+=p.v.x*h;p.p.y+=p.v.y*h;p.p.z+=p.v.z*h;}}
   // allies (green dots, people). During the maul they flicker and turn: then they are part of it.
   const cyc=aggro?((t-aggroT0)%6.2):0;
-  if(!aggro||cyc<.1){for(const a of C.A){if(a.state!==0){a.state=0;a.p.copy(tgtPos).add(a.off).setY(.9);a.v.set(0,0,0);a.h.forEach(q=>q.copy(a.p));}}C.absorbed=0;}
+  if(!aggro||cyc<.1){for(const a of C.A){if(a.state!==0){a.state=0;a.p.copy(tgtPos).add(a.off).setY(.9);a.v.set(0,0,0);if(a.h)a.h.forEach(q=>q.copy(a.p));}}C.absorbed=0;}
   C.A.forEach((a,i)=>{let tx=tgtPos.x+a.off.x+Math.sin(t*.8+a.ph)*.15,ty=.9,tz=tgtPos.z+a.off.z+Math.cos(t*.6+a.ph)*.15;
     if(aggro&&a.state===0&&g.stage==='maul'&&cyc>3.25+i*.22){a.state=1;a.t0=t;}
     if(a.state===0&&aggro&&(g.stage==='lunge'||g.stage==='maul')){tx+=Math.sin(t*9+i)*.25;tz+=.6*(g.stage==='maul'?1:0);} // scatter
     if(a.state===1&&t-a.t0>1.25){a.state=2;a.j=Math.floor(rnd()*C.P.length);C.absorbed++;}
     if(a.state===2){const q=C.P[a.j].p;tx=q.x+Math.sin(t*3+a.ph)*.3;ty=q.y+Math.cos(t*2.7+a.ph)*.3;tz=q.z;}
-    if(C.first){a.p.set(tx,ty,tz);a.h.forEach(q=>q.copy(a.p));return;}
+    if(C.first){a.p.set(tx,ty,tz);if(a.h)a.h.forEach(q=>q.copy(a.p));return;}
     for(let s=0;s<sub;s++){a.v.x+=((tx-a.p.x)*60-a.v.x*12)*h;a.v.y+=((ty-a.p.y)*60-a.v.y*12)*h;a.v.z+=((tz-a.p.z)*60-a.v.z*12)*h;a.p.addScaledVector(a.v,h);}});
   C.first=false;
   // write buffers: copy k = trail age k
   const all=C.P.length+C.A.length;let o=0;
-  const write=(p,col,I)=>{for(let k=HIST-1;k>0;k--)p.h[k].copy(p.h[k-1]);p.h[0].copy(p.p);
-    for(let k=0;k<HIST;k++){const idx=k*all+o;cpuPos[idx*3]=p.h[k].x;cpuPos[idx*3+1]=p.h[k].y;cpuPos[idx*3+2]=p.h[k].z;
+  const NH=C.hist;
+  const write=(p,col,I)=>{if(NH===1){const idx=o;cpuPos[idx*3]=p.p.x;cpuPos[idx*3+1]=p.p.y;cpuPos[idx*3+2]=p.p.z;cpuCol[idx*3]=col[0];cpuCol[idx*3+1]=col[1];cpuCol[idx*3+2]=col[2];cpuI[idx]=I;o++;return;}
+    for(let k=NH-1;k>0;k--)p.h[k].copy(p.h[k-1]);p.h[0].copy(p.p);
+    for(let k=0;k<NH;k++){const idx=k*all+o;cpuPos[idx*3]=p.h[k].x;cpuPos[idx*3+1]=p.h[k].y;cpuPos[idx*3+2]=p.h[k].z;
       cpuCol[idx*3]=col[0];cpuCol[idx*3+1]=col[1];cpuCol[idx*3+2]=col[2];cpuI[idx]=I*TRAIL[k];}o++;};
-  for(const p of C.P)write(p,[1,0,0],1);
+  const RED=[1,0,0];for(const p of C.P)write(p,RED,1);
   for(const a of C.A){let col=[0,0,1];if(a.state===1){const f=(t-a.t0)/1.25;const fl=(Math.sin((t-a.t0)*(8+f*30))>0)?1:0;const red=f>.55?fl|(f>.85):fl*f*1.6;
       col=red?[1,0,0]:[0,0,1];}else if(a.state===2)col=[1,0,0];write(a,col,a.state===2?1:1.3);}
-  cpuGeo.setDrawRange(0,thermal?all:all*HIST);
-  const li=thermal?0:.55;C.L.forEach(([a,b],n)=>{const pa=C.P[a].p,pb=C.P[b].p;const d=pa.distanceTo(pb);const k=li*clamp(1.4-d/(tier.size*.45),0,1);
+  cpuGeo.setDrawRange(0,thermal?all:all*NH);
+  const li=thermal?0:.55;if(C.L.length)C.L.forEach(([a,b],n)=>{const pa=C.P[a].p,pb=C.P[b].p;const d=pa.distanceTo(pb);const k=li*clamp(1.4-d/(tier.size*.45),0,1);
     lnPos.set([pa.x,pa.y,pa.z,pb.x,pb.y,pb.z],n*6);lnCol.set([k,0,0,k,0,0],n*6);});
   lnGeo.setDrawRange(0,C.L.length*2);lnGeo.attributes.position.needsUpdate=lnGeo.attributes.color.needsUpdate=true;
-  cpuGeo.attributes.position.needsUpdate=cpuGeo.attributes.aCol.needsUpdate=cpuGeo.attributes.aI.needsUpdate=true;
+  const nUp=thermal?all:all*NH;for(const [k,w] of [['position',3],['aCol',3],['aI',1]]){const at=cpuGeo.attributes[k];at.clearUpdateRanges();at.addUpdateRange(0,nUp*w);at.needsUpdate=true;}
   return C.P.length+C.absorbed;
 }
 
 // ---------------------------------------------------------------- THE HOST: build a million dots from body parts
 // parts: 0 torso, 1 head, 2 L upper arm, 3 L forearm+hand, 4 R upper arm, 5 R forearm+hand, 6 L small arm, 7 R small arm, 8 rift column, 9 core, 10 jaw, 11 eyes
-const PIV=[V(0,60,0),V(0,110,4),V(-34,106,0),V(-50,74,12),V(34,106,0),V(50,74,12),V(-18,92,14),V(18,92,14),V(),V(),V(0,124,25),V(0,110,4)];
-const CORE_C=V(0,97,4);
+// parts: 0 body, 1 head, 2 L upper arm, 3 L forearm+fist, 4 R upper arm, 5 R forearm+fist, 6/7 back tendrils (drawn in the shader),
+// 8 rift column, 9 core, 10 jaw, 11 throat glow (shows when the jaw opens)
+const PIV=[V(0,58,-6),V(2,96,22),V(-36,102,10),V(-57,70,28),V(36,102,10),V(57,70,28),V(),V(),V(),V(),V(4,82,32),V(2,96,22)];
+const CORE_C=V(-3,92,12);
 function hostPrims(){const P=[];
   const cap=(a,b,ra,rb,part,w=1)=>P.push({t:0,a:V(...a),b:V(...b),ra,rb,part,w});
   const ell=(c,r,part,w=1)=>P.push({t:1,c:V(...c),r:V(...r),part,w});
   const mir=(f)=>{f(1);f(-1);};
-  ell([0,62,-2],[17,10,13],0);cap([0,62,-3],[0,84,4],13,11,0);                  // pelvis, gut (fed by the column)
-  cap([0,66,-10],[0,114,-6],5.5,5,0,.8);                                          // spine
-  for(let i=0;i<6;i++){const y=110-i*5.2,s=1-i*.07;mir(x=>{cap([x*3,y,-11],[x*24*s,y-5,4],2.1,1.7,0);cap([x*24*s,y-5,4],[x*5,y-12,18],1.7,1.3,0);});}
-  cap([0,114,18],[0,82,20],2.6,2,0);                                              // sternum
-  mir(x=>{ell([x*31,109,-1],[12,10,11],0);cap([x*4,113,12],[x*28,111,4],3,3.2,0,.7);  // shoulders, collarbones
-    cap([x*33,113,-6],[x*47,134,-18],3.4,.3,0,.6);cap([x*24,112,-8],[x*31,128,-22],2.6,.3,0,.5);});
-  for(let i=0;i<8;i++){const y=70+i*5.8;cap([0,y,-13],[0,y+12+i*.6,-32-i*1.2],2.6,.3,0,.45);}  // dorsal spines
-  cap([0,110,4],[0,124,21],7.5,5.2,1);ell([0,129,30],[8.5,7.5,13.5],1);cap([-7,133.5,37],[7,133.5,37],2.6,2.6,1,.6);  // neck, skull, brow
-  for(const k of [-6,-3,0,3,6])cap([k,136,24],[k*2.3,158-Math.abs(k)*1.6,4-Math.abs(k)],2.1,.3,1,.55);           // crown
-  cap([0,123,25],[0,118.5,45],4.8,2,10);for(let i=0;i<6;i++){const z=31+i*2.4;mir(x=>cap([x*(3.2-i*.25),121.5-i*.6,z],[x*(3-i*.25),126-i*.6,z+.6],.8,.12,10,.25));}
-  mir(x=>{const pu=x>0?2:4,pf=x>0?3:5;                                             // big arms (x>0 is the creature's left = screen right when facing you)
-    cap([-x*34,106,0],[-x*50,74,12],10.5,8,pu);cap([-x*50,74,12],[-x*58,32,30],8,7,pf);ell([-x*58,26,34],[8,5.5,9],pf);
-    for(const [dx,dz,ty] of [[-7,14,4],[-2,17,2],[3,16,3],[7,11,6]])cap([-x*(58+dx*.4),24,38],[-x*(58+dx*1.1),ty,34+dz],3.2,.4,pf,.7);
-    const ps=x>0?6:7;cap([-x*18,92,14],[-x*30,80,28],4.2,3,ps);cap([-x*30,80,28],[-x*24,70,44],3,2,ps);
-    for(const d of [-2,0,2])cap([-x*24,70,44],[-x*(21+d),61,52+d],1.6,.2,ps,.6);});
+  ell([0,58,-6],[25,15,21],0);cap([0,62,-6],[0,95,8],22,26,0);                     // gut (fed by the column) and torso
+  ell([3,113,-8],[38,30,32],0,1.25);                                                // the hump: the highest thing on it
+  ell([15,133,-14],[17,13,16],0,.55);ell([-17,126,-25],[15,12,14],0,.5);ell([4,107,-35],[16,14,13],0,.5);
+  ell([-25,114,-3],[14,12,12],0,.45);ell([23,119,5],[12,10,11],0,.4);ell([-6,138,-2],[11,9,10],0,.35);   // lumps, uneven
+  mir(x=>ell([x*34,99,11],[16,13,15],0,.8));                                       // shoulders, low and forward
+  ell([4,84,40],[13,10.5,17],1);                                                     // head: low, forward, a little off-centre
+  ell([4,76.5,44],[10.5,5,13],10);                                                   // jaw
+  mir(x=>{const pu=x>0?2:4,pf=x>0?3:5,a=x>0?1.12:.92;                               // one arm heavier than the other
+    cap([-x*36,102,10],[-x*57,70,28],15*a,12*a,pu);cap([-x*57,70,28],[-x*62,24,47],12*a,13.5*a,pf);ell([-x*62,13,51],[16*a,12*a,17*a],pf,1.1);});
   return P;}
-function primSD(q,pr){if(pr.t===0){_a.subVectors(q,pr.a);_b.subVectors(pr.b,pr.a);const L2=_b.lengthSq();const u=clamp(_a.dot(_b)/L2,0,1);
-   _d.copy(pr.a).addScaledVector(_b,u);return q.distanceTo(_d)-lerp(pr.ra,pr.rb,u);}
-  const x=(q.x-pr.c.x)/pr.r.x,y=(q.y-pr.c.y)/pr.r.y,z=(q.z-pr.c.z)/pr.r.z;return (Math.sqrt(x*x+y*y+z*z)-1)*Math.min(pr.r.x,pr.r.y,pr.r.z);}
 const HOST_N=1000000;
 let host=null;
 function makeHost(){
   const prims=hostPrims();
-  prims.forEach(p=>{if(p.t===0){const L=p.a.distanceTo(p.b);p.area=(2*Math.PI*(p.ra+p.rb)*.5*L+2*Math.PI*(p.ra*p.ra+p.rb*p.rb)*.5)*p.w;
-      p.bc=p.a.clone().add(p.b).multiplyScalar(.5);p.br=L*.5+Math.max(p.ra,p.rb);}
-    else{const a=p.r.x,b=p.r.y,c=p.r.z;p.area=4*Math.PI*Math.pow((Math.pow(a*b,1.6)+Math.pow(a*c,1.6)+Math.pow(b*c,1.6))/3,1/1.6)*p.w;p.bc=p.c.clone();p.br=Math.max(a,b,c);}});
+  prims.forEach(p=>{if(p.t===0){const L=p.a.distanceTo(p.b);p.L=L;p.area=(2*Math.PI*(p.ra+p.rb)*.5*L+2*Math.PI*(p.ra*p.ra+p.rb*p.rb)*.5)*p.w;}
+    else{const a=p.r.x,b=p.r.y,c=p.r.z;p.area=4*Math.PI*Math.pow((Math.pow(a*b,1.6)+Math.pow(a*c,1.6)+Math.pow(b*c,1.6))/3,1/1.6)*p.w;}});
   const tot=prims.reduce((s,p)=>s+p.area,0);let acc=0;const cdf=prims.map(p=>(acc+=p.area)/tot);
   const geo=new T.BufferGeometry();
   const pos=new Float32Array(HOST_N*3),seed=new Float32Array(HOST_N*4),part=new Float32Array(HOST_N);
   geo.setAttribute('position',new T.BufferAttribute(pos,3));geo.setAttribute('aSeed',new T.BufferAttribute(seed,4));geo.setAttribute('aPart',new T.BufferAttribute(part,1));
-  const NF=170000,NC=24000,NE=6000;   // rift column, core, eyes; the rest is body
+  const NF=170000,NC=12000,NM=6000,NT=70000;   // rift column, core, throat, tendrils; the rest is body
   let made=0;const q=V(),n1=V(),n2=V(),dd=V();
-  const put=(x,y,z,pt)=>{const i=made++;pos[i*3]=x;pos[i*3+1]=y;pos[i*3+2]=z;part[i]=pt;
-    seed[i*4]=Math.random();seed[i*4+1]=Math.random();seed[i*4+2]=Math.random();seed[i*4+3]=Math.random();};
+  const put=(x,y,z,pt,sy)=>{const i=made++;pos[i*3]=x;pos[i*3+1]=y;pos[i*3+2]=z;part[i]=pt;
+    seed[i*4]=Math.random();seed[i*4+1]=sy!=null?sy:Math.random();seed[i*4+2]=Math.random();seed[i*4+3]=Math.random();};
+  let cLeft=0,cR=1,cPh=0,cPart=0;const cc=V();
+  const radial=()=>1-.42*Math.pow(Math.random(),1.5);   // filled, densest near the skin: a mass, not a shell
   function chunk(max){const end=Math.min(HOST_N,made+max);
-    while(made<end){
-      const ty=Math.random()*HOST_N; // types mixed through the buffer, so any partial draw is an even sample
+    while(made<end){const ty=Math.random()*HOST_N; // types mixed through the buffer, so any partial draw is an even sample
       if(ty<NF){put(Math.random()*6.2832,Math.random(),Math.pow(Math.random(),.6),8);continue;}
-      if(ty<NF+NC){const g=[gauss(),gauss(),gauss()];const s=Math.pow(Math.random(),.6)*6.5/(Math.hypot(...g)||1);put(g[0]*s,g[1]*s*1.15,g[2]*s,9);continue;}
-      if(ty<NF+NC+NE){const x=Math.random()<.5?1:-1;const g=[gauss(),gauss(),gauss()];const s=Math.pow(Math.random(),.5)/(Math.hypot(...g)||1);
-        put(x*4.6+g[0]*s*1.7,131+g[1]*s*1.2,41.5+g[2]*s*1.1,11);continue;}
-      const r=Math.random();let pi=0;while(cdf[pi]<r)pi++;const pr=prims[pi];
-      const shell=1-.22*Math.pow(Math.random(),2);
-      if(pr.t===0){_b.subVectors(pr.b,pr.a);const L=_b.length();dd.copy(_b).multiplyScalar(1/L);
+      if(ty<NF+NC){const g=[gauss(),gauss(),gauss()];const s2=Math.pow(Math.random(),.5)*11/(Math.hypot(...g)||1);put(g[0]*s2*1.2,g[1]*s2*.8,g[2]*s2,9);continue;}
+      if(ty<NF+NC+NM){const g=[gauss(),gauss(),gauss()];const s2=Math.pow(Math.random(),.5)/(Math.hypot(...g)||1);put(4+g[0]*s2*6,80.5+g[1]*s2*2.5,45+g[2]*s2*7,11);continue;}
+      if(ty<NF+NC+NM+NT){put(Math.pow(Math.random(),.85),Math.random()*6.2832,Math.pow(Math.random(),.5),Math.random()<.5?6:7);continue;}
+      if(cLeft>0){const g=[gauss(),gauss(),gauss()];const rr=cR*Math.pow(Math.random(),.35)/(Math.hypot(...g)||1);put(cc.x+g[0]*rr,cc.y+g[1]*rr*.8,cc.z+g[2]*rr,cPart,cPh);cLeft--;continue;}
+      const r=Math.random();let pi=0;while(cdf[pi]<r)pi++;const pr=prims[pi];const sh=radial();
+      if(pr.t===0){_b.subVectors(pr.b,pr.a);const L=pr.L;dd.copy(_b).multiplyScalar(1/L);
         n1.crossVectors(Math.abs(dd.y)>.9?V(1,0,0):_up,dd).normalize();n2.crossVectors(dd,n1);
-        let u=Math.random();const capP=(pr.ra*pr.ra+pr.rb*pr.rb)/((pr.ra+pr.rb)*L+pr.ra*pr.ra+pr.rb*pr.rb);
-        if(Math.random()<capP){const end2=Math.random()<pr.ra*pr.ra/(pr.ra*pr.ra+pr.rb*pr.rb)?0:1;const g=[gauss(),gauss(),gauss()];const gl2=Math.hypot(...g)||1;const rr=(end2?pr.rb:pr.ra)*shell;
-          q.copy(end2?pr.b:pr.a).add(V(g[0]/gl2*rr,g[1]/gl2*rr,g[2]/gl2*rr));}
-        else{const a=Math.random()*6.2832,rr=lerp(pr.ra,pr.rb,u)*shell;q.copy(pr.a).addScaledVector(dd,u*L).addScaledVector(n1,Math.cos(a)*rr).addScaledVector(n2,Math.sin(a)*rr);}}
-      else{const g=[gauss(),gauss(),gauss()];const gl2=Math.hypot(...g)||1;q.set(pr.c.x+g[0]/gl2*pr.r.x*shell,pr.c.y+g[1]/gl2*pr.r.y*shell,pr.c.z+g[2]/gl2*pr.r.z*shell);}
-      let inside=false;for(let j=0;j<prims.length;j++){if(j===pi)continue;const o=prims[j];if(o.part!==pr.part&&!((pr.part===0||pr.part===2||pr.part===4)&&(o.part===0)))continue;
-        if(q.distanceToSquared(o.bc)>o.br*o.br)continue;if(primSD(q,o)<-.7){inside=true;break;}}
-      if(inside)continue;
-      put(q.x,q.y,q.z,pr.part);}
+        const capP=(pr.ra*pr.ra+pr.rb*pr.rb)/((pr.ra+pr.rb)*L+pr.ra*pr.ra+pr.rb*pr.rb);
+        if(Math.random()<capP){const e=Math.random()<pr.ra*pr.ra/(pr.ra*pr.ra+pr.rb*pr.rb)?0:1;const g=[gauss(),gauss(),gauss()];const gl2=Math.hypot(...g)||1;const rr=(e?pr.rb:pr.ra)*sh;
+          q.copy(e?pr.b:pr.a).add(V(g[0]/gl2*rr,g[1]/gl2*rr,g[2]/gl2*rr));}
+        else{const u=Math.random(),a=Math.random()*6.2832,rr=lerp(pr.ra,pr.rb,u)*sh;q.copy(pr.a).addScaledVector(dd,u*L).addScaledVector(n1,Math.cos(a)*rr).addScaledVector(n2,Math.sin(a)*rr);}}
+      else{const g=[gauss(),gauss(),gauss()];const gl2=Math.hypot(...g)||1;q.set(pr.c.x+g[0]/gl2*pr.r.x*sh,pr.c.y+g[1]/gl2*pr.r.y*sh,pr.c.z+g[2]/gl2*pr.r.z*sh);}
+      cc.copy(q);cLeft=220+Math.floor(Math.random()*520);cR=2.6+Math.random()*3.2;cPh=Math.random();cPart=pr.part;}  // a brute-sized clump: ~2,000 of them make the Host
     geo.attributes.position.needsUpdate=geo.attributes.aSeed.needsUpdate=geo.attributes.aPart.needsUpdate=true;
     return made;}
   const pts=new T.Points(geo,hostMat);pts.frustumCulled=false;geo.setDrawRange(0,0);world.add(pts);
@@ -457,22 +516,24 @@ const _m=new T.Matrix4(),_m2=new T.Matrix4(),_e=new T.Euler();
 function pivotRot(out,pv,rx,ry,rz,parent){_e.set(rx,ry,rz,'XYZ');out.makeTranslation(pv.x,pv.y,pv.z).multiply(_m.makeRotationFromEuler(_e)).multiply(_m2.makeTranslation(-pv.x,-pv.y,-pv.z));
   if(parent)out.premultiply(parent);return out;}
 let hostSlamFlash=0;
-function poseHost(t){const M=hostMat.uniforms.uPart.value;
-  let ag=0,raise=0,slam=0,roar=0,pulse=.5+.5*Math.sin(t*1.6);
-  if(aggro){const c=(t-aggroT0)%7;ag=1;raise=ss(.2,2.1,c)*(1-ss(2.25,2.55,c));slam=ss(2.25,2.5,c)*(1-ss(3.6,6,c));roar=ss(1.2,1.9,c)*(1-ss(3.4,4.4,c));
-    if(c>2.45&&c<2.62)hostSlamFlash=1;pulse=Math.max(pulse,c>2.4?1-ss(2.4,3.6,c):roar*.6);}
-  pivotRot(M[0],PIV[0],.03*Math.sin(t*.6)+ag*.1+slam*.08,.05*Math.sin(t*.23),.02*Math.sin(t*.37));
-  pivotRot(M[1],PIV[1],.07*Math.sin(t*.5)-roar*.35+slam*.15,.28*Math.sin(t*.31)*(1-roar),.04*Math.sin(t*.7),M[0]);
-  pivotRot(M[10],PIV[10],.06+.05*Math.sin(t*1.1)+roar*.6,0,0,M[1]);M[11].copy(M[1]);
-  // creature's left arm (on screen right) braces; right arm rises and slams
-  pivotRot(M[2],PIV[2],.05*Math.sin(t*.4),0,.04*Math.sin(t*.45)-ag*.05,M[0]);pivotRot(M[3],PIV[3],-.04*Math.sin(t*.4+1),0,0,M[2]);
-  pivotRot(M[4],PIV[4],.05*Math.sin(t*.43+2)-raise*1.9+slam*.25,raise*.3,-.04*Math.sin(t*.5)+raise*.35,M[0]);
-  pivotRot(M[5],PIV[5],-.05*Math.sin(t*.43+3)-raise*.9+slam*.1,0,0,M[4]);
-  pivotRot(M[6],PIV[6],.25*Math.sin(t*3.1)+.1*Math.sin(t*7.3)-ag*.5,.2*Math.sin(t*2.3),0,M[0]);
-  pivotRot(M[7],PIV[7],.25*Math.sin(t*2.9+1)+.1*Math.sin(t*6.1)-ag*.5,-.2*Math.sin(t*2.1),0,M[0]);
-  M[8].identity();M[9].copy(M[0]);
-  hostMat.uniforms.uPulse.value=pulse;
+function hostState(t){let ag=0,raise=0,slam=0,roar=0,pulse=.5+.5*Math.sin(t*1.6);
+  if(aggro){const c=((t-aggroT0)%7+7)%7;ag=1;raise=ss(.2,2.1,c)*(1-ss(2.25,2.55,c));slam=ss(2.25,2.5,c)*(1-ss(3.6,6,c));roar=ss(1.0,1.8,c)*(1-ss(3.6,4.6,c));
+    pulse=Math.max(pulse,c>2.4?1-ss(2.4,3.6,c):roar*.6);}
+  return {ag,raise,slam,roar,pulse};}
+function poseHost(t,M){const {ag,raise,slam,roar}=hostState(t);
+  const pullL=Math.max(0,Math.sin(t*.32)),pullR=Math.max(0,Math.sin(t*.32+Math.PI));   // idle: hauls itself on one arm, then the other
+  const heave=Math.sin(t*.55);
+  pivotRot(M[0],PIV[0],.04*heave+.05*(pullL+pullR)+ag*.1+slam*.1,.06*Math.sin(t*.21)+.05*(pullL-pullR),.03*Math.sin(t*.37)+.03*(pullL-pullR));
+  pivotRot(M[1],PIV[1],.05*Math.sin(t*.43)-roar*.3+slam*.12,.22*Math.sin(t*.27)*(1-roar),.05*Math.sin(t*.61),M[0]);
+  pivotRot(M[10],PIV[10],.04+.03*Math.sin(t*1.1)+roar*.55,0,0,M[1]);M[11].copy(M[1]);
+  pivotRot(M[2],PIV[2],-.32*pullL+.04*heave,.08*pullL,-.06*pullL,M[0]);pivotRot(M[3],PIV[3],.22*pullL-.04*Math.sin(t*.4),0,0,M[2]);
+  pivotRot(M[4],PIV[4],-.32*pullR*(1-raise)-raise*1.85+slam*.28,raise*.3-.08*pullR,.06*pullR+raise*.32,M[0]);
+  pivotRot(M[5],PIV[5],.22*pullR*(1-raise)-raise*.85+slam*.12,0,0,M[4]);
+  M[6].identity();M[7].identity();M[8].identity();M[9].copy(M[0]);
 }
+function poseHostAll(t){const U=hostMat.uniforms;poseHost(t,U.uPart.value);poseHost(t-.5,U.uPartL.value);
+  const st=hostState(t);U.uPulse.value=st.pulse;U.uMaw.value=st.roar*1.2;U.uReach.value=st.ag*(.35+.65*Math.max(st.raise,st.slam));U.uAg.value=st.ag;
+  if(aggro){const c=((t-aggroT0)%7+7)%7;if(c>2.45&&c<2.62&&!poseHostAll.f){hostSlamFlash=1;poseHostAll.f=1;}if(c<2.4)poseHostAll.f=0;}}
 
 // ---------------------------------------------------------------- the 4-D dots (mote close-up and the brief)
 function makeFrac(levels){const n=Math.pow(16,levels);const pos=new Float32Array(n*3);
@@ -507,7 +568,7 @@ function placeCam(dt){orb.idle+=dt;if(orb.auto&&orb.idle>3.5)orb.yaw+=dt*.07;
 const $=id=>document.getElementById(id);
 let tier=null,tierIx=1;
 const tierRow=$('tiers');
-TIERS.forEach((t,i)=>{const b=document.createElement('button');b.innerHTML=(t.id==='brief'?'Brief':t.id==='host'?'1M':String(t.n))+`<small>${t.id==='brief'?'intel':t.name}</small>`;
+TIERS.forEach((t,i)=>{const b=document.createElement('button');b.innerHTML=(t.id==='brief'?'Brief':t.id==='host'?'1M':t.n>=1000?(t.n/1000)+'K':String(t.n))+`<small>${t.id==='brief'?'intel':t.name}</small>`;
   b.onclick=()=>setTier(i);t.btn=b;tierRow.appendChild(b);});
 function frame(t){orb.dist=t.cam[0];orb.pitch=t.cam[1];orb.ty=t.cam[2];orb.minD=t.minD;orb.maxD=t.maxD;orb.tz=0;orb.idle=0;orb.yaw=t.yaw!=null?t.yaw:.55;
   if(t.pose&&W<H)orb.dist*=1.12;
@@ -536,7 +597,7 @@ let capTxt='';function cap(s){if(s===capTxt)return;capTxt=s;$('cap').innerHTML=s
 
 // ---------------------------------------------------------------- the contact sequence ("wait... it's one mass")
 let contact=null;
-function startContact(){contact={t0:simT,shown:0};orb.idleUser=false;if(!host)host=makeHost();host.pts.visible=true;orb.auto=false;orb.dist=1150;orb.pitch=.11;orb.ty=55;orb.yaw=.2;}
+function startContact(){contact={t0:simT,shown:0};orb.idleUser=false;if(!host)host=makeHost();host.pts.visible=true;orb.auto=false;orb.dist=1150;orb.pitch=.11;orb.ty=55;orb.yaw=.8;}
 const LINES=[[.4,'<b>OVERWATCH</b> New contact. Bearing zero-four-one, range two point four.'],[3.4,'<b>OVERWATCH</b> Count is climbing… forty thousand… two hundred thousand…'],
  [6.2,'<b>OVERWATCH</b> That’s more than I’ve ever seen on one screen.'],[8.6,'<b>OVERWATCH</b> Sensor’s choking. It can’t resolve them.'],
  [11.0,'<b>OVERWATCH</b> Wait. They’re not moving like a swarm.'],[13.6,'<b>OVERWATCH</b> It’s one mass.'],[18.5,'']];
@@ -575,8 +636,9 @@ function loop(now){requestAnimationFrame(loop);
   const sweep=gridG.userData.sweep;sweep.rotation.y=-simT*.9;
   if(tier.pose){
     count=stepCreature(dt,simT);
-    dotMat.uniforms.uGain.value=tier.gain*(thermal?.07:1);dotMat.uniforms.uMin.value=(thermal?7:2)*PR*.5+1;dotMat.uniforms.uMax.value=thermal?160:56;
-    dotMat.uniforms.uSize.value=tier.dot*(thermal?4.2:1);
+    dotMat.uniforms.uGain.value=tier.gain*(thermal?.07*Math.pow(Math.min(1,500/tier.n),.33):1);dotMat.uniforms.uMin.value=(thermal?7:2)*PR*.5+1;dotMat.uniforms.uMax.value=thermal?160:56;
+    dotMat.uniforms.uSize.value=tier.dot*(thermal?4.2:1);dotMat.uniforms.uT.value=simT;
+    dotMat.uniforms.uBoil.value=tier.n>500?tier.size*.008*(aggro?1.5:1):0;dotMat.uniforms.uBF.value=12/tier.size;
     const near=ss(tier.size*3.2,tier.size*.75,dist);interf=tier.base+near*.92;
     if(aggro){const st=C.g.stage;if(st==='maul')interf+=.12;if(st==='lunge')shake=Math.max(shake,tier.size*.02);}
     scaleM.position.set(-(tier.size*.75+1.5),0,aggro?(tier.lane||10)*.45:0);
@@ -604,16 +666,16 @@ function loop(now){requestAnimationFrame(loop);
     if(c>31)startBrief();}
   if(tier.id==='host'&&host){
     if(host.made<HOST_N)host.chunk(dt>.03?45000:90000);
-    poseHost(simT);hostMat.uniforms.uT.value=simT;
+    poseHostAll(simT);hostMat.uniforms.uT.value=simT;
     const s=contact?contactState(dt):{res:1,q:.06,interf:tier.base,stut:.1,count:HOST_N};
     res=s.res;hostMat.uniforms.uRes.value=res;hostMat.uniforms.uQ.value=s.q;
     const drawN=Math.min(host.made,s.count);host.geo.setDrawRange(0,drawN);count=drawN;
-    hostMat.uniforms.uGain.value=(thermal?.0022:.046)*(HALF?1:2.5);hostMat.uniforms.uCG.value=thermal?3:7;hostMat.uniforms.uSize.value=thermal?2.2:.38;
+    hostMat.uniforms.uGain.value=(thermal?.0022:.06)*(HALF?1:2.5);hostMat.uniforms.uCG.value=thermal?3:7;hostMat.uniforms.uSize.value=thermal?2.2:.38;
     hostMat.uniforms.uMin.value=thermal?2.2:1.1;hostMat.uniforms.uMax.value=thermal?30:5;
     interf=s.interf+ss(260,90,dist)*.7;stut=s.stut;if(s.line!==undefined)cap(s.line);
     hostMat.uniforms.uCloud.value.set(0,0,0);
     if(hostSlamFlash>0){shake=Math.max(shake,9);interf+=.5;flash=.35;hostSlamFlash=0;}
-    scaleM.position.set(-68,0,58);
+    scaleM.position.set(-74,0,62);
     if(!contact||simT-contact.t0>15){if(aggro){const c=(simT-aggroT0)%7;cap(c>1.2&&c<3.4?'<b>OVERWATCH</b> It’s moving. It’s actually moving.':'');}}
   }
   interf=clamp(interf,0,1);

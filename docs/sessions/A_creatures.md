@@ -10,12 +10,17 @@ The session that built `concept/swarm-viewer.src.html` (20 Nov 2026). If this ch
 ## Done
 - **The threat library viewer** (`builds/swarm-viewer.html`):
   - MOTE (1): a single dot that splits into 16, 256 and 4,096 as you zoom in. These are dots made of dots, turning through four dimensions.
-  - KNOT 10, SKEIN 20, RUNNER 50, STALKER 100, BRUTE 500: CPU rigs. Each dot springs toward its place on a simple skeleton, so
+  - KNOT 10, SKEIN 20, RUNNER 50, STALKER 100, BRUTE 500, and (20 Nov) DRAG 1,000, HULK 5,000, BEHEMOTH 10,000, TITAN 50,000: CPU rigs.
+    The big four are filled masses built from clumps of 16 to 60 dots that crawl together, with a slow crawl of the surface done on the GPU
+    (`uBoil`). They have no trails or links. Thermal brightness scales with (500/n)^0.33. Each dot springs toward its place on a simple skeleton, so
     the dots lag and smear when the creature lunges. Faint lines join neighbouring dots: the sensor's best-fit skeleton. IDLE
     breathes and paces. AGGRO stalks, coils, lunges at a squad of green dots and mauls it; the squad's dots flicker, turn red and
     join the count.
-  - THE HOST, 1,000,000 dots, all moved on the GPU. A placeholder body built from capsules and ellipsoids (crown, skull, open
-    ribcage with a core, long arms on claws, small chest arms). Its lower half is a funnel still pouring up out of the rift.
+  - THE HOST, 1,000,000 dots, all moved on the GPU. Reworked 20 Nov after Christopher found the first body too pointy: now a hunched,
+    lopsided heap of about 2,000 brute-sized clumps (220 to 740 dots each) that crawl over each other. A huge hump, the head sunk low
+    in front, one arm heavier than the other, two tendrils trailing behind, a dim core, a throat that glows when the jaw opens.
+    Moving parts lag (`uPartL`, the pose half a second ago) so motion smears; a few dots drip off and crawl back.
+    Its lower half is a funnel still pouring up out of the rift.
     The contact sequence: the count climbs, the sensor chokes (static, pixelation, real dropped frames), the dots resolve into
     the shape, "It's one mass." AGGRO: it raises an arm and slams, with a roar and a core pulse.
   - INTEL BRIEF 00: 1,048,576 dots unfolding from one dot, five levels, turning through four dimensions, with the drone's log.
@@ -23,8 +28,8 @@ The session that built `concept/swarm-viewer.src.html` (20 Nov 2026). If this ch
 - **Round-1 image request:** `docs/art-requests/RMD_ROUND1_IMAGE_REQUEST.html`.
 
 ## Next
-1. When the round-1 art comes back: build the Host's real model the Ironhowl 4 way (trace H01 to H03 → shape → fill it with a
-   million dots by sampling its surface), and keep the funnel, the core and the eyes as they are now.
+1. When Christopher picks a Host direction (`RMD_HOST_DIRECTIONS.html`, A to E): write its turnaround request, then build the real
+   model the Ironhowl 4 way (trace → shape → fill with a million dots in brute-sized clumps), keeping the funnel and the reveal.
 2. Rework the small rigs from the S01 and S02 line-ups.
 3. Make `game/creatures/`: one module the game uses for every cluster. Sessions B and C copy the viewer until then.
 4. Proposal for C and D: dot count = hit points. A hit knocks dots off, so the creature shrinks.

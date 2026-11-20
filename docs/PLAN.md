@@ -33,7 +33,13 @@ Only Christopher's decisions go here (20 Nov 2026 unless dated). Proposals live 
 
 ## Art and models
 - Models are made the Ironhowl 4 way (concept sheet from ChatGPT → trace → model), shown alone in a void where they can be turned.
-- First thing built: the creatures as single clusters (1, 10, 20, 50, 100, 500) and the million-dot one, still and attacking.
+- First thing built: the creatures as single clusters, still and attacking.
+- **The ladder of sizes** (20 Nov): 1, 10, 20, 50, 100, 500, 1,000, 5,000, 10,000, 50,000, then a jump to 1,000,000 (the Host).
+- **The look to keep:** the 10 is an amorphous blob; the 500 BRUTE on thermal is frightening, a mass walking. They aren't dots:
+  they're a hive creature we render as dots. That look carries all the way up to the Host.
+- **The Host:** the reveal, the static, the glitches and the shifting are right. The first body was too pointy and not frightening:
+  it should be a blob, a mass, not spikes. Its design is being explored with five open ChatGPT directions
+  (`docs/art-requests/RMD_HOST_DIRECTIONS.html`).
 
 ## Open questions (not decided)
 - Creature names. The viewer uses placeholders: MOTE, KNOT, SKEIN, RUNNER, STALKER, BRUTE, THE HOST.

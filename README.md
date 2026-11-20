@@ -7,13 +7,13 @@ they are dots.
 
 **Open first:** `builds/swarm-viewer.html` (one self-contained file, works offline, made for a phone; also at
 https://claude.ai/artifact/TTjCztKET9MYQkawNMNBAX): the threat library.
-Every creature in it is made of dots: a MOTE (1), the KNOT (10), SKEIN (20), RUNNER (50), STALKER (100) and BRUTE (500),
-THE HOST (1,000,000) with its contact sequence, and INTEL BRIEF 00. IDLE or AGGRO, SENSOR or THERMAL; get close and the sensor
+Every creature in it is made of dots: MOTE 1, KNOT 10, SKEIN 20, RUNNER 50, STALKER 100, BRUTE 500, DRAG 1,000,
+HULK 5,000, BEHEMOTH 10,000, TITAN 50,000, then THE HOST 1,000,000 with its contact sequence, and INTEL BRIEF 00. IDLE or AGGRO, SENSOR or THERMAL; get close and the sensor
 breaks up. A link with `#host`, `#brute,aggro`, `#stalker,thermal` and so on opens a creature directly.
 
 ## Where it stands
-- **Concept 1 is built: the swarm creatures** (`concept/swarm-viewer.src.html`). The Host is a placeholder shape built from
-  primitives; its real model comes from the round-1 concept art (`docs/art-requests/`).
+- **Concept 1 is built: the swarm creatures** (`concept/swarm-viewer.src.html`). The Host is a placeholder: a hunched heap of
+  about 2,000 brute-sized clumps. Its real design comes from one of the five open directions (`docs/art-requests/RMD_HOST_DIRECTIONS.html`).
 - The assets from Mud Lab and Ironhowl 4 are copied in (`borrowed/`, see `borrowed/INDEX.md`). Nothing is built from them yet.
 - `docs/BOARD.md` has the jobs and which session owns each; `docs/PLAN.md` has what Christopher has decided.
 
