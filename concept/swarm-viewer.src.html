@@ -1,0 +1,652 @@
+<!doctype html>
+<!-- RIFT MECH DEFENSE — threat specimen viewer (concept 1: the swarm creatures).
+     Source page. tools/build_viewer.py inlines three.js and writes builds/swarm-viewer.html (one file, works offline). -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>IRMD · Threat specimens</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#d8e6e2;font:700 12px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.08em;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+canvas{position:fixed;inset:0;display:block;width:100%;height:100%}
+.hud{position:fixed;pointer-events:none;text-transform:uppercase}
+#tl{left:max(14px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));max-width:calc(100vw - 150px)}
+#tl .org{font-size:10px;color:#6fae9f;letter-spacing:.22em}
+#tl .name{font-size:clamp(22px,6vw,44px);color:#ff3b26;letter-spacing:.12em;line-height:1.05;margin-top:4px;text-shadow:0 0 18px #ff2a1088}
+#tl .cls{font-size:12px;color:#ffb29a;margin-top:2px}
+#tl .desc{font-size:11px;color:#9fb8b2;margin-top:6px;max-width:360px;text-transform:none;letter-spacing:.03em;font-weight:600}
+#tr{right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));text-align:right;font-size:10px;color:#6fae9f;letter-spacing:.16em}
+#tr .v{font-size:15px;color:#d8e6e2;letter-spacing:.08em}
+#tr .bar{width:110px;height:4px;background:#ffffff18;margin:3px 0 7px auto;overflow:hidden}
+#tr .bar i{display:block;height:100%;background:#4fe0b8;width:50%}
+#tr .bar.bad i{background:#ff4a2a}
+#cap{left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,17px);color:#e9f3f0;text-transform:none;letter-spacing:.04em;
+  text-shadow:0 0 6px #000,0 0 14px #000;padding:0 18px;min-height:1.3em}
+#cap b{color:#4fe0b8;font-weight:800;letter-spacing:.12em;font-size:.8em}
+#scale{font-size:9px;color:#7fd6c2;letter-spacing:.14em;white-space:nowrap;transform:translate(6px,-50%)}
+.corner{position:fixed;width:26px;height:26px;border:2px solid #4fe0b833;pointer-events:none}
+.c1{left:8px;top:8px;border-right:0;border-bottom:0}.c2{right:8px;top:8px;border-left:0;border-bottom:0}
+.c3{left:8px;bottom:8px;border-right:0;border-top:0}.c4{right:8px;bottom:8px;border-left:0;border-top:0}
+#ui{position:fixed;left:0;right:0;bottom:0;padding:8px 8px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:7px;align-items:center;
+  background:linear-gradient(#0000,#000c 40%)}
+.row{display:flex;gap:6px;max-width:100%;overflow-x:auto;scrollbar-width:none;padding:0 4px}
+.row::-webkit-scrollbar{display:none}
+button{flex:0 0 auto;font:800 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.1em;color:#bcd3cd;background:#0b1513cc;border:1px solid #2c4a43;border-radius:3px;
+  padding:8px 9px;min-width:42px;white-space:nowrap;cursor:pointer;text-transform:uppercase}
+button small{display:block;font-size:8px;color:#6f8f88;letter-spacing:.14em;margin-top:2px}
+button.on{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 12px #ff2a1055 inset}
+button.on small{color:#ffb29a}
+button.alt.on{background:#0a2c24ee;border-color:#4fe0b8;box-shadow:0 0 12px #4fe0b855 inset}
+button.hide{display:none}
+#load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#ff3b26;font-size:13px;letter-spacing:.3em;background:#000;z-index:5}
+#help{right:max(14px,env(safe-area-inset-right));top:calc(222px + env(safe-area-inset-top));max-width:130px;font-size:8px;color:#56776f;letter-spacing:.14em;text-align:right}
+</style></head><body>
+<div id="load">LINKING SENSOR…</div>
+<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+<div class="hud" id="tl"><div class="org">Intl. Rift Mech Defense<br>Threat library</div>
+  <div class="name" id="nm">KNOT</div><div class="cls" id="cl">10 dots</div><div class="desc" id="ds"></div></div>
+<div class="hud" id="tr">
+  <div>Dot count</div><div class="v" id="cnt">10</div>
+  <div style="margin-top:6px">Sensor confidence</div><div class="bar" id="confb"><i id="conf"></i></div>
+  <div>View</div><div class="v" id="vw">SENSOR</div></div>
+<div class="hud" id="scale">▏WRAITH 6.6 M</div>
+<div class="hud" id="cap"></div>
+<div class="hud" id="help"></div>
+<div id="ui">
+  <div class="row" id="tiers"></div>
+  <div class="row">
+    <button id="bIdle" class="on">Idle</button><button id="bAggro">Aggro</button>
+    <button id="bSensor" class="alt on">Sensor</button><button id="bThermal" class="alt">Thermal</button>
+    <button id="bContact" class="hide">Replay ▶</button><button id="bBrief" class="hide">Replay ▶</button>
+  </div>
+</div>
+<!--THREE-->
+<script>
+'use strict';
+const T=THREE;
+// ---------------------------------------------------------------- renderer and targets
+const cv=document.createElement('canvas');document.body.prepend(cv);
+const R=new T.WebGLRenderer({canvas:cv,antialias:false,powerPreference:'high-performance',alpha:false});
+const PR=Math.min(window.devicePixelRatio||1,2);
+const gl=R.getContext();
+const HALF=!!(R.extensions.has('EXT_color_buffer_float')||R.extensions.has('EXT_color_buffer_half_float'));
+const FT=HALF?T.HalfFloatType:T.UnsignedByteType;
+let W=1,H=1;
+function mkRT(w,h){return new T.WebGLRenderTarget(w,h,{type:FT,format:T.RGBAFormat,depthBuffer:false,minFilter:T.LinearFilter,magFilter:T.LinearFilter});}
+let rtS,rtH1,rtH2,rtQ1,rtQ2;
+const scene=new T.Scene();
+const cam=new T.PerspectiveCamera(45,1,0.05,6000);
+const fsCam=new T.OrthographicCamera(-1,1,1,-1,0,1);
+const fsScene=new T.Scene();
+const fsQuad=new T.Mesh(new T.PlaneGeometry(2,2));fsQuad.frustumCulled=false;fsScene.add(fsQuad);
+function resize(){
+  W=Math.max(1,innerWidth);H=Math.max(1,innerHeight);
+  R.setPixelRatio(PR);R.setSize(W,H,false);
+  const w=Math.floor(W*PR),h=Math.floor(H*PR);
+  [rtS,rtH1,rtH2,rtQ1,rtQ2].forEach(t=>t&&t.dispose());
+  rtS=mkRT(w,h);rtH1=mkRT(w>>1,h>>1);rtH2=mkRT(w>>1,h>>1);rtQ1=mkRT(w>>2,h>>2);rtQ2=mkRT(w>>2,h>>2);
+  cam.aspect=W/H;cam.updateProjectionMatrix();
+}
+// px per metre at distance 1 (for world-sized dots)
+function pxScale(){return (H*PR)/(2*Math.tan(cam.fov*Math.PI/360));}
+
+// ---------------------------------------------------------------- shared shader bits
+const ADD={transparent:true,depthTest:false,depthWrite:false,blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneFactor};
+const DOT_FRAG=`varying vec3 vC;varying float vA;uniform float uSoft;
+void main(){vec2 d=gl_PointCoord-.5;float r=length(d)*2.;if(r>1.)discard;
+ float core=exp(-r*r*mix(5.5,1.6,uSoft));gl_FragColor=vec4(vC*vA*core,1.);}`;
+const HASH=`float hs(float n){return fract(sin(n)*43758.5453);}`;
+
+// CPU-driven dots (motes 10..500, allies, trails). aCol = channel mix (r hostile, g grid, b ally)
+const dotMat=new T.ShaderMaterial(Object.assign({uniforms:{uSize:{value:.3},uScale:{value:1},uMin:{value:2},uMax:{value:48},uSoft:{value:0},uGain:{value:1}},
+ vertexShader:`attribute vec3 aCol;attribute float aI;uniform float uSize,uScale,uMin,uMax,uGain;varying vec3 vC;varying float vA;
+ void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;
+  float px=uSize*uScale/max(.001,-mv.z);float cl=clamp(px,uMin,uMax);
+  vA=aI*uGain*min(1.,px*px/(cl*cl)+.4);gl_PointSize=cl;vC=aCol;}`,
+ fragmentShader:DOT_FRAG},ADD));
+
+// THE HOST: one million dots, all motion on the GPU
+const NPART=12;
+const hostMat=new T.ShaderMaterial(Object.assign({uniforms:{uPart:{value:Array.from({length:NPART},()=>new T.Matrix4())},
+  uT:{value:0},uRes:{value:1},uQ:{value:0},uPulse:{value:0},uCoreC:{value:new T.Vector3()},
+  uSize:{value:.45},uScale:{value:1},uMin:{value:1.2},uMax:{value:6},uSoft:{value:0},uGain:{value:.03},uCG:{value:6},uCloud:{value:new T.Vector3(0,0,0)}},
+ vertexShader:`attribute vec4 aSeed;attribute float aPart;uniform mat4 uPart[${NPART}];
+ uniform float uT,uRes,uQ,uPulse,uSize,uScale,uMin,uMax,uGain,uCG;uniform vec3 uCoreC,uCloud;varying vec3 vC;varying float vA;${HASH}
+ void main(){int pi=int(aPart+.5);vec3 tp;float hot=0.;
+  if(pi==8){float Hh=60.;float y=mod(position.y*Hh+uT*(5.+aSeed.y*9.),Hh);float f=y/Hh;
+    float rad=mix(52.,10.,pow(f,.5))*(.18+.82*position.z);float ang=position.x+uT*(.3+.45*aSeed.x)+f*6.;
+    tp=vec3(cos(ang)*rad,y,sin(ang)*rad*.8-2.);hot=.35*(1.-f);}
+  else if(pi==9){tp=(uPart[0]*vec4(uCoreC+position*(1.+.16*uPulse),1.)).xyz;hot=1.;}
+  else{tp=(uPart[pi]*vec4(position,1.)).xyz;if(pi==11)hot=.9;}
+  float ph=aSeed.y*6.2832;tp+=vec3(sin(uT*1.7+ph),sin(uT*1.3+ph*1.7),cos(uT*1.5+ph))*(.3+.7*aSeed.w);
+  float ca=aSeed.w*6.2832+uT*.04*(.5+aSeed.x);float cr=40.+aSeed.z*aSeed.z*620.;
+  vec3 cp=uCloud+vec3(cos(ca)*cr,1.+aSeed.y*aSeed.y*70.,sin(ca)*cr*.55);
+  float k=clamp(uRes*1.7-aSeed.x*.7,0.,1.);k=k*k*(3.-2.*k);
+  vec3 p=mix(cp,tp,k);float sw=sin(k*3.1416);p.y+=sw*50.*aSeed.z;p.xz+=sw*vec2(cos(ca*3.),sin(ca*3.))*70.*aSeed.y;
+  float q=uQ*(1.-k*.6);float st=floor(uT*9.+aSeed.x*3.);
+  p+=(vec3(hs(st+aSeed.y*91.7),hs(st*1.3+aSeed.z*57.1),hs(st*.7+aSeed.w*33.3))-.5)*q*(3.+aSeed.x*14.);
+  vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
+  float un=1.-k;float px=uSize*(1.+hot*.7+un*1.6)*uScale/max(.001,-mv.z);float cl=clamp(px,uMin+un*.8,uMax);
+  vA=uGain*mix(1.,uCG,un)*(1.+hot*3.5*(.55+.45*uPulse)*k)*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);}`,
+ fragmentShader:DOT_FRAG},ADD));
+
+// The unmeasurable: dots made of dots, rotating through four dimensions (mote close-up and the intel brief)
+const fracMat=new T.ShaderMaterial(Object.assign({uniforms:{uR0:{value:new T.Matrix4()},uR1:{value:new T.Matrix4()},uR2:{value:new T.Matrix4()},uR3:{value:new T.Matrix4()},uR4:{value:new T.Matrix4()},
+  uUnf:{value:0},uSz:{value:1},uW:{value:2.4},uSize:{value:.03},uScale:{value:1},uMin:{value:1.2},uMax:{value:20},uSoft:{value:0},uGain:{value:1},uK:{value:.42}},
+ vertexShader:`uniform mat4 uR0,uR1,uR2,uR3,uR4;uniform float uUnf,uSz,uW,uSize,uScale,uMin,uMax,uGain,uK;varying vec3 vC;varying float vA;
+ vec4 tv(float d){return vec4(mod(d,2.),mod(floor(d*.5),2.),mod(floor(d*.25),2.),floor(d*.125))*2.-1.;}
+ float sm(float l){float k=clamp(uUnf-l,0.,1.);return k*k*(3.-2.*k);}
+ void main(){float a=position.x,b=position.y;
+  vec4 p=uR0*tv(mod(a,16.))*sm(0.)+uR1*tv(floor(a/16.))*uK*sm(1.)+uR2*tv(mod(b,16.))*uK*uK*sm(2.)
+   +uR3*tv(floor(b/16.))*uK*uK*uK*sm(3.)+uR4*tv(position.z)*uK*uK*uK*uK*sm(4.);
+  float w=uW/(uW+1.6-p.w);vec3 q=p.xyz*w*uSz;
+  vec4 mv=modelViewMatrix*vec4(q,1.);gl_Position=projectionMatrix*mv;
+  float px=uSize*uScale/max(.001,-mv.z);float cl=clamp(px,uMin,uMax);
+  float depth=clamp(.6+p.w*.25,.2,1.4);
+  vA=uGain*depth*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);}`,
+ fragmentShader:DOT_FRAG},ADD));
+
+// ---------------------------------------------------------------- post: bloom + sensor / thermal look + interference
+const FS_V=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
+const downMat=new T.ShaderMaterial({uniforms:{tA:{value:null},uPx:{value:new T.Vector2()}},vertexShader:FS_V,depthTest:false,depthWrite:false,
+ fragmentShader:`uniform sampler2D tA;uniform vec2 uPx;varying vec2 vUv;void main(){vec2 o=uPx*.5;
+ gl_FragColor=(texture2D(tA,vUv+vec2(-o.x,-o.y))+texture2D(tA,vUv+vec2(o.x,-o.y))+texture2D(tA,vUv+vec2(-o.x,o.y))+texture2D(tA,vUv+vec2(o.x,o.y)))*.25;}`});
+const blurMat=new T.ShaderMaterial({uniforms:{tA:{value:null},uD:{value:new T.Vector2()}},vertexShader:FS_V,depthTest:false,depthWrite:false,
+ fragmentShader:`uniform sampler2D tA;uniform vec2 uD;varying vec2 vUv;void main(){
+ vec4 c=texture2D(tA,vUv)*.2270;c+=(texture2D(tA,vUv+uD*1.3846)+texture2D(tA,vUv-uD*1.3846))*.3162;
+ c+=(texture2D(tA,vUv+uD*3.2308)+texture2D(tA,vUv-uD*3.2308))*.0703;gl_FragColor=c;}`});
+const finMat=new T.ShaderMaterial({uniforms:{tS:{value:null},tH:{value:null},tQ:{value:null},uMode:{value:0},uI:{value:0},uT:{value:0},uPix:{value:1},
+  uRes:{value:new T.Vector2()},uExp:{value:1},uFlash:{value:0}},vertexShader:FS_V,depthTest:false,depthWrite:false,
+ fragmentShader:`uniform sampler2D tS,tH,tQ;uniform float uMode,uI,uT,uPix,uExp,uFlash;uniform vec2 uRes;varying vec2 vUv;
+ float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+ vec3 iron(float t){t=clamp(t,0.,1.);
+  vec3 a=vec3(.02,.02,.07),b=vec3(.22,.04,.42),c=vec3(.72,.08,.38),d=vec3(.97,.42,.06),e=vec3(1.,.83,.25),f=vec3(1.,1.,.92);
+  return t<.2?mix(a,b,t/.2):t<.42?mix(b,c,(t-.2)/.22):t<.62?mix(c,d,(t-.42)/.2):t<.82?mix(d,e,(t-.62)/.2):mix(e,f,(t-.82)/.18);}
+ vec3 look(vec2 uv){vec4 s=texture2D(tS,uv),bh=texture2D(tH,uv),bq=texture2D(tQ,uv);vec3 col;
+  if(uMode<.5){float I=s.r+bh.r*.9+bq.r*.8;float A=s.b+bh.b*.9+bq.b*.6;float G=s.g+bh.g*.35;
+   col=vec3(.011,.015,.019);
+   col+=vec3(1.,.08,.035)*(1.-exp(-I*1.4))*1.05+vec3(1.,.48,.14)*smoothstep(1.2,5.,I)*.85+vec3(1.,.95,.85)*smoothstep(5.,18.,I)*.8;
+   col+=vec3(.2,1.,.45)*(1.-exp(-A*1.5))+vec3(.9,1.,.9)*smoothstep(3.,9.,A)*.5;
+   col+=vec3(.12,.5,.44)*G;}
+  else{float Tm=(s.r*.25+bh.r*.9+bq.r*1.6+(s.b*.15+bh.b*.5+bq.b*.9)*.6)*uExp;
+   float bg=.05+.035*h(floor(uv*uRes/6.)+floor(uT*3.))+.04*uv.y;
+   col=iron(bg+ (1.-exp(-Tm))*.95)+vec3(.05,.08,.08)*s.g;}
+  return col;}
+ void main(){vec2 uv=vUv;float I=uI;
+  if(uPix>1.01){vec2 g=uRes/uPix;uv=(floor(uv*g)+.5)/g;}
+  float fr=floor(uT*18.);
+  float band=floor(uv.y*46.+fr*13.);
+  float on=step(1.-I*.55,h(vec2(band*.37,fr)));uv.x+=(h(vec2(band,fr*1.7))-.5)*.09*I*on;
+  vec2 blk=floor(uv*vec2(10.,16.));float bg=step(1.-I*I*.3,h(blk+fr*.31));
+  uv+=bg*(vec2(h(blk+1.3+fr),h(blk+2.7+fr))-.5)*.07;
+  float ca=.0012+.011*I;
+  vec3 col=vec3(look(uv+vec2(ca,0.)).r,look(uv).g,look(uv-vec2(ca,0.)).b);
+  // interference: fog, snow, dropouts
+  float snow=h(uv*uRes*.5+fract(uT*61.)*vec2(91.,17.));
+  col=mix(col,vec3(.16,.2,.2)*(.6+.8*snow),I*.42);
+  col+=vec3(snow*snow)*.16*I;
+  float drop=step(.985-I*.06,h(vec2(floor(uv.y*120.),fr)));col=mix(col,vec3(.5,.62,.6)*snow,drop*I*.8);
+  col*=.93+.07*sin(uv.y*uRes.y*1.6);
+  vec2 q=vUv-.5;col*=1.-dot(q,q)*.9;
+  col+=vec3(1.,.4,.3)*uFlash;
+  col+=(h(vUv*uRes+uT)-.5)*.025;
+  gl_FragColor=vec4(col,1.);}`});
+function pass(mat,target){fsQuad.material=mat;R.setRenderTarget(target);R.render(fsScene,fsCam);}
+
+// ---------------------------------------------------------------- ground grid, sweep and scale marker (green channel)
+const world=new T.Group();scene.add(world);
+const gridG=new T.Group();world.add(gridG);
+(function(){const p=[],c=[];const ring=(r,a)=>{for(let i=0;i<96;i++){const a0=i/96*Math.PI*2,a1=(i+1)/96*Math.PI*2;
+  p.push(Math.cos(a0)*r,0,Math.sin(a0)*r,Math.cos(a1)*r,0,Math.sin(a1)*r);c.push(0,a,0,0,a,0);}};
+ for(let i=1;i<=10;i++)ring(i/10,(i%5===0?.55:.28)*(1-i/12));
+ for(let i=0;i<16;i++){const a=i/16*Math.PI*2;p.push(Math.cos(a)*.1,0,Math.sin(a)*.1,Math.cos(a),0,Math.sin(a));c.push(0,.26,0,0,.02,0);}
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c,3));
+ gridG.add(new T.LineSegments(g,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD))));
+ const sp=[],sc=[];const N=40,span=Math.PI*.42;
+ for(let i=0;i<N;i++){const a0=-i/N*span,a1=-(i+1)/N*span,f0=Math.pow(1-i/N,2.2)*.22,f1=Math.pow(1-(i+1)/N,2.2)*.22;
+  sp.push(0,0,0,Math.cos(a0),0,Math.sin(a0),Math.cos(a1),0,Math.sin(a1));sc.push(0,f0,0,0,f0,0,0,f1,0);}
+ const sg=new T.BufferGeometry();sg.setAttribute('position',new T.Float32BufferAttribute(sp,3));sg.setAttribute('color',new T.Float32BufferAttribute(sc,3));
+ const sweep=new T.Mesh(sg,new T.MeshBasicMaterial(Object.assign({vertexColors:true,side:T.DoubleSide},ADD)));sweep.position.y=.001;gridG.add(sweep);gridG.userData.sweep=sweep;
+})();
+const scaleM=(function(){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([0,0,0,0,6.6,0,-.6,6.6,0,.6,6.6,0,-.6,0,0,.6,0,0],3));
+ g.setAttribute('color',new T.Float32BufferAttribute([0,1.4,0,0,1.4,0,0,1.4,0,0,1.4,0,0,1.4,0,0,1.4,0],3));
+ const l=new T.LineSegments(g,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));world.add(l);return l;})();
+
+// ---------------------------------------------------------------- small math
+const V=(x,y,z)=>new T.Vector3(x,y,z);
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const lerp=(a,b,t)=>a+(b-a)*t;
+let seedN=1;const rnd=()=>{seedN=(seedN*16807)%2147483647;return (seedN-1)/2147483646;};
+const gauss=()=>{let u=0,v=0;while(u===0)u=Math.random();v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+
+// ---------------------------------------------------------------- the creatures made of dots (CPU rigs, 10 to 500 dots)
+// pose(t,g) returns key points in creature space (faces +z, feet on y=0). Segments join key points: [a,b,radiusA,radiusB,weight].
+function legs(k,g,hips,len,lift,phOff,stride){ // simple gait helper
+  for(const [nm,hx,hy,hz,off,side] of hips){const ph=g.phi+off+phOff;const sw=Math.sin(ph),up=Math.max(0,Math.cos(ph));
+    const fx=hx+side*len[2],fz=hz+sw*stride*g.stride;const fy=up*lift*g.stride;
+    k[nm+'h']=V(hx,hy,hz);k[nm+'k']=V(hx+side*len[0],hy+len[1]+fy*.5,hz+sw*stride*.4*g.stride+len[3]);k[nm+'f']=V(fx,fy,fz);}}
+const TIERS=[
+ {id:'mote',n:1,name:'MOTE',cls:'1 dot · the smallest thing the sensor can see',desc:'One dot. Zoom in. Each one the sensor has ever tried to measure has turned out to be made of more of them.',
+  size:1.2,grid:6,cam:[9,.3,1.2],minD:1.2,maxD:40,base:.02},
+ {id:'knot',n:10,name:'KNOT',cls:'10 dots · darter',desc:'Darts in, bites, scatters. Never alone: they come in hundreds. Light Arc fire breaks them apart.',
+  size:1.6,grid:14,cam:[6,.4,1],minD:2.2,maxD:60,base:.03,dot:.42,gain:1.25,reach:1.2,lane:9,
+  seg:[['c','c',.75,.75,1]],pose(t,g){const k={};const b=1.05+.22*Math.sin(t*3.1)-.35*g.low+.6*g.hop;k.c=V(0,b,0);return k;}},
+ {id:'skein',n:20,name:'SKEIN',cls:'20 dots · crawler',desc:'Low and many-legged. Climbs wreckage and pours through gaps in armour.',
+  size:2.6,grid:18,cam:[6.5,.5,.5],yaw:.9,minD:2.5,maxD:70,base:.04,dot:.32,gain:1.15,reach:1.6,lane:10,
+  seg:[['tail','mid',.3,.38,1.4],['mid','front',.38,.3,1.4],['front','head',.25,.18,.7]].concat(['a','b','c','d','e','f'].flatMap(s=>[[s+'h',s+'k',.07,.06,.5],[s+'k',s+'f',.06,.04,.6]])),
+  pose(t,g){const k={};const y=.58-.18*g.low;const sway=Math.sin(g.phi*.5)*.08;
+   k.tail=V(sway,y,-1.0);k.mid=V(0,y+.05,0);k.front=V(-sway,y,.9+g.stretch*.8);k.head=V(-sway*1.5,y-.05,1.3+g.stretch*1.3);
+   legs(k,g,[['a',.22,y,-.6,0,1],['b',-.22,y,-.6,Math.PI,-1],['c',.25,y,0,Math.PI,1],['d',-.25,y,0,0,-1],['e',.22,y,.6,0,1],['f',-.22,y,.6,Math.PI,-1]],
+     [.45,.38,.95,.1],.35,0,.42);return k;}},
+ {id:'runner',n:50,name:'RUNNER',cls:'50 dots · pack hunter',desc:'Four legs, fast on open ground. Runs at whatever is moving and keeps going.',
+  size:3.6,grid:24,cam:[8.5,.32,1.1],yaw:1.25,minD:3.5,maxD:90,base:.05,dot:.25,gain:1.05,reach:2.4,lane:13,
+  seg:[['hip','sh',.42,.5,1.6],['sh','head',.3,.24,.8],['head','jaw',.2,.1,.4],['hip','t1',.2,.12,.5],['t1','t2',.12,.04,.35]]
+   .concat(['fl','fr','bl','br'].flatMap(s=>[[s+'h',s+'k',.15,.12,.6],[s+'k',s+'f',.11,.07,.6]])),
+  pose(t,g){const k={};const bob=Math.abs(Math.sin(g.phi))*.08*g.stride;const y=1.35-.38*g.low+bob;
+   k.hip=V(0,y,-1.0);k.sh=V(0,y+.15-.2*g.low,.8+g.stretch*.6);k.head=V(0,y+.35-.55*g.low,1.65+g.stretch*1.2);k.jaw=V(0,y+.05-.6*g.low,2.1+g.stretch*1.5);
+   const tw=Math.sin(t*2.3)*.35;k.t1=V(tw*.5,y+.05,-1.7);k.t2=V(tw,y+.2,-2.4);
+   legs(k,g,[['fl',.34,y+.05,.8,0,1],['fr',-.34,y+.05,.8,Math.PI,-1],['bl',.34,y,-1.0,Math.PI,1],['br',-.34,y,-1.0,0,-1]],[.06,-.62,.05,.18],.45,0,.7);
+   return k;}},
+ {id:'stalker',n:100,name:'STALKER',cls:'100 dots · walks upright',desc:'Long arms, digitigrade legs. It goes for people first, and the ones it reaches join its count.',
+  size:4.8,grid:30,cam:[11.5,.25,2.3],yaw:1.0,minD:4,maxD:110,base:.07,dot:.22,gain:.95,reach:2.8,lane:15,
+  seg:[['pel','ch',.55,.72,2.2],['ch','nk',.32,.28,.6],['nk','hd',.34,.14,.8],['ch','sp1',.14,.02,.25],['pel','sp2',.12,.02,.2]]
+   .concat(['l','r'].flatMap(s=>[[s+'s',s+'e',.22,.17,.8],[s+'e',s+'w',.16,.12,.8],[s+'w',s+'c',.1,.02,.45],[s+'hp',s+'kn',.26,.19,.9],[s+'kn',s+'an',.18,.11,.7],[s+'an',s+'ft',.1,.06,.35]])),
+  pose(t,g){const k={};const L=g.low;const br=Math.sin(t*1.4)*.04;const bob=Math.abs(Math.sin(g.phi))*.12*g.stride;
+   k.pel=V(0,2.3-.5*L+bob,0);k.ch=V(0,3.45-.75*L+br+bob,.45+.8*L+g.stretch*.6);k.nk=V(0,3.95-.9*L+bob,1.0+1.0*L+g.stretch*1.0);
+   k.hd=V(Math.sin(t*.7)*.15,3.85-.95*L+bob,1.75+1.1*L+g.stretch*1.5);k.sp1=V(0,4.3-.7*L,-.4+.6*L);k.sp2=V(0,2.9-.4*L,-.6);
+   for(const [s,x,o] of [['l',1,0],['r',-1,Math.PI]]){const sw=Math.sin(g.phi+o+Math.PI)*g.stride;const reachA=L*.9+g.stretch*1.6;
+    k[s+'s']=V(x*.78,k.ch.y-.05,k.ch.z);k[s+'e']=V(x*1.15,k.ch.y-1.0+reachA*.3,k.ch.z+.35+sw*.4+reachA*.7);
+    k[s+'w']=V(x*1.05,k.ch.y-2.0+reachA*1.0,k.ch.z+.8+sw*.6+reachA*1.6);k[s+'c']=V(x*.95,k.ch.y-2.6+reachA*1.3,k.ch.z+1.2+sw*.6+reachA*2.1);
+    const ph=g.phi+o;const fs=Math.sin(ph)*.75*g.stride,up=Math.max(0,Math.cos(ph))*.45*g.stride;
+    k[s+'hp']=V(x*.42,k.pel.y-.1,k.pel.z);k[s+'kn']=V(x*.52,k.pel.y-1.0+up*.4,k.pel.z+.65+fs*.4);
+    k[s+'an']=V(x*.48,.65+up*.6,k.pel.z-.35+fs*.8);k[s+'ft']=V(x*.48,up*.5,k.pel.z+.3+fs);}
+   return k;}},
+ {id:'brute',n:500,name:'BRUTE',cls:'500 dots · armour breaker',desc:'Bigger than the Wraith. Walks on its fists. Every wreck and every person it takes adds to it.',
+  size:9,grid:50,cam:[23,.22,4],yaw:1.2,minD:7,maxD:200,base:.1,dot:.27,gain:.7,reach:4.2,lane:26,
+  seg:[['pel','hump',1.3,1.9,5],['hump','ch',1.8,1.6,4],['ch','hd',.95,.85,1.3],['hd','sn',.95,.45,.9],['pel','tl',.7,.15,.8]]
+   .concat(['l','r'].flatMap(s=>[[s+'s',s+'e',1.05,.92,2.4],[s+'e',s+'f',.92,1.1,2.4],[s+'f',s+'f2',1.15,.9,1.2],[s+'hp',s+'kn',.85,.6,1.2],[s+'kn',s+'ft',.6,.45,.8],
+     [s+'h0',s+'h1',.38,.22,.35],[s+'h1',s+'h2',.22,.07,.3]]))
+   .concat([0,1,2,3,4].map(i=>['b'+i,'bt'+i,.45,.05,.35])),
+  pose(t,g){const k={};const L=g.low;const br=Math.sin(t*.9)*.12;const bob=Math.abs(Math.sin(g.phi))*.25*g.stride;
+   k.pel=V(0,3.3-.4*L+bob,-2.4);k.hump=V(0,7.3-.9*L+br+bob,.1+.4*L);k.ch=V(0,5.3-.8*L+bob,1.9+.6*L+g.stretch*.8);
+   k.hd=V(Math.sin(t*.5)*.3,5.0-1.0*L+bob,3.5+.8*L+g.stretch*1.5);k.sn=V(Math.sin(t*.5)*.35,4.2-1.1*L+bob,4.8+.9*L+g.stretch*2.2);k.tl=V(Math.sin(t*1.3)*.6,2.4,-4.4);
+   for(const [s,x,o] of [['l',1,0],['r',-1,Math.PI]]){const ph=g.phi+o;const sw=Math.sin(ph)*1.3*g.stride,up=Math.max(0,Math.cos(ph))*.9*g.stride;
+    const slam=g.slam*(s==='l'?1:.6);
+    k[s+'s']=V(x*2.3,k.hump.y-.9,1.3+.4*L);k[s+'e']=V(x*3.2,3.7+slam*3.5,2.3+sw*.5+slam*1.5);
+    k[s+'f']=V(x*2.9,.95+up+slam*6.0,3.0+sw+g.stretch*1.6+slam*1.2);k[s+'f2']=V(x*2.8,.9+up+slam*6.0,3.5+sw+g.stretch*1.8+slam*1.5);
+    const ph2=ph+Math.PI;const fs2=Math.sin(ph2)*.9*g.stride,up2=Math.max(0,Math.cos(ph2))*.6*g.stride;
+    k[s+'hp']=V(x*1.25,k.pel.y-.2,-2.3);k[s+'kn']=V(x*1.55,1.7+up2*.5,-1.5+fs2*.5);k[s+'ft']=V(x*1.45,up2,-2.5+fs2);
+    k[s+'h0']=V(x*.85,k.hd.y+.55,k.hd.z-.1);k[s+'h1']=V(x*2.3,k.hd.y+1.5,k.hd.z-.6);k[s+'h2']=V(x*2.6,k.hd.y+2.6,k.hd.z+.7);}
+   for(let i=0;i<5;i++){const f=i/4;const bx=lerp(k.pel.x,k.hump.x,f),by=lerp(k.pel.y+1.2,k.hump.y+.9,f),bz=lerp(k.pel.z,k.hump.z,f)-.6;
+    k['b'+i]=V(bx,by,bz);k['bt'+i]=V(bx,by+1.4+Math.sin(f*3)*.8,bz-1.6-f*.4);}
+   return k;}},
+ {id:'host',n:1000000,name:'THE HOST',cls:'1,000,000 dots · end of chapter one',desc:'The first contact the sensor ever resolved into a shape, and only because it is so big and so far away. Its lower half never finishes forming: it is still pouring up out of the rift.',
+  size:170,grid:520,cam:[430,.17,70],minD:60,maxD:1400,base:.18},
+ {id:'brief',n:1048576,name:'INTEL BRIEF 00',cls:'Recovered sensor log · survey drone 3',desc:'This is everything we have on what they are. The drone tried to resolve one contact up close.',
+  size:2,grid:0,cam:[7,.25,0],minD:1.5,maxD:30,base:.08},
+];
+
+// one buffer for the active CPU creature: creature dots + ally dots, each with 4 trail copies
+const HIST=5,TRAIL=[1,.42,.24,.13,.07];
+const MAXP=640;
+const cpuGeo=new T.BufferGeometry();
+const cpuPos=new Float32Array(MAXP*HIST*3),cpuCol=new Float32Array(MAXP*HIST*3),cpuI=new Float32Array(MAXP*HIST);
+cpuGeo.setAttribute('position',new T.BufferAttribute(cpuPos,3).setUsage(T.DynamicDrawUsage));
+cpuGeo.setAttribute('aCol',new T.BufferAttribute(cpuCol,3).setUsage(T.DynamicDrawUsage));
+cpuGeo.setAttribute('aI',new T.BufferAttribute(cpuI,1).setUsage(T.DynamicDrawUsage));
+const cpuPts=new T.Points(cpuGeo,dotMat);cpuPts.frustumCulled=false;world.add(cpuPts);
+const MAXL=900;const lnPos=new Float32Array(MAXL*6),lnCol=new Float32Array(MAXL*6);
+const lnGeo=new T.BufferGeometry();lnGeo.setAttribute('position',new T.BufferAttribute(lnPos,3).setUsage(T.DynamicDrawUsage));lnGeo.setAttribute('color',new T.BufferAttribute(lnCol,3).setUsage(T.DynamicDrawUsage));
+const lnMesh=new T.LineSegments(lnGeo,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));lnMesh.frustumCulled=false;world.add(lnMesh);
+let C=null; // active creature state
+function buildCreature(tier){
+  seedN=tier.n*7919+11;
+  const kp=tier.pose(0,{phi:0,stride:0,low:0,stretch:0,hop:0,slam:0});
+  const segs=tier.seg.map(([a,b,ra,rb,w])=>{const L=kp[a].distanceTo(kp[b]);return {a,b,ra,rb,w:(L*(ra+rb)*.5+ra*ra*1.6)*w};});
+  const tot=segs.reduce((s,x)=>s+x.w,0);
+  // stratified allocation so every segment gets its share
+  const cnt=segs.map(s=>s.w/tot*tier.n);const flo=cnt.map(Math.floor);let left=tier.n-flo.reduce((a,b)=>a+b,0);
+  cnt.map((c,i)=>[c-flo[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,left).forEach(([,i])=>flo[i]++);
+  const P=[];segs.forEach((s,si)=>{for(let j=0;j<flo[si];j++){
+    const u=flo[si]>1?(j+.2+.6*rnd())/flo[si]:.5;const a=rnd()*Math.PI*2,rr=.72+.28*Math.sqrt(rnd());
+    const sph=[gauss(),gauss(),gauss()];const sl=Math.hypot(...sph)||1;
+    P.push({s:si,u,ox:Math.cos(a)*rr,oy:Math.sin(a)*rr,sx:sph[0]/sl*rr,sy:sph[1]/sl*rr,sz:sph[2]/sl*rr,
+      k:70+rnd()*110,d:11+rnd()*7,ph:rnd()*6.283,jf:.7+rnd()*1.6,p:V(0,0,0),v:V(0,0,0),h:[V(),V(),V(),V(),V()]});}});
+  // links: consecutive dots along each segment, and segment ends that meet at a key point
+  const L=[];const bySeg=segs.map(()=>[]);P.forEach((p,i)=>bySeg[p.s].push(i));
+  bySeg.forEach(a=>{a.sort((x,y)=>P[x].u-P[y].u);for(let i=1;i<a.length;i++)L.push([a[i-1],a[i]]);});
+  for(let i=0;i<segs.length;i++)for(let j=i+1;j<segs.length;j++){const A=segs[i],B=segs[j];const ai=bySeg[i],bi=bySeg[j];if(!ai.length||!bi.length)continue;
+    const pick=(arr,seg,key)=>seg.a===key?arr[0]:arr[arr.length-1];
+    for(const key of [A.a,A.b])if(key===B.a||key===B.b){L.push([pick(ai,A,key),pick(bi,B,key)]);break;}}
+  if(tier.n<=10)for(let i=0;i<P.length;i++)L.push([i,(i+3)%P.length]);
+  const nA=tier.n<=10?2:tier.n<=50?3:4;
+  const A=[];for(let i=0;i<nA;i++)A.push({off:V((i-(nA-1)/2)*Math.min(1.6,tier.size*.3),0,(rnd()-.5)*1.2),state:0,t0:0,j:0,p:V(),v:V(),h:[V(),V(),V(),V(),V()],ph:rnd()*6.283});
+  return {tier,segs,P,A,L:L.slice(0,MAXL),phi:0,root:V(0,0,0),first:true,absorbed:0,dartT:0,dartTo:0,dartFrom:0};
+}
+const _a=V(),_b=V(),_d=V(),_n1=V(),_n2=V(),_up=V(0,1,0),_t=V();
+let aggro=false,thermal=false,simT=0,aggroT0=0;
+function gaitState(tier,t){
+  const g={phi:0,stride:0,low:0,stretch:0,hop:0,slam:0,thrash:0,rootZ:0,stage:'idle'};
+  const lane=tier.lane||10,reach=tier.reach||2;
+  if(!aggro){g.phi=t*.9;g.stride=.12;g.low=.08+.06*Math.sin(t*.5);g.rootZ=0;return g;}
+  const P=6.2,c=(t-aggroT0)%P;const home=-lane*.55,tgt=lane*.45-reach;
+  if(c<2.2){g.stage='stalk';const f=c/2.2;g.rootZ=lerp(home,home*.15,ss(0,1,f));g.phi=t*4.2;g.stride=.9;g.low=.55;}
+  else if(c<2.75){g.stage='coil';g.rootZ=home*.15-(c-2.2)*.6;g.phi=t*2;g.stride=.15;g.low=1;}
+  else if(c<3.1){g.stage='lunge';const f=ss(0,1,(c-2.75)/.35);g.rootZ=lerp(home*.15-.33,tgt,f);g.stretch=Math.sin(f*Math.PI)*1.0+f*.3;g.low=.7;g.hop=Math.sin(f*Math.PI);g.stride=.3;g.phi=t*6;}
+  else if(c<4.5){g.stage='maul';g.rootZ=tgt+Math.sin(t*23)*.08*reach;g.stretch=.3;g.low=.85;g.thrash=1;g.phi=t*9;g.stride=.25;g.slam=Math.max(0,Math.sin((c-3.1)*9))*.7;}
+  else{g.stage='back';const f=ss(0,1,(c-4.5)/1.7);g.rootZ=lerp(tgt,home,f);g.phi=-t*3.6;g.stride=.75;g.low=.45*(1-f)+.2;}
+  // the knot darts in hops instead of walking
+  if(tier.id==='knot'){g.hop=Math.max(g.hop,Math.max(0,Math.sin(t*7.5))*.35*(g.stage==='stalk'||g.stage==='back'?1:0));}
+  return g;
+}
+function stepCreature(dt,t){
+  const tier=C.tier,g=gaitState(tier,t);C.g=g;
+  const kp=tier.pose(t,g);
+  C.root.set(0,0,g.rootZ);
+  const lane=tier.lane||10,tgtPos=_t.set(0,0,aggro?lane*.45:lane);
+  // segment frames
+  const F=C.segs.map(s=>{const A=kp[s.a].clone().add(C.root),B=kp[s.b].clone().add(C.root);const d=B.clone().sub(A);const L=d.length();
+    if(L>1e-4)d.multiplyScalar(1/L);const n1=new T.Vector3().crossVectors(Math.abs(d.y)>.9?V(1,0,0):_up,d).normalize();const n2=new T.Vector3().crossVectors(d,n1);
+    return {A,B,d,L,n1,n2,ra:s.ra,rb:s.rb};});
+  const jit=(aggro?.16:.07)*(1+g.thrash*2.2)*Math.max(.5,tier.size/4);
+  const sub=Math.max(1,Math.ceil(dt/(1/90)));const h=dt/sub;
+  for(const p of C.P){const f=F[p.s];let tx,ty,tz;
+    if(f.L<1e-4){const r=f.ra;tx=f.A.x+p.sx*r;ty=f.A.y+p.sy*r;tz=f.A.z+p.sz*r;}
+    else{const r=lerp(f.ra,f.rb,p.u);tx=f.A.x+f.d.x*f.L*p.u+(f.n1.x*p.ox+f.n2.x*p.oy)*r;ty=f.A.y+f.d.y*f.L*p.u+(f.n1.y*p.ox+f.n2.y*p.oy)*r;tz=f.A.z+f.d.z*f.L*p.u+(f.n1.z*p.ox+f.n2.z*p.oy)*r;}
+    const w=t*p.jf*(aggro?5.5:2.2)+p.ph;tx+=Math.sin(w)*jit;ty+=Math.sin(w*1.31+1.7)*jit*.7;tz+=Math.cos(w*.87)*jit;
+    if(C.first){p.p.set(tx,ty,tz);p.h.forEach(q=>q.set(tx,ty,tz));continue;}
+    for(let s=0;s<sub;s++){p.v.x+=((tx-p.p.x)*p.k-p.v.x*p.d)*h;p.v.y+=((ty-p.p.y)*p.k-p.v.y*p.d)*h;p.v.z+=((tz-p.p.z)*p.k-p.v.z*p.d)*h;
+      p.p.x+=p.v.x*h;p.p.y+=p.v.y*h;p.p.z+=p.v.z*h;}}
+  // allies (green dots, people). During the maul they flicker and turn: then they are part of it.
+  const cyc=aggro?((t-aggroT0)%6.2):0;
+  if(!aggro||cyc<.1){for(const a of C.A){if(a.state!==0){a.state=0;a.p.copy(tgtPos).add(a.off).setY(.9);a.v.set(0,0,0);a.h.forEach(q=>q.copy(a.p));}}C.absorbed=0;}
+  C.A.forEach((a,i)=>{let tx=tgtPos.x+a.off.x+Math.sin(t*.8+a.ph)*.15,ty=.9,tz=tgtPos.z+a.off.z+Math.cos(t*.6+a.ph)*.15;
+    if(aggro&&a.state===0&&g.stage==='maul'&&cyc>3.25+i*.22){a.state=1;a.t0=t;}
+    if(a.state===0&&aggro&&(g.stage==='lunge'||g.stage==='maul')){tx+=Math.sin(t*9+i)*.25;tz+=.6*(g.stage==='maul'?1:0);} // scatter
+    if(a.state===1&&t-a.t0>1.25){a.state=2;a.j=Math.floor(rnd()*C.P.length);C.absorbed++;}
+    if(a.state===2){const q=C.P[a.j].p;tx=q.x+Math.sin(t*3+a.ph)*.3;ty=q.y+Math.cos(t*2.7+a.ph)*.3;tz=q.z;}
+    if(C.first){a.p.set(tx,ty,tz);a.h.forEach(q=>q.copy(a.p));return;}
+    for(let s=0;s<sub;s++){a.v.x+=((tx-a.p.x)*60-a.v.x*12)*h;a.v.y+=((ty-a.p.y)*60-a.v.y*12)*h;a.v.z+=((tz-a.p.z)*60-a.v.z*12)*h;a.p.addScaledVector(a.v,h);}});
+  C.first=false;
+  // write buffers: copy k = trail age k
+  const all=C.P.length+C.A.length;let o=0;
+  const write=(p,col,I)=>{for(let k=HIST-1;k>0;k--)p.h[k].copy(p.h[k-1]);p.h[0].copy(p.p);
+    for(let k=0;k<HIST;k++){const idx=k*all+o;cpuPos[idx*3]=p.h[k].x;cpuPos[idx*3+1]=p.h[k].y;cpuPos[idx*3+2]=p.h[k].z;
+      cpuCol[idx*3]=col[0];cpuCol[idx*3+1]=col[1];cpuCol[idx*3+2]=col[2];cpuI[idx]=I*TRAIL[k];}o++;};
+  for(const p of C.P)write(p,[1,0,0],1);
+  for(const a of C.A){let col=[0,0,1];if(a.state===1){const f=(t-a.t0)/1.25;const fl=(Math.sin((t-a.t0)*(8+f*30))>0)?1:0;const red=f>.55?fl|(f>.85):fl*f*1.6;
+      col=red?[1,0,0]:[0,0,1];}else if(a.state===2)col=[1,0,0];write(a,col,a.state===2?1:1.3);}
+  cpuGeo.setDrawRange(0,thermal?all:all*HIST);
+  const li=thermal?0:.55;C.L.forEach(([a,b],n)=>{const pa=C.P[a].p,pb=C.P[b].p;const d=pa.distanceTo(pb);const k=li*clamp(1.4-d/(tier.size*.45),0,1);
+    lnPos.set([pa.x,pa.y,pa.z,pb.x,pb.y,pb.z],n*6);lnCol.set([k,0,0,k,0,0],n*6);});
+  lnGeo.setDrawRange(0,C.L.length*2);lnGeo.attributes.position.needsUpdate=lnGeo.attributes.color.needsUpdate=true;
+  cpuGeo.attributes.position.needsUpdate=cpuGeo.attributes.aCol.needsUpdate=cpuGeo.attributes.aI.needsUpdate=true;
+  return C.P.length+C.absorbed;
+}
+
+// ---------------------------------------------------------------- THE HOST: build a million dots from body parts
+// parts: 0 torso, 1 head, 2 L upper arm, 3 L forearm+hand, 4 R upper arm, 5 R forearm+hand, 6 L small arm, 7 R small arm, 8 rift column, 9 core, 10 jaw, 11 eyes
+const PIV=[V(0,60,0),V(0,110,4),V(-34,106,0),V(-50,74,12),V(34,106,0),V(50,74,12),V(-18,92,14),V(18,92,14),V(),V(),V(0,124,25),V(0,110,4)];
+const CORE_C=V(0,97,4);
+function hostPrims(){const P=[];
+  const cap=(a,b,ra,rb,part,w=1)=>P.push({t:0,a:V(...a),b:V(...b),ra,rb,part,w});
+  const ell=(c,r,part,w=1)=>P.push({t:1,c:V(...c),r:V(...r),part,w});
+  const mir=(f)=>{f(1);f(-1);};
+  ell([0,62,-2],[17,10,13],0);cap([0,62,-3],[0,84,4],13,11,0);                  // pelvis, gut (fed by the column)
+  cap([0,66,-10],[0,114,-6],5.5,5,0,.8);                                          // spine
+  for(let i=0;i<6;i++){const y=110-i*5.2,s=1-i*.07;mir(x=>{cap([x*3,y,-11],[x*24*s,y-5,4],2.1,1.7,0);cap([x*24*s,y-5,4],[x*5,y-12,18],1.7,1.3,0);});}
+  cap([0,114,18],[0,82,20],2.6,2,0);                                              // sternum
+  mir(x=>{ell([x*31,109,-1],[12,10,11],0);cap([x*4,113,12],[x*28,111,4],3,3.2,0,.7);  // shoulders, collarbones
+    cap([x*33,113,-6],[x*47,134,-18],3.4,.3,0,.6);cap([x*24,112,-8],[x*31,128,-22],2.6,.3,0,.5);});
+  for(let i=0;i<8;i++){const y=70+i*5.8;cap([0,y,-13],[0,y+12+i*.6,-32-i*1.2],2.6,.3,0,.45);}  // dorsal spines
+  cap([0,110,4],[0,124,21],7.5,5.2,1);ell([0,129,30],[8.5,7.5,13.5],1);cap([-7,133.5,37],[7,133.5,37],2.6,2.6,1,.6);  // neck, skull, brow
+  for(const k of [-6,-3,0,3,6])cap([k,136,24],[k*2.3,158-Math.abs(k)*1.6,4-Math.abs(k)],2.1,.3,1,.55);           // crown
+  cap([0,123,25],[0,118.5,45],4.8,2,10);for(let i=0;i<6;i++){const z=31+i*2.4;mir(x=>cap([x*(3.2-i*.25),121.5-i*.6,z],[x*(3-i*.25),126-i*.6,z+.6],.8,.12,10,.25));}
+  mir(x=>{const pu=x>0?2:4,pf=x>0?3:5;                                             // big arms (x>0 is the creature's left = screen right when facing you)
+    cap([-x*34,106,0],[-x*50,74,12],10.5,8,pu);cap([-x*50,74,12],[-x*58,32,30],8,7,pf);ell([-x*58,26,34],[8,5.5,9],pf);
+    for(const [dx,dz,ty] of [[-7,14,4],[-2,17,2],[3,16,3],[7,11,6]])cap([-x*(58+dx*.4),24,38],[-x*(58+dx*1.1),ty,34+dz],3.2,.4,pf,.7);
+    const ps=x>0?6:7;cap([-x*18,92,14],[-x*30,80,28],4.2,3,ps);cap([-x*30,80,28],[-x*24,70,44],3,2,ps);
+    for(const d of [-2,0,2])cap([-x*24,70,44],[-x*(21+d),61,52+d],1.6,.2,ps,.6);});
+  return P;}
+function primSD(q,pr){if(pr.t===0){_a.subVectors(q,pr.a);_b.subVectors(pr.b,pr.a);const L2=_b.lengthSq();const u=clamp(_a.dot(_b)/L2,0,1);
+   _d.copy(pr.a).addScaledVector(_b,u);return q.distanceTo(_d)-lerp(pr.ra,pr.rb,u);}
+  const x=(q.x-pr.c.x)/pr.r.x,y=(q.y-pr.c.y)/pr.r.y,z=(q.z-pr.c.z)/pr.r.z;return (Math.sqrt(x*x+y*y+z*z)-1)*Math.min(pr.r.x,pr.r.y,pr.r.z);}
+const HOST_N=1000000;
+let host=null;
+function makeHost(){
+  const prims=hostPrims();
+  prims.forEach(p=>{if(p.t===0){const L=p.a.distanceTo(p.b);p.area=(2*Math.PI*(p.ra+p.rb)*.5*L+2*Math.PI*(p.ra*p.ra+p.rb*p.rb)*.5)*p.w;
+      p.bc=p.a.clone().add(p.b).multiplyScalar(.5);p.br=L*.5+Math.max(p.ra,p.rb);}
+    else{const a=p.r.x,b=p.r.y,c=p.r.z;p.area=4*Math.PI*Math.pow((Math.pow(a*b,1.6)+Math.pow(a*c,1.6)+Math.pow(b*c,1.6))/3,1/1.6)*p.w;p.bc=p.c.clone();p.br=Math.max(a,b,c);}});
+  const tot=prims.reduce((s,p)=>s+p.area,0);let acc=0;const cdf=prims.map(p=>(acc+=p.area)/tot);
+  const geo=new T.BufferGeometry();
+  const pos=new Float32Array(HOST_N*3),seed=new Float32Array(HOST_N*4),part=new Float32Array(HOST_N);
+  geo.setAttribute('position',new T.BufferAttribute(pos,3));geo.setAttribute('aSeed',new T.BufferAttribute(seed,4));geo.setAttribute('aPart',new T.BufferAttribute(part,1));
+  const NF=170000,NC=24000,NE=6000;   // rift column, core, eyes; the rest is body
+  let made=0;const q=V(),n1=V(),n2=V(),dd=V();
+  const put=(x,y,z,pt)=>{const i=made++;pos[i*3]=x;pos[i*3+1]=y;pos[i*3+2]=z;part[i]=pt;
+    seed[i*4]=Math.random();seed[i*4+1]=Math.random();seed[i*4+2]=Math.random();seed[i*4+3]=Math.random();};
+  function chunk(max){const end=Math.min(HOST_N,made+max);
+    while(made<end){
+      const ty=Math.random()*HOST_N; // types mixed through the buffer, so any partial draw is an even sample
+      if(ty<NF){put(Math.random()*6.2832,Math.random(),Math.pow(Math.random(),.6),8);continue;}
+      if(ty<NF+NC){const g=[gauss(),gauss(),gauss()];const s=Math.pow(Math.random(),.6)*6.5/(Math.hypot(...g)||1);put(g[0]*s,g[1]*s*1.15,g[2]*s,9);continue;}
+      if(ty<NF+NC+NE){const x=Math.random()<.5?1:-1;const g=[gauss(),gauss(),gauss()];const s=Math.pow(Math.random(),.5)/(Math.hypot(...g)||1);
+        put(x*4.6+g[0]*s*1.7,131+g[1]*s*1.2,41.5+g[2]*s*1.1,11);continue;}
+      const r=Math.random();let pi=0;while(cdf[pi]<r)pi++;const pr=prims[pi];
+      const shell=1-.22*Math.pow(Math.random(),2);
+      if(pr.t===0){_b.subVectors(pr.b,pr.a);const L=_b.length();dd.copy(_b).multiplyScalar(1/L);
+        n1.crossVectors(Math.abs(dd.y)>.9?V(1,0,0):_up,dd).normalize();n2.crossVectors(dd,n1);
+        let u=Math.random();const capP=(pr.ra*pr.ra+pr.rb*pr.rb)/((pr.ra+pr.rb)*L+pr.ra*pr.ra+pr.rb*pr.rb);
+        if(Math.random()<capP){const end2=Math.random()<pr.ra*pr.ra/(pr.ra*pr.ra+pr.rb*pr.rb)?0:1;const g=[gauss(),gauss(),gauss()];const gl2=Math.hypot(...g)||1;const rr=(end2?pr.rb:pr.ra)*shell;
+          q.copy(end2?pr.b:pr.a).add(V(g[0]/gl2*rr,g[1]/gl2*rr,g[2]/gl2*rr));}
+        else{const a=Math.random()*6.2832,rr=lerp(pr.ra,pr.rb,u)*shell;q.copy(pr.a).addScaledVector(dd,u*L).addScaledVector(n1,Math.cos(a)*rr).addScaledVector(n2,Math.sin(a)*rr);}}
+      else{const g=[gauss(),gauss(),gauss()];const gl2=Math.hypot(...g)||1;q.set(pr.c.x+g[0]/gl2*pr.r.x*shell,pr.c.y+g[1]/gl2*pr.r.y*shell,pr.c.z+g[2]/gl2*pr.r.z*shell);}
+      let inside=false;for(let j=0;j<prims.length;j++){if(j===pi)continue;const o=prims[j];if(o.part!==pr.part&&!((pr.part===0||pr.part===2||pr.part===4)&&(o.part===0)))continue;
+        if(q.distanceToSquared(o.bc)>o.br*o.br)continue;if(primSD(q,o)<-.7){inside=true;break;}}
+      if(inside)continue;
+      put(q.x,q.y,q.z,pr.part);}
+    geo.attributes.position.needsUpdate=geo.attributes.aSeed.needsUpdate=geo.attributes.aPart.needsUpdate=true;
+    return made;}
+  const pts=new T.Points(geo,hostMat);pts.frustumCulled=false;geo.setDrawRange(0,0);world.add(pts);
+  hostMat.uniforms.uCoreC.value.copy(CORE_C);
+  return {pts,geo,chunk,get made(){return made;}};
+}
+const _m=new T.Matrix4(),_m2=new T.Matrix4(),_e=new T.Euler();
+function pivotRot(out,pv,rx,ry,rz,parent){_e.set(rx,ry,rz,'XYZ');out.makeTranslation(pv.x,pv.y,pv.z).multiply(_m.makeRotationFromEuler(_e)).multiply(_m2.makeTranslation(-pv.x,-pv.y,-pv.z));
+  if(parent)out.premultiply(parent);return out;}
+let hostSlamFlash=0;
+function poseHost(t){const M=hostMat.uniforms.uPart.value;
+  let ag=0,raise=0,slam=0,roar=0,pulse=.5+.5*Math.sin(t*1.6);
+  if(aggro){const c=(t-aggroT0)%7;ag=1;raise=ss(.2,2.1,c)*(1-ss(2.25,2.55,c));slam=ss(2.25,2.5,c)*(1-ss(3.6,6,c));roar=ss(1.2,1.9,c)*(1-ss(3.4,4.4,c));
+    if(c>2.45&&c<2.62)hostSlamFlash=1;pulse=Math.max(pulse,c>2.4?1-ss(2.4,3.6,c):roar*.6);}
+  pivotRot(M[0],PIV[0],.03*Math.sin(t*.6)+ag*.1+slam*.08,.05*Math.sin(t*.23),.02*Math.sin(t*.37));
+  pivotRot(M[1],PIV[1],.07*Math.sin(t*.5)-roar*.35+slam*.15,.28*Math.sin(t*.31)*(1-roar),.04*Math.sin(t*.7),M[0]);
+  pivotRot(M[10],PIV[10],.06+.05*Math.sin(t*1.1)+roar*.6,0,0,M[1]);M[11].copy(M[1]);
+  // creature's left arm (on screen right) braces; right arm rises and slams
+  pivotRot(M[2],PIV[2],.05*Math.sin(t*.4),0,.04*Math.sin(t*.45)-ag*.05,M[0]);pivotRot(M[3],PIV[3],-.04*Math.sin(t*.4+1),0,0,M[2]);
+  pivotRot(M[4],PIV[4],.05*Math.sin(t*.43+2)-raise*1.9+slam*.25,raise*.3,-.04*Math.sin(t*.5)+raise*.35,M[0]);
+  pivotRot(M[5],PIV[5],-.05*Math.sin(t*.43+3)-raise*.9+slam*.1,0,0,M[4]);
+  pivotRot(M[6],PIV[6],.25*Math.sin(t*3.1)+.1*Math.sin(t*7.3)-ag*.5,.2*Math.sin(t*2.3),0,M[0]);
+  pivotRot(M[7],PIV[7],.25*Math.sin(t*2.9+1)+.1*Math.sin(t*6.1)-ag*.5,-.2*Math.sin(t*2.1),0,M[0]);
+  M[8].identity();M[9].copy(M[0]);
+  hostMat.uniforms.uPulse.value=pulse;
+}
+
+// ---------------------------------------------------------------- the 4-D dots (mote close-up and the brief)
+function makeFrac(levels){const n=Math.pow(16,levels);const pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const d=[0,1,2,3,4].map(l=>Math.floor(i/Math.pow(16,l))%16);pos[i*3]=d[0]+16*d[1];pos[i*3+1]=d[2]+16*d[3];pos[i*3+2]=d[4];}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));const p=new T.Points(g,fracMat);p.frustumCulled=false;p.visible=false;world.add(p);return p;}
+function rot4(out,t,sp){const [a,b,c,d]=sp.map(s=>s*t);const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b),cc=Math.cos(c),sc=Math.sin(c),cd=Math.cos(d),sd=Math.sin(d);
+  // xw, yz, zw, xy plane rotations composed (column-major set via .set row-major)
+  const XW=[[ca,0,0,-sa],[0,1,0,0],[0,0,1,0],[sa,0,0,ca]],YZ=[[1,0,0,0],[0,cb,-sb,0],[0,sb,cb,0],[0,0,0,1]],ZW=[[1,0,0,0],[0,1,0,0],[0,0,cc,-sc],[0,0,sc,cc]],XY=[[cd,-sd,0,0],[sd,cd,0,0],[0,0,1,0],[0,0,0,1]];
+  const mul=(A,B)=>A.map((r,i)=>B[0].map((_,j)=>r.reduce((s,_,k)=>s+A[i][k]*B[k][j],0)));const M=mul(mul(mul(XW,YZ),ZW),XY);
+  out.set(...M[0],...M[1],...M[2],...M[3]);return out;}
+let moteFrac=null,briefFrac=null;
+
+// ---------------------------------------------------------------- camera (orbit, pinch, wheel)
+const orb={yaw:.6,pitch:.35,dist:9,ty:1,tz:0,minD:1,maxD:100,idle:0,auto:true};
+const ptrs=new Map();let pinch0=0,dist0=0;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});orb.idle=0;
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);dist0=orb.dist;}});
+cv.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;orb.idle=0;
+  if(ptrs.size===1){orb.yaw-=(e.clientX-p.x)*.006;orb.pitch=clamp(orb.pitch+(e.clientY-p.y)*.005,-.05,1.45);}
+  p.x=e.clientX;p.y=e.clientY;
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)orb.dist=clamp(dist0*pinch0/d,orb.minD,orb.maxD);}});
+const up=e=>{ptrs.delete(e.pointerId);pinch0=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();orb.idle=0;orb.dist=clamp(orb.dist*Math.exp(e.deltaY*.0012),orb.minD,orb.maxD);},{passive:false});
+let shake=0;
+function placeCam(dt){orb.idle+=dt;if(orb.auto&&orb.idle>3.5)orb.yaw+=dt*.07;
+  const cp=Math.cos(orb.pitch);const tz=orb.tz;
+  cam.position.set(Math.sin(orb.yaw)*cp*orb.dist,orb.ty+Math.sin(orb.pitch)*orb.dist,tz+Math.cos(orb.yaw)*cp*orb.dist);
+  if(shake>0){cam.position.x+=(Math.random()-.5)*shake;cam.position.y+=(Math.random()-.5)*shake;shake*=Math.exp(-dt*5);}
+  cam.lookAt(0,orb.ty,tz);}
+
+// ---------------------------------------------------------------- UI and the tier switch
+const $=id=>document.getElementById(id);
+let tier=null,tierIx=1;
+const tierRow=$('tiers');
+TIERS.forEach((t,i)=>{const b=document.createElement('button');b.innerHTML=(t.id==='brief'?'Brief':t.id==='host'?'1M':String(t.n))+`<small>${t.id==='brief'?'intel':t.name}</small>`;
+  b.onclick=()=>setTier(i);t.btn=b;tierRow.appendChild(b);});
+function frame(t){orb.dist=t.cam[0];orb.pitch=t.cam[1];orb.ty=t.cam[2];orb.minD=t.minD;orb.maxD=t.maxD;orb.tz=0;orb.idle=0;orb.yaw=t.yaw!=null?t.yaw:.55;
+  if(t.pose&&W<H)orb.dist*=1.12;
+  if(t.pose&&aggro){orb.yaw=.32;orb.pitch=.5;orb.dist=(t.lane||10)*1.25*(W<H?1.15:1);orb.tz=(t.lane||10)*.05;orb.ty=t.cam[2]*.6;}}
+function setTier(i){tierIx=i;tier=TIERS[i];TIERS.forEach((t,j)=>t.btn.classList.toggle('on',j===i));try{tier.btn.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
+  $('nm').textContent=tier.name;$('cl').textContent=tier.cls;$('ds').textContent=tier.desc;
+  cpuPts.visible=lnMesh.visible=!!tier.pose;if(tier.pose){C=buildCreature(tier);dotMat.uniforms.uSize.value=tier.dot;}
+  if(host)host.pts.visible=tier.id==='host';
+  if(!moteFrac)moteFrac=makeFrac(3);moteFrac.visible=tier.id==='mote';
+  if(tier.id==='brief'&&!briefFrac)briefFrac=makeFrac(5);if(briefFrac)briefFrac.visible=tier.id==='brief';
+  gridG.visible=tier.grid>0;gridG.scale.setScalar(tier.grid||1);
+  scaleM.visible=tier.id!=='brief';
+  $('bContact').classList.toggle('hide',tier.id!=='host');$('bBrief').classList.toggle('hide',tier.id!=='brief');
+  ['bIdle','bAggro'].forEach(id=>$(id).classList.toggle('hide',tier.id==='brief'||tier.id==='mote'));
+  $('help').innerHTML=tier.id==='mote'?'PINCH IN · THE CLOSER YOU LOOK, THE MORE THERE IS':'DRAG TO TURN<br>PINCH TO ZOOM<br>GET CLOSE AND THE SENSOR BREAKS UP';
+  frame(tier);cap('');
+  if(tier.id==='host')startContact();
+  if(tier.id==='brief')startBrief();
+}
+function setAggro(on){aggro=on;aggroT0=simT;$('bIdle').classList.toggle('on',!on);$('bAggro').classList.toggle('on',on);if(tier&&tier.pose){C=buildCreature(tier);frame(tier);}}
+function setThermal(on){thermal=on;$('bSensor').classList.toggle('on',!on);$('bThermal').classList.toggle('on',on);$('vw').textContent=on?'THERMAL':'SENSOR';}
+$('bIdle').onclick=()=>setAggro(false);$('bAggro').onclick=()=>setAggro(true);
+$('bSensor').onclick=()=>setThermal(false);$('bThermal').onclick=()=>setThermal(true);
+$('bContact').onclick=()=>{frame(tier);startContact();};$('bBrief').onclick=()=>startBrief();
+let capTxt='';function cap(s){if(s===capTxt)return;capTxt=s;$('cap').innerHTML=s;}
+
+// ---------------------------------------------------------------- the contact sequence ("wait... it's one mass")
+let contact=null;
+function startContact(){contact={t0:simT,shown:0};orb.idleUser=false;if(!host)host=makeHost();host.pts.visible=true;orb.auto=false;orb.dist=1150;orb.pitch=.11;orb.ty=55;orb.yaw=.2;}
+const LINES=[[.4,'<b>OVERWATCH</b> New contact. Bearing zero-four-one, range two point four.'],[3.4,'<b>OVERWATCH</b> Count is climbing… forty thousand… two hundred thousand…'],
+ [6.2,'<b>OVERWATCH</b> That’s more than I’ve ever seen on one screen.'],[8.6,'<b>OVERWATCH</b> Sensor’s choking. It can’t resolve them.'],
+ [11.0,'<b>OVERWATCH</b> Wait. They’re not moving like a swarm.'],[13.6,'<b>OVERWATCH</b> It’s one mass.'],[18.5,'']];
+function contactState(dt){ // returns {res,q,interf,stut,count}
+  const c=simT-contact.t0;const s={res:1,q:0,interf:0,stut:0,count:HOST_N};
+  if(c<3){s.count=Math.floor(2000+28000*ss(0,3,c));s.res=0;s.q=.4;s.interf=.12;}
+  else if(c<8){const f=(c-3)/5;s.count=Math.floor(30000+Math.pow(f,1.6)*720000);s.res=0;s.q=.8+f*.6;s.interf=.15+f*.35;s.stut=f*.5;}
+  else if(c<12.6){const f=(c-8)/4.6;s.count=Math.floor(750000+f*250000);s.res=ss(0,1,f);s.q=1.4*(1-f*.3);s.interf=.5+.35*Math.sin(f*3.14);s.stut=.85;}
+  else if(c<13.5){s.res=1;s.q=.3;s.interf=.95;s.stut=1;}
+  else{const f=ss(13.5,17,c);s.res=1;s.q=.35*(1-f)+.06;s.interf=.6*(1-f)+tier.base;s.stut=.55*(1-f)+.1;}
+  // camera pushes in through the sequence
+  if(!orb.idleUser){const f=ss(2,14,c);orb.dist=lerp(1150,440,f);orb.pitch=lerp(.11,.16,f);orb.ty=lerp(55,84,f);}
+  for(const [tt,l] of LINES)if(c>=tt)s.line=l;
+  if(c>14.5)orb.auto=true;
+  return s;}
+cv.addEventListener('pointerdown',()=>{if(contact)orb.idleUser=true;});
+
+// ---------------------------------------------------------------- the intel brief (dots unfolding on dots)
+let brief=null;
+const BRIEF_LINES=[[0,'<b>IRMD INTEL BRIEF 00</b> This is everything we have.'],[4,'Survey drone 3 tried to resolve one contact at close range.'],
+ [9,'Every dot it measured was made of more dots.'],[14,'The count never settled. Neither did the shape.'],[19.5,'At four metres the sensor reported more dimensions than it has axes for.'],
+ [25,'Drone lost at 4.1 metres. Count at loss: 1,048,576 and rising.'],[30,'']];
+function startBrief(){brief={t0:simT};orb.auto=true;orb.idle=9;orb.dist=W<H?10.5:7;orb.pitch=.2;orb.ty=0;}
+
+// ---------------------------------------------------------------- main loop
+let last=performance.now(),holdUntil=0,flash=0,fpsAcc=0,fpsN=0;
+const sp4=[[.31,.17,.23,.11],[.53,-.37,.29,.21],[-.71,.43,.61,-.33],[.97,.67,-.83,.47],[-1.3,1.1,.9,-.7]];
+function loop(now){requestAnimationFrame(loop);
+  const dt=Math.min(.05,(now-last)/1000);last=now;simT+=dt;
+  let interf=tier.base,stut=0,count=tier.n,res=1;
+  placeCam(dt);
+  // world-size dots → pixel scale
+  const S=pxScale();dotMat.uniforms.uScale.value=hostMat.uniforms.uScale.value=fracMat.uniforms.uScale.value=S*1;
+  const soft=thermal?1:0;dotMat.uniforms.uSoft.value=hostMat.uniforms.uSoft.value=fracMat.uniforms.uSoft.value=soft;
+  const dist=cam.position.distanceTo(V(0,orb.ty,orb.tz));
+  const sweep=gridG.userData.sweep;sweep.rotation.y=-simT*.9;
+  if(tier.pose){
+    count=stepCreature(dt,simT);
+    dotMat.uniforms.uGain.value=tier.gain*(thermal?.07:1);dotMat.uniforms.uMin.value=(thermal?7:2)*PR*.5+1;dotMat.uniforms.uMax.value=thermal?160:56;
+    dotMat.uniforms.uSize.value=tier.dot*(thermal?4.2:1);
+    const near=ss(tier.size*3.2,tier.size*.75,dist);interf=tier.base+near*.92;
+    if(aggro){const st=C.g.stage;if(st==='maul')interf+=.12;if(st==='lunge')shake=Math.max(shake,tier.size*.02);}
+    scaleM.position.set(-(tier.size*.75+1.5),0,aggro?(tier.lane||10)*.45:0);
+    if(aggro){const f=((simT-aggroT0)%6.2);const st=C.g.stage;
+      cap(st==='maul'?(C.absorbed?'<b>RADIO</b> Lost contact with '+C.absorbed+' of the squad… their markers just turned red.':'<b>RADIO</b> It’s on them!'):st==='lunge'?'<b>RADIO</b> Contact, contact!':'');}
+    else cap('');
+  }
+  if(tier.id==='mote'){const f=ss(9,1.7,dist);const unf=Math.min(2.999,f*3.15);
+    fracMat.uniforms.uUnf.value=unf;fracMat.uniforms.uSz.value=.42;fracMat.uniforms.uK.value=.3;
+    fracMat.uniforms.uSize.value=.05*(thermal?3:1);fracMat.uniforms.uGain.value=(thermal?.06:.18)/Math.pow(16,Math.max(0,3-Math.max(unf,0)))*16;
+    fracMat.uniforms.uGain.value=(thermal?.5:2.4)*Math.pow(16,unf*.8-3);
+    fracMat.uniforms.uMin.value=1.5;fracMat.uniforms.uMax.value=thermal?60:18;
+    ['uR0','uR1','uR2','uR3','uR4'].forEach((k,l)=>rot4(fracMat.uniforms[k].value,simT*.5,sp4[l]));
+    moteFrac.position.set(0,1.2,0);interf=tier.base+ss(4,1.2,dist)*.38+ss(1.3,.9,dist)*.5;count=Math.max(1,Math.round(Math.pow(16,unf)));
+    scaleM.position.set(-2.2,0,0);
+    cap(unf<.15?'':unf<1.2?'<b>SENSOR</b> Single return… no. Sixteen.':unf<2.2?'<b>SENSOR</b> Two hundred and fifty-six. Edge undefined.':'<b>SENSOR</b> Four thousand and ninety-six. Still resolving.');}
+  if(tier.id==='brief'&&brief){const c=simT-brief.t0;const unf=Math.min(4.999,ss(1.5,26,c)*5.2);
+    fracMat.uniforms.uUnf.value=unf;fracMat.uniforms.uSz.value=1.05;fracMat.uniforms.uK.value=.31;
+    fracMat.uniforms.uSize.value=.035*(thermal?3:1);fracMat.uniforms.uMin.value=1.1;fracMat.uniforms.uMax.value=thermal?40:12;
+    fracMat.uniforms.uGain.value=(thermal?.7:4)*Math.pow(16,unf*.8-5);
+    ['uR0','uR1','uR2','uR3','uR4'].forEach((k,l)=>rot4(fracMat.uniforms[k].value,simT*.45,sp4[l]));
+    briefFrac.position.set(0,0,0);
+    interf=.08+ss(18,26,c)*.55+(c>25&&c<26.2?.4:0);stut=ss(19,26,c)*.6;count=Math.min(1048576,Math.round(Math.pow(16,unf)));
+    let l='';for(const [tt,s] of BRIEF_LINES)if(c>=tt)l=s;cap(l);
+    if(c>31)startBrief();}
+  if(tier.id==='host'&&host){
+    if(host.made<HOST_N)host.chunk(dt>.03?45000:90000);
+    poseHost(simT);hostMat.uniforms.uT.value=simT;
+    const s=contact?contactState(dt):{res:1,q:.06,interf:tier.base,stut:.1,count:HOST_N};
+    res=s.res;hostMat.uniforms.uRes.value=res;hostMat.uniforms.uQ.value=s.q;
+    const drawN=Math.min(host.made,s.count);host.geo.setDrawRange(0,drawN);count=drawN;
+    hostMat.uniforms.uGain.value=(thermal?.0022:.046)*(HALF?1:2.5);hostMat.uniforms.uCG.value=thermal?3:7;hostMat.uniforms.uSize.value=thermal?2.2:.38;
+    hostMat.uniforms.uMin.value=thermal?2.2:1.1;hostMat.uniforms.uMax.value=thermal?30:5;
+    interf=s.interf+ss(260,90,dist)*.7;stut=s.stut;if(s.line!==undefined)cap(s.line);
+    hostMat.uniforms.uCloud.value.set(0,0,0);
+    if(hostSlamFlash>0){shake=Math.max(shake,9);interf+=.5;flash=.35;hostSlamFlash=0;}
+    scaleM.position.set(-68,0,58);
+    if(!contact||simT-contact.t0>15){if(aggro){const c=(simT-aggroT0)%7;cap(c>1.2&&c<3.4?'<b>OVERWATCH</b> It’s moving. It’s actually moving.':'');}}
+  }
+  interf=clamp(interf,0,1);
+  // sensor readouts
+  $('cnt').textContent=count.toLocaleString('en-US');
+  const conf=clamp(1-interf*.95-(tier.id==='host'?(1-res)*.4:0),0,1);$('conf').style.width=(conf*100).toFixed(0)+'%';$('confb').classList.toggle('bad',conf<.45);
+  // scale label follows its marker
+  if(scaleM.visible){const p=scaleM.position.clone().setY(6.6).project(cam);const sl=$('scale');
+    if(p.z<1&&Math.abs(p.x)<1.05&&Math.abs(p.y)<1.05){sl.style.display='block';sl.style.left=((p.x+1)/2*W)+'px';sl.style.top=((1-p.y)/2*H)+'px';}else sl.style.display='none';}
+  else $('scale').style.display='none';
+  // the sensor struggles: hold frames (a real dropped frame, not a filter)
+  stut=Math.max(stut,ss(.55,1,interf)*.6);
+  if(now<holdUntil)return;
+  if(stut>0&&Math.random()<stut*.22)holdUntil=now+30+Math.random()*Math.random()*260*stut;
+  flash*=Math.exp(-dt*7);
+  // render: dots → bloom → look
+  R.setRenderTarget(rtS);R.setClearColor(0x000000,1);R.clear();R.render(scene,cam);
+  downMat.uniforms.tA.value=rtS.texture;downMat.uniforms.uPx.value.set(1/rtS.width,1/rtS.height);pass(downMat,rtH1);
+  const spread=thermal?2.2:1;
+  blurMat.uniforms.tA.value=rtH1.texture;blurMat.uniforms.uD.value.set(spread/rtH1.width,0);pass(blurMat,rtH2);
+  blurMat.uniforms.tA.value=rtH2.texture;blurMat.uniforms.uD.value.set(0,spread/rtH1.height);pass(blurMat,rtH1);
+  downMat.uniforms.tA.value=rtH1.texture;downMat.uniforms.uPx.value.set(1/rtH1.width,1/rtH1.height);pass(downMat,rtQ1);
+  blurMat.uniforms.tA.value=rtQ1.texture;blurMat.uniforms.uD.value.set(spread*1.6/rtQ1.width,0);pass(blurMat,rtQ2);
+  blurMat.uniforms.tA.value=rtQ2.texture;blurMat.uniforms.uD.value.set(0,spread*1.6/rtQ1.height);pass(blurMat,rtQ1);
+  const u=finMat.uniforms;u.tS.value=rtS.texture;u.tH.value=rtH1.texture;u.tQ.value=rtQ1.texture;u.uMode.value=thermal?1:0;u.uI.value=interf;u.uT.value=simT;
+  u.uPix.value=1+Math.floor(ss(.45,1,interf)*7)*PR;u.uRes.value.set(rtS.width,rtS.height);u.uFlash.value=flash;
+  u.uExp.value=tier.id==='host'?.75:tier.id==='brief'?1.2:tier.id==='mote'?1.6:1.3;
+  pass(finMat,null);
+}
+addEventListener('resize',resize);resize();
+setTier(1);
+// a deep link like #host or #brief opens that specimen directly; #thermal and #aggro too
+(function(){const h=location.hash.slice(1).split(/[,&]/);const i=TIERS.findIndex(t=>h.includes(t.id));if(i>=0)setTier(i);if(h.includes('thermal'))setThermal(true);if(h.includes('aggro'))setAggro(true);})();
+$('load').remove();
+requestAnimationFrame(loop);
+</script></body></html>
