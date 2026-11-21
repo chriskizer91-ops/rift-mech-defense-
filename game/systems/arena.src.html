@@ -1,0 +1,129 @@
+<!doctype html>
+<!-- RIFT MECH DEFENSE — mech arena (session C): the Wraith with Ironhowl 4's systems, top-down, against dot clusters.
+     Source page. game/systems/build.py inlines three.js, the Wraith's models and pictures, and the code, and writes builds/mech-arena.html. -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>IRMD · Mech arena</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#d8e6e2;font:700 12px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.08em;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+canvas#gl{position:fixed;inset:0;display:block}
+.hud{position:fixed;pointer-events:none;text-transform:uppercase}
+#tl{left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));width:150px}
+.lbl{font-size:9px;color:#6fae9f;letter-spacing:.18em;margin-top:5px}
+.bar{height:6px;background:#ffffff1c;overflow:hidden;margin-top:2px}
+.bar i{display:block;height:100%;width:100%;transition:width .12s}
+#bshield{background:#5fb4ff}#bhull{background:#4fe0b8}#bhull.low{background:#ff4a2a}
+#fuel{display:flex;gap:3px;margin-top:3px}#fuel i{flex:1;height:6px;background:#ffffff1c;overflow:hidden}#fuel i b{display:block;height:100%;background:#cfd8ff88}#fuel i.full b{background:#e8eeff}
+#fuel.no{animation:no .4s}@keyframes no{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#hov{display:none;margin-top:3px}#hov.on{display:block}#hov .bar i{background:#9fd0ff}#hov.act .bar i{background:#fff}
+#arms{font-size:11px;color:#ffd9a0;margin-top:6px}#mslc{font-size:10px;color:#ffb27a;margin-top:2px}
+#heat{margin-top:5px}#heat .bar i{background:#ffb347;width:0}#heat.warm .bar i{background:#ff7a2a}#heat.over .bar i{background:#ff2a1a;animation:bl .3s infinite}
+@keyframes bl{50%{opacity:.4}}
+#top{left:0;right:0;top:max(10px,env(safe-area-inset-top));text-align:center}
+#wave{font-size:12px;color:#ff8a70;letter-spacing:.14em}#allies{font-size:10px;color:#6fe0a0;margin-top:3px;letter-spacing:.16em}#allies.bad{color:#ffb29a}
+#tr{right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));text-align:right;width:112px}
+#radar{width:104px;height:104px;display:block;margin-left:auto}
+#tr .lbl{margin-top:4px}#conf{width:104px;margin-left:auto}#conf i{background:#4fe0b8}#conf.bad i{background:#ff4a2a}
+#scrapc{font-size:10px;color:#ffd76a;margin-top:5px}
+#tb{position:fixed;right:max(10px,env(safe-area-inset-right));top:calc(max(10px,env(safe-area-inset-top)) + 158px);display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+button{font:800 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.1em;color:#bcd3cd;background:#0b1513cc;border:1px solid #2c4a43;border-radius:3px;
+  padding:7px 9px;cursor:pointer;text-transform:uppercase}
+button small{display:block;font-size:9px;color:#8fb0a8;letter-spacing:.1em;margin-top:1px}
+button.on,.tb.on{color:#fff;background:#3a0d07ee;border-color:#ff4a2a}
+button:disabled{opacity:.35}
+.tb.sm{padding:6px 8px;font-size:10px}
+.tb.cool{opacity:.45}.tb.hot{border-color:#ff4a2a;color:#ffb29a}
+/* touch buttons: right edge, above where the right thumb aims */
+.pad{position:fixed;display:none;border-radius:50%;padding:0;text-align:center;line-height:1.05;background:#0b1513aa;border:2px solid #2c4a43}
+body.touch .pad{display:block}
+#bjet{right:calc(14px + env(safe-area-inset-right));bottom:calc(196px + env(safe-area-inset-bottom));width:76px;height:76px;font-size:13px;border-color:#4b7f75}
+#bsalvo{right:calc(100px + env(safe-area-inset-right));bottom:calc(214px + env(safe-area-inset-bottom));width:58px;height:58px}
+#bmsl{right:calc(22px + env(safe-area-inset-right));bottom:calc(286px + env(safe-area-inset-bottom));width:58px;height:58px}
+#bvent{right:calc(96px + env(safe-area-inset-right));bottom:calc(286px + env(safe-area-inset-bottom));width:52px;height:52px;font-size:10px}
+.pad.on{background:#3a0d07ee;border-color:#ff4a2a;color:#fff}
+.stick{position:fixed;display:none;width:116px;height:116px;margin:-58px 0 0 -58px;border-radius:50%;border:2px solid #4fe0b844;background:#4fe0b80d;pointer-events:none}
+.stick i{position:absolute;left:38px;top:38px;width:40px;height:40px;border-radius:50%;background:#4fe0b855;border:2px solid #4fe0b8aa}
+#astick{border-color:#ff4a2a55;background:#ff4a2a0d}#astick i{background:#ff4a2a55;border-color:#ff4a2aaa}
+#cross{position:fixed;left:0;top:0;width:30px;height:30px;margin:-15px 0 0 -15px;pointer-events:none;display:none}
+#cross::before{content:'';position:absolute;inset:0;border:2px solid #ffffffaa;border-radius:50%}
+#cross::after{content:'';position:absolute;left:13px;top:13px;width:4px;height:4px;background:#fff;border-radius:50%}
+#cross.on::before{border-color:#ff6a4a}#cross.hit::before{border-color:#fff;transform:scale(1.25)}
+#lch{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));width:120px;margin-left:-60px;display:none}#lch.on{display:block}
+#lch .bar i{background:#8fd0ff;width:0}#lch.full .bar i{background:#fff}
+.mk{position:fixed;left:0;top:0;display:none;pointer-events:none;width:40px;height:40px;margin:0}
+.mk i{position:absolute;left:0;top:0;width:100%;height:100%;transform:translate(-50%,-50%);border:2px dashed #ffb347;border-radius:4px;box-sizing:border-box}
+.mk.locking i{opacity:.8}.mk.lock i{border:2px solid #ff3b26}
+.dmg{position:fixed;left:50%;top:50%;width:92vmin;height:92vmin;margin:-46vmin 0 0 -46vmin;pointer-events:none;opacity:0;transition:opacity .35s}
+.dmg::before{content:'';position:absolute;left:25%;top:0;width:50%;height:26px;border-radius:50%;background:radial-gradient(ellipse at 50% 0,rgba(255,40,20,.9),transparent 70%)}
+.dmg.s::before{background:radial-gradient(ellipse at 50% 0,rgba(90,170,255,.9),transparent 70%)}
+.ea{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;display:none}
+.ea i{position:absolute;left:-8px;top:-7px;border:8px solid transparent;border-bottom:13px solid #ff3b26;border-top:0}
+#msg{left:0;right:0;top:34%;text-align:center;font-size:15px;color:#fff;text-shadow:0 0 8px #000;opacity:0;transition:opacity .3s}
+#banner{left:0;right:0;top:24%;text-align:center;font-size:clamp(26px,8vw,46px);color:#ff3b26;letter-spacing:.16em;opacity:0;text-shadow:0 0 18px #ff2a1088}
+#banner.go{animation:bn 2.4s}@keyframes bn{0%{opacity:0;transform:scale(1.2)}12%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0}}
+#cap{left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(12px,3.4vw,15px);color:#e9f3f0;text-transform:none;letter-spacing:.03em;
+  text-shadow:0 0 6px #000,0 0 14px #000;padding:0 18px;opacity:0;transition:opacity .4s}
+#cap b{color:#4fe0b8;font-weight:800;letter-spacing:.12em;font-size:.8em}
+#help{left:max(10px,env(safe-area-inset-left));bottom:calc(10px + env(safe-area-inset-bottom));font-size:9px;color:#56776f;letter-spacing:.12em;max-width:300px}
+body.touch #help{display:none}
+#fps{right:10px;bottom:4px;font-size:9px;color:#6fae9f}
+.panel{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#000c;z-index:4;padding:20px;text-align:center;overflow-y:auto}
+.panel h1{margin:0;font-size:clamp(24px,8vw,44px);color:#ff3b26;letter-spacing:.14em;text-shadow:0 0 18px #ff2a1088}
+.panel h2{margin:0;font-size:11px;color:#6fae9f;letter-spacing:.22em}
+.panel .txt{max-width:360px;font-size:11px;color:#9fb8b2;letter-spacing:.03em;font-weight:600;line-height:1.45}
+.panel .row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.big{font-size:14px;padding:12px 22px;color:#fff;border-color:#ff4a2a;background:#3a0d07ee}
+#title{display:flex}
+#upg .box{width:min(440px,100%);display:flex;flex-direction:column;gap:6px}
+.urow{display:flex;align-items:center;gap:8px;background:#0b1513cc;border:1px solid #1e332e;padding:6px 8px;text-align:left}
+.un{flex:1}.un b{font-size:12px}.pips{margin-left:8px;color:#ffd76a;letter-spacing:.1em}.fx{display:block;font-size:9px;color:#8fb0a8;margin-top:2px}
+.urow button{min-width:62px;color:#ffd76a}
+#uscrap{font-size:14px;color:#ffd76a}
+.arow{display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap}.arow b{font-size:10px;color:#6fae9f;width:76px;text-align:right;margin-right:4px}
+.chip{padding:7px 8px;font-size:10px}
+#load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#ff3b26;font-size:13px;letter-spacing:.3em;background:#000;z-index:9}
+.corner{position:fixed;width:22px;height:22px;border:2px solid #4fe0b833;pointer-events:none}
+.c1{left:6px;top:6px;border-right:0;border-bottom:0}.c2{right:6px;top:6px;border-left:0;border-bottom:0}
+.c3{left:6px;bottom:6px;border-right:0;border-top:0}.c4{right:6px;bottom:6px;border-left:0;border-top:0}
+</style></head><body>
+<div id="load">LINKING SENSOR…</div>
+<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+<div class="hud" id="tl">
+  <div class="lbl">Shield</div><div class="bar"><i id="bshield"></i></div>
+  <div class="lbl">Hull</div><div class="bar"><i id="bhull"></i></div>
+  <div class="lbl">Jets</div><div id="fuel"></div>
+  <div id="hov"><div class="lbl">Hover</div><div class="bar"><i id="hovb"></i></div></div>
+  <div id="arms">GUN I ×2</div><div id="mslc">MSL 12</div>
+  <div id="heat"><div class="lbl">Gun heat</div><div class="bar"><i id="heatb"></i></div></div>
+</div>
+<div class="hud" id="top"><div id="wave"></div><div id="allies"></div></div>
+<div class="hud" id="tr"><canvas id="radar" width="208" height="208"></canvas>
+  <div class="lbl">Sensor</div><div class="bar" id="conf"><i id="confb"></i></div><div id="scrapc">SCRAP 0</div></div>
+<div id="tb"><button id="bthermal" class="tb sm">Thermal</button><button id="bzoom" class="tb sm">Cam</button><button id="bpause" class="tb sm">II</button></div>
+<button id="bjet" class="pad">JET</button><button id="bsalvo" class="pad tb">SALVO</button><button id="bmsl" class="pad">MSL</button><button id="bvent" class="pad tb">VENT</button>
+<div class="stick" id="stick"><i></i></div><div class="stick" id="astick"><i></i></div>
+<div id="cross"></div><div class="hud" id="lch"><div class="bar"><i id="lchb"></i></div></div>
+<div class="hud" id="msg"></div><div class="hud" id="banner"></div><div class="hud" id="cap"></div>
+<div class="hud" id="help">WASD move · mouse aims · hold left button: fire · right button / G: missiles · Space: jet, hold to hover · Q: salvo · R: vent · T: thermal · Z: camera · U: upgrades · P: pause</div>
+<div class="hud" id="fps"></div>
+<div class="panel" id="title">
+  <h2>Intl. Rift Mech Defense · test arena</h2><h1>WRAITH</h1>
+  <div class="txt">Ironhowl&nbsp;4’s Wraith against the swarm. Every creature is a cluster of dots, and its dots are its hit points: shots knock them off. Keep the green dots alive: if a creature reaches one, it becomes part of it.</div>
+  <div class="row" id="tdiff"><button data-d="easy">Easy</button><button data-d="medium">Medium</button><button data-d="hard">Hard</button></div>
+  <div class="row"><button class="big" id="tgo">Deploy</button><button id="tupg">Upgrades</button></div>
+</div>
+<div class="panel" id="upg"><div class="box">
+  <h2 id="usub"></h2><h1 id="utitle" style="font-size:clamp(20px,6vw,32px)">UPGRADES</h1><div id="uscrap"></div>
+  <div id="urows"></div>
+  <h2 style="margin-top:6px">Arms</h2><div id="uarms"></div>
+  <div class="row" style="margin-top:8px"><button class="big" id="ugo">Next wave</button><button id="ureset">Reset</button></div>
+</div></div>
+<div class="panel" id="menu"><h1 style="font-size:28px">PAUSED</h1>
+  <button class="big" id="mresume">Resume</button><button id="mupg">Upgrades</button><button id="mthermal">Sensor / thermal</button><button id="msound">Sound: on</button><button id="mquit">Leave the arena</button></div>
+<div class="panel" id="down"><h1>WRAITH DOWN</h1><div class="txt" id="dscore"></div><h2>Tap to go again</h2></div>
+<!--THREE-->
+<!--ASSETS-->
+<!--CODE-->
+</body></html>
