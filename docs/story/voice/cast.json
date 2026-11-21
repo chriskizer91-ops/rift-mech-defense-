@@ -7,21 +7,13 @@
     "guidance": "30%",
     "notes": "Most lines in the game. Keep one voice for the whole chapter. In mission 8 phase 4 and the ending her lines get more strained and broken: do those as separate takes with [strained] or [exhausted]."
   },
-  "PILOT_F": {
-    "name": "PILOT (option A: young woman)",
-    "role": "You, call sign WRAITH. About 20. Mostly silent: 16 short phrases in the chapter.",
-    "prompt": "English, neutral American accent, female voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low-pitched for her age, slightly husky. Speaks very few words, slowly, with no drama.",
-    "preview": "I'm here. I've got them. Climb down, I've got you. We hold this line until the last boat is gone.",
-    "guidance": "30%",
-    "notes": "Pick option A or B and use that one for every pilot line."
-  },
-  "PILOT_M": {
-    "name": "PILOT (option B: young man)",
+  "PILOT": {
+    "name": "PILOT (young man)",
     "role": "You, call sign WRAITH. About 20. Mostly silent: 16 short phrases in the chapter.",
     "prompt": "English, neutral American accent, male voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low, soft and a little rough. Speaks very few words, slowly, with no drama.",
     "preview": "I'm here. I've got them. Climb down, I've got you. We hold this line until the last boat is gone.",
     "guidance": "30%",
-    "notes": "Pick option A or B and use that one for every pilot line."
+    "notes": "Decided: a young man."
   },
   "ANVIL": {
     "name": "ANVIL",

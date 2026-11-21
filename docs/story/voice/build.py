@@ -91,7 +91,7 @@ def write_html(sections, cast):
 
     cards = []
     for key, c in cast.items():
-        vkey = 'PILOT' if key.startswith('PILOT') else key
+        vkey = 'PILOT' if key=='PILOT' else key
         n = count.get(vkey, 0)
         cards.append(f'''<section class="card" data-voice="{vkey}">
 <h3>{esc(c['name'])} <span class="n">{n} lines</span></h3>
@@ -100,7 +100,7 @@ def write_html(sections, cast):
 <p class="box">{esc(c['prompt'])}</p>
 <div class="lab">Preview text <button class="cp" data-t="{esc(c['preview'])}">Copy</button></div>
 <p class="box">{esc(c['preview'])}</p>
-<p class="meta">Guidance scale: {esc(c['guidance'])}. Save as: <b>RMD {esc(c['name'].split(' (')[0].title() if not key.startswith('SQ') else 'Squad ' + key[2:])}{' A' if key == 'PILOT_F' else ' B' if key == 'PILOT_M' else ''}</b></p>
+<p class="meta">Guidance scale: {esc(c['guidance'])}. Save as: <b>RMD {esc(c['name'].split(' (')[0].title() if not key.startswith('SQ') else 'Squad ' + key[2:])}</b></p>
 {f'<p class="meta">{esc(c["notes"])}</p>' if c['notes'] else ''}
 </section>''')
 
@@ -153,12 +153,12 @@ ol.steps{{padding-left:20px;margin:8px 0}}ol.steps li{{margin:6px 0}}
 .hide{{display:none}}.toc{{font-size:13px;color:var(--quiet)}}
 </style></head><body><main>
 <h1>Voice-acting sheet: chapter 1</h1>
-<p class="lead">Rift Mech Defense. {len(lines)} lines, 8 designed voices (9 prompts: pick one of the two pilots). Every line has an ID: name its audio file after it.</p>
+<p class="lead">Rift Mech Defense. {len(lines)} lines, 8 designed voices. Every line has an ID: name its audio file after it.</p>
 
 <div class="panel"><h3>How to make it in ElevenLabs</h3><ol class="steps">
-<li><b>Design each voice once.</b> Voices → My Voices → Add a new voice → Voice Design. Paste the voice's prompt, paste its preview text, set the guidance scale shown, generate, and save the best of the three. Pick one pilot (A or B) and use it for every pilot line.</li>
+<li><b>Design each voice once.</b> Voices → My Voices → Add a new voice → Voice Design. Paste the voice's prompt, paste its preview text, set the guidance scale shown, generate, and save the best of the three.</li>
 <li><b>Generate the lines</b> in Text to Speech with <b>Eleven v4</b> (or v3). Paste each line exactly as written, [tags] included: they set the delivery and aren't spoken. Ellipses add pauses; CAPITALS add stress.</li>
-<li><b>Keep every take dry and clean.</b> No radio, crackle or echo: the game adds the radio sound and the static itself. Leave about half a second of silence at each end.</li>
+<li><b>Keep every take dry and clean.</b> No radio, crackle or echo in ElevenLabs: the game puts the radio sound and the static over every line itself (decided). Leave about half a second of silence at each end.</li>
 <li><b>Save each file as its ID</b>, lower case, MP3 44.1 kHz: <code>m5_09_copper.mp3</code>. Lines marked "3 takes" get <code>_a</code>, <code>_b</code>, <code>_c</code>.</li>
 <li><b>Work one voice at a time:</b> tap a voice below to show only its lines.</li>
 </ol>

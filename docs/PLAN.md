@@ -86,6 +86,12 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
   Shelf, Hollin Ridge, Arlen Bay).
 - **Radio is voiced.** Christopher makes the dialogue in ElevenLabs from a voice-acting sheet (each voice described, every line).
 
+- **Voices** (20 Nov, night): the pilot is a **young man**; OVERWATCH's voice (a young woman) is good. **Static is added to the
+  voices** in the game (a radio chain over the clean ElevenLabs takes).
+- **One cinematic only: the Signal's reveal**, about 45 to 60 seconds, and it should be epic. It is **its own page**: the game cuts
+  to it and back (an experiment with GitHub Pages). Size is no worry (15 MB or more for the one shot is fine). The ending of
+  chapter 1 plays in the game, not as a second cinematic.
+
 ## The team and the artillery (20 Nov, night; Christopher to session C)
 - **You fight as a team of four Wraiths:** the player and three others. You still have to help keep your allies alive. This makes
   more sense than the green-dot squads in the fights.

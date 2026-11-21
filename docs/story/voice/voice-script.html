@@ -30,12 +30,12 @@ ol.steps{padding-left:20px;margin:8px 0}ol.steps li{margin:6px 0}
 .hide{display:none}.toc{font-size:13px;color:var(--quiet)}
 </style></head><body><main>
 <h1>Voice-acting sheet: chapter 1</h1>
-<p class="lead">Rift Mech Defense. 179 lines, 8 designed voices (9 prompts: pick one of the two pilots). Every line has an ID: name its audio file after it.</p>
+<p class="lead">Rift Mech Defense. 179 lines, 8 designed voices. Every line has an ID: name its audio file after it.</p>
 
 <div class="panel"><h3>How to make it in ElevenLabs</h3><ol class="steps">
-<li><b>Design each voice once.</b> Voices → My Voices → Add a new voice → Voice Design. Paste the voice's prompt, paste its preview text, set the guidance scale shown, generate, and save the best of the three. Pick one pilot (A or B) and use it for every pilot line.</li>
+<li><b>Design each voice once.</b> Voices → My Voices → Add a new voice → Voice Design. Paste the voice's prompt, paste its preview text, set the guidance scale shown, generate, and save the best of the three.</li>
 <li><b>Generate the lines</b> in Text to Speech with <b>Eleven v4</b> (or v3). Paste each line exactly as written, [tags] included: they set the delivery and aren't spoken. Ellipses add pauses; CAPITALS add stress.</li>
-<li><b>Keep every take dry and clean.</b> No radio, crackle or echo: the game adds the radio sound and the static itself. Leave about half a second of silence at each end.</li>
+<li><b>Keep every take dry and clean.</b> No radio, crackle or echo in ElevenLabs: the game puts the radio sound and the static over every line itself (decided). Leave about half a second of silence at each end.</li>
 <li><b>Save each file as its ID</b>, lower case, MP3 44.1 kHz: <code>m5_09_copper.mp3</code>. Lines marked "3 takes" get <code>_a</code>, <code>_b</code>, <code>_c</code>.</li>
 <li><b>Work one voice at a time:</b> tap a voice below to show only its lines.</li>
 </ol>
@@ -55,23 +55,14 @@ ol.steps{padding-left:20px;margin:8px 0}ol.steps li{margin:6px 0}
 <p class="meta">Guidance scale: 30%. Save as: <b>RMD Overwatch</b></p>
 <p class="meta">Most lines in the game. Keep one voice for the whole chapter. In mission 8 phase 4 and the ending her lines get more strained and broken: do those as separate takes with [strained] or [exhausted].</p>
 </section><section class="card" data-voice="PILOT">
-<h3>PILOT (option A: young woman) <span class="n">16 lines</span></h3>
-<p class="role">You, call sign WRAITH. About 20. Mostly silent: 16 short phrases in the chapter.</p>
-<div class="lab">Voice Design prompt <button class="cp" data-t="English, neutral American accent, female voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low-pitched for her age, slightly husky. Speaks very few words, slowly, with no drama.">Copy</button></div>
-<p class="box">English, neutral American accent, female voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low-pitched for her age, slightly husky. Speaks very few words, slowly, with no drama.</p>
-<div class="lab">Preview text <button class="cp" data-t="I&#x27;m here. I&#x27;ve got them. Climb down, I&#x27;ve got you. We hold this line until the last boat is gone.">Copy</button></div>
-<p class="box">I&#x27;m here. I&#x27;ve got them. Climb down, I&#x27;ve got you. We hold this line until the last boat is gone.</p>
-<p class="meta">Guidance scale: 30%. Save as: <b>RMD Pilot A</b></p>
-<p class="meta">Pick option A or B and use that one for every pilot line.</p>
-</section><section class="card" data-voice="PILOT">
-<h3>PILOT (option B: young man) <span class="n">16 lines</span></h3>
+<h3>PILOT (young man) <span class="n">16 lines</span></h3>
 <p class="role">You, call sign WRAITH. About 20. Mostly silent: 16 short phrases in the chapter.</p>
 <div class="lab">Voice Design prompt <button class="cp" data-t="English, neutral American accent, male voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low, soft and a little rough. Speaks very few words, slowly, with no drama.">Copy</button></div>
 <p class="box">English, neutral American accent, male voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low, soft and a little rough. Speaks very few words, slowly, with no drama.</p>
 <div class="lab">Preview text <button class="cp" data-t="I&#x27;m here. I&#x27;ve got them. Climb down, I&#x27;ve got you. We hold this line until the last boat is gone.">Copy</button></div>
 <p class="box">I&#x27;m here. I&#x27;ve got them. Climb down, I&#x27;ve got you. We hold this line until the last boat is gone.</p>
-<p class="meta">Guidance scale: 30%. Save as: <b>RMD Pilot B</b></p>
-<p class="meta">Pick option A or B and use that one for every pilot line.</p>
+<p class="meta">Guidance scale: 30%. Save as: <b>RMD Pilot</b></p>
+<p class="meta">Decided: a young man.</p>
 </section><section class="card" data-voice="ANVIL">
 <h3>ANVIL <span class="n">13 lines</span></h3>
 <p class="role">The artillery chief behind the ridge. Never seen. Seals the rifts.</p>
@@ -146,7 +137,7 @@ ol.steps{padding-left:20px;margin:8px 0}ol.steps li{margin:6px 0}
 <button class="cp" data-t="Shot, over. Twenty seconds. Don&#x27;t stand there.">Copy</button></div><div class="tx">Shot, over. Twenty seconds. Don&#x27;t stand there.</div></div><div class="ln" data-voice="ANVIL"><div class="hd"><code>GEN_09_ANVIL</code><b class="v-ANVIL">ANVIL</b>
 <button class="cp" data-t="Splash.">Copy</button></div><div class="tx">Splash.</div></div><div class="ln" data-voice="ANVIL"><div class="hd"><code>GEN_10_ANVIL</code><b class="v-ANVIL">ANVIL</b>
 <button class="cp" data-t="That&#x27;s a hole in the ground now. Rift&#x27;s closed.">Copy</button></div><div class="tx">That&#x27;s a hole in the ground now. Rift&#x27;s closed.</div></div><div class="ln" data-voice="ANVIL"><div class="hd"><code>GEN_11_ANVIL</code><b class="v-ANVIL">ANVIL</b>
-<button class="cp" data-t="That&#x27;s the last of them. You&#x27;re on your own, son.">Copy</button></div><div class="tx">That&#x27;s the last of them. You&#x27;re on your own, son.</div><div class="note">say &quot;lass&quot; instead of &quot;son&quot; if the pilot is option A</div></div><div class="ln" data-voice="SQ2"><div class="hd"><code>GEN_12_LANTERN</code><b class="v-SQ2">LANTERN</b>
+<button class="cp" data-t="That&#x27;s the last of them. You&#x27;re on your own, son.">Copy</button></div><div class="tx">That&#x27;s the last of them. You&#x27;re on your own, son.</div></div><div class="ln" data-voice="SQ2"><div class="hd"><code>GEN_12_LANTERN</code><b class="v-SQ2">LANTERN</b>
 <button class="cp" data-t="Painting it. Send it!">Copy</button></div><div class="tx">Painting it. Send it!</div><div class="note">squad marks a target; generate once per squad voice</div></div><div class="ln" data-voice="SQ1"><div class="hd"><code>GEN_13_TERN</code><b class="v-SQ1">TERN</b>
 <button class="cp" data-t="Painting it. Send it!">Copy</button></div><div class="tx">Painting it. Send it!</div></div><div class="ln" data-voice="SQ4"><div class="hd"><code>GEN_14_PIKE</code><b class="v-SQ4">PIKE</b>
 <button class="cp" data-t="Painting it. Send it!">Copy</button></div><div class="tx">Painting it. Send it!</div></div><div class="ln" data-voice="SQ3"><div class="hd"><code>GEN_15_REED</code><b class="v-SQ3">REED</b>

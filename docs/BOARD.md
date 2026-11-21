@@ -7,7 +7,7 @@ Update your own line when you finish something. Pull before you edit this file.
 | **A: Creatures** | the swarm creatures: the viewer, small-creature rigs, the Host's real model from the concept art | `concept/`, `art/`, `game/creatures/` | `sessions/A_creatures.md` | Viewer: 1 to 50,000 plus the Host (20 Nov). Host: a heap of clumps with 12 tentacles, drifting between three forms; TITAN tendrilling out. Lore/boss proposal written for D: https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3 |
 | **B: World** | Mud Lab's soil and water in a top-down test: the Wraith wading, tearing up ground, sensor/thermal toggle, a rift caved in by artillery | `game/world/` | `sessions/B_world.md` | **Field 1 and the world test run (20 Nov):** `builds/field-1.html` (also at https://claude.ai/artifact/EfzTMcA87VpRHTFgjUVpbT) is the first combat map, 1.8 km of rolling fields (meadow, ploughed, wheat, tree lines, groves), Mill River (riffles to wade, pools to hover over), the flooded Sunk Meadows with a magma crack, farm tracks, a farm, three rift mouths in scarps. `builds/world-test.html` is the coast. Both: Wraith walks and leaves prints, wades (bow wave, rings, too deep past its hips: HOVER), REAL / SENSOR / THERMAL, ~400 red dots crossing (ground churns where they pass), ARTILLERY caves in the nearest rift. `RMD.World.heightAt/depthAt`. Shots: `docs/shots/world/`. Not done: run on the phone; prints read faintly from the camera's height; creatures are a stand-in, not `game/creatures/` yet; trees are Ironhowl 3's low oak. Notes: `game/world/README.md` |
 | **C: Mech** | Ironhowl 4's Wraith, controls, weapons, upgrades and HUD, taken out of Ironhowl 4 and made to fight dot clusters | `game/mech/`, `game/systems/` | `sessions/C_mech.md` | **Arena works (20 Nov):** `builds/mech-arena.html` (also at https://claude.ai/artifact/YTRc5HkhgwkV1T9wnRAuo3). A team of four Wraiths (you + KESTREL, VESPER, HALE: they fight, take bites, go down, you stand by them to bring them back); every weapon; A's creatures shrink as dots come off; after every second wave an **artillery round** on a battleship grid of red and green (tap a square, keep it off the green); scrap buys the six upgrade tracks and sets the arms; sensor / thermal, interference; a stand-in field. Proposals: `sessions/C_mech.md`. Next: B's Field 1, balance |
-| **D: Story** | chapter 1 (about an hour): missions, waves, the radio script, the ally beats, the Host fight, the lore | `docs/story/` and the design doc | `sessions/D_story.md` | Design doc (20 Nov): https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR. Christopher's answers are in `PLAN.md`. Signal reveal written as a 56 s cinematic. Voice-acting sheet for ElevenLabs (8 voices, 179 lines with file IDs): https://claude.ai/artifact/JWs89obwrg8BgbAXbLpaKU, source `docs/story/voice/`. Waves in `docs/story/waves.md` (+ JSON) |
+| **D: Story** | chapter 1: missions, waves, the radio script, the ally beats, the Signal fight, the lore; **the Signal's reveal cinematic** | `docs/story/`, the design doc, `game/cinematic/`, `builds/signal-reveal.html`, `audio/voice/` | `sessions/D_story.md` | Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR. Voice-acting sheet (8 voices, 179 lines): https://claude.ai/artifact/JWs89obwrg8BgbAXbLpaKU. **The reveal is built (20 Nov, night):** 56 s, ten shots, live three.js, the four Wraiths on Arlen Bay's wall, the million-dot Signal, a synthesised score and a radio chain for the voices: https://claude.ai/artifact/CZhk4pYLujkrLPmHxdRjQB (`game/cinematic/README.md`). Next: the story pass for the team of four |
 
 Later, when B and C have something running: one session joins them into `game/` (the first playable mission).
 
@@ -18,6 +18,8 @@ Later, when B and C have something running: one session joins them into `game/` 
 
 ## Asks
 (one line each: who asks, who for, what)
+- D → whoever builds mission 8: cut to `builds/signal-reveal.html?back=<your page>#m8-fight` when the Wraith reaches the harbour wall; it hands back at the end (`game/cinematic/README.md`).
+- D → C (and anyone playing radio lines): **static on the voices is decided.** Use `RMD.RadioVoice` from `game/cinematic/cin-audio.js` over the clean ElevenLabs takes in `audio/voice/` (named by the sheet's ids).
 - A → C (20 Nov), answering C's ask: **creatures now prefer a kind of target** in `game/creatures/creatures.js` (`RIG[id].prefers`,
   or `c.prefers` per creature): KNOT, BRUTE, DRAG, HULK, BEHEMOTH go for the Wraith; STALKER and TITAN for people; SKEIN and RUNNER
   for whatever is nearest. A preferred target counts at 45% of its distance. Give targets `kind:'mech'` or `kind:'ally'`.
@@ -68,9 +70,8 @@ Later, when B and C have something running: one session joins them into `game/` 
   teams as green dots). Nothing needed from you for this; tell me if the viewer should show it.
 
 ## Waiting on Christopher
+- **Turn on GitHub Pages** (D can't from here): repo Settings → Pages → Deploy from a branch → `main`, `/ (root)` → Save. Then the cinematic is at https://chriskizer91-ops.github.io/rift-mech-defense-/builds/signal-reveal.html
 - Session C's proposals for the mech (aiming on a phone, shots through the gaps, bites and scrap): `sessions/C_mech.md`, end.
-- Chapter 1 (session D), still open: the pilot's voice (woman or man), OVERWATCH as a woman's voice, and how the two cinematics
-  are made (video or live in the engine). End of https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
 - Nothing blocking. The lore and boss proposal is approved (20 Nov): https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3.
   The calamity is **the Static**; the big one is **the Signal**.
 - The ChatGPT image requests (`docs/art-requests/`) are on hold; session A designs the creatures.

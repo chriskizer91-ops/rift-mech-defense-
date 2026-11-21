@@ -34,7 +34,7 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
 - `GEN_08_ANVIL` **ANVIL:** "Shot, over. Twenty seconds. Don't stand there."
 - `GEN_09_ANVIL` **ANVIL:** "Splash."
 - `GEN_10_ANVIL` **ANVIL:** "That's a hole in the ground now. Rift's closed."
-- `GEN_11_ANVIL` **ANVIL:** "That's the last of them. You're on your own, son."  (say "lass" instead of "son" if the pilot is option A)
+- `GEN_11_ANVIL` **ANVIL:** "That's the last of them. You're on your own, son."
 - `GEN_12_LANTERN` **LANTERN:** "Painting it. Send it!"  (squad marks a target; generate once per squad voice)
 - `GEN_13_TERN` **TERN:** "Painting it. Send it!"
 - `GEN_14_PIKE` **PIKE:** "Painting it. Send it!"
