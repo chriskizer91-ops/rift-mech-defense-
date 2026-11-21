@@ -55,10 +55,18 @@ Only Christopher's decisions go here (20 Nov 2026 unless dated). Proposals live 
   needed; the concept is what matters.
 - **The AI thread:** the only reason we can fight this is that we developed AI. Lean into fate or a conscious-universe idea: we were
   destined to reach this point.
-- Proposal built on this (lore, boss reveals, the mechanics, the Host fight): https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3 (not decided yet).
+- **Christopher said yes to the whole lore and boss proposal** (20 Nov): https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3. His answers:
+  - **The name** names the event: a calamity across the planet. The big one is named through that experience. (Pairs to pick
+    from are at the end of the doc; until then the viewer calls it CONTACT 01.)
+  - **The AI is the reason we can stand a chance.**
+  - **OVERWATCH** is a warm voice, living through the threat alongside the player.
+  - **Squads** are fresh each mission.
+  - **Chapter 1** is at least 30 minutes of play; each combat wave is 2 to 5 minutes. (Proposal in the doc: 8 missions of 2 to 4 waves.)
+  - **Difficulty:** Easy, Medium and Hard.
+  - **Creature names** MOTE to TITAN stay; "the Host" goes.
 
 ## Open questions (not decided)
-- The open questions at the end of the lore proposal (https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3): a name for the thing, cause or fate, OVERWATCH's voice, squads.
+- The calamity's name and the big one's name (pairs at the end of https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3).
 - Creature names. The viewer uses placeholders: MOTE, KNOT, SKEIN, RUNNER, STALKER, BRUTE, THE HOST.
 - How damage works on a cluster (proposal: shots knock dots off, so a 100-dot creature shrinks as it's hurt).
 - What the real-world view shows of a swarm (proposal: nothing directly, only heat shimmer, churned ground and the wreckage).

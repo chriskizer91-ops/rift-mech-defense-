@@ -15,7 +15,9 @@ https://claude.ai/artifact/C1P4JdkPFbZLWw1S7kvfJG), with working notes in `docs/
 Christopher's lore and boss direction is in `docs/PLAN.md` (20 Nov). Session A wrote a proposal on it: the lore (pieces of a
 thing from more dimensions; why dots, why shapes change, why they take people), the AI-and-fate thread, the boss ladder
 (BRUTE 500 → BEHEMOTH 10K, light boss → TITAN 50K, mid boss → THE HOST 1M), the six mechanics the Host fight needs, the fight
-in four phases, difficulty, and the Wraith's upgrades: https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3. Build the design document from it; change what doesn't work.
+in four phases, difficulty, and the Wraith's upgrades: https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3. Christopher said yes to all of it, with answers recorded in `docs/PLAN.md` (chapter 1 at least 30 minutes, waves of 2 to 5
+minutes, squads fresh each mission, a warm OVERWATCH, the AI as the reason we stand a chance, Easy/Medium/Hard). Build the design
+document from it.
 
 ## Read first
 - `docs/PLAN.md` (every decision so far, with Christopher's own words about the Host's reveal).
