@@ -68,3 +68,17 @@ Screenshots: `docs/shots/mech/`. Numbers below come from headless runs and a bot
    people, BRUTEs the Wraith, KNOTs the Wraith in swarms). Asked of session A on the board.
 6. **Left for later:** the DR-1 drone, the full-detail modification bay, pilot levels. The missile pod still has to be fitted for
    missiles (Ironhowl 4's rule).
+
+### Session C, 20 Nov night: the team and the artillery (Christopher's direction, in `PLAN.md`)
+Built in the arena, with these choices of mine (proposals):
+1. **The team:** KESTREL, VESPER and HALE (placeholder names) keep a loose formation round you, fire autocannons (3.2 rounds a second,
+   8 each, 36 m: weaker than you), back off from anything close, and are targets for the swarm like you. Shield 30, hull 100. A downed
+   one stays down until you stand within 7 m of it for 3 s; it gets up at 40 %. They are repaired between waves; each one standing at
+   the end of a wave is worth 40 scrap. Green rings under them, names over them, green on the radar.
+2. **Waves are 2.2 times as big** for four Wraiths, and creatures 35 % faster than A's walking speeds (so a pack can catch a Wraith).
+   Even so the bot pilot takes no damage: the team of four is too strong against these waves for now. Needs tuning with you playing.
+3. **The artillery round, after every second wave:** an 8 × 8 grid (A–H, 1–8, 20 m squares) seen from 500 m up. Two Wraith teams,
+   BRAVO and CHARLIE, are four green dots each in the south rows; they hold and fire back. Red packs come from the north rows. Tap a
+   square: a shell lands 3.2 s later and hits everything within 14 m. Green inside it is lost: "CHECK FIRE". 8 shells plus one every
+   two waves, 90 s. Scrap: half the red dots destroyed, plus 20 for each green alive, minus 60 for each one you hit.
+4. The green-dot squads are gone from the ground fight.

@@ -26,10 +26,12 @@ CODE = [
     "game/mech/wraith.js",
     "game/mech/player.js",
     "game/mech/weapons.js",
+    "game/mech/wingmates.js",
     "game/systems/camera.js",
     "game/systems/hud.js",
     "game/systems/swarm.js",
     "game/systems/upgrades.js",
+    "game/systems/artillery.js",
     "game/systems/main.js",
 ]
 

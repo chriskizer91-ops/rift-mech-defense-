@@ -22,7 +22,14 @@ canvas#gl{position:fixed;inset:0;display:block}
 #heat{margin-top:5px}#heat .bar i{background:#ffb347;width:0}#heat.warm .bar i{background:#ff7a2a}#heat.over .bar i{background:#ff2a1a;animation:bl .3s infinite}
 @keyframes bl{50%{opacity:.4}}
 #top{left:0;right:0;top:max(10px,env(safe-area-inset-top));text-align:center}
-#wave{font-size:12px;color:#ff8a70;letter-spacing:.14em}#allies{font-size:10px;color:#6fe0a0;margin-top:3px;letter-spacing:.16em}#allies.bad{color:#ffb29a}
+#wave{font-size:12px;color:#ff8a70;letter-spacing:.14em}#allies{font-size:10px;color:#6fe0a0;margin-top:2px;letter-spacing:.12em;line-height:1.4}#allies .lo{color:#ffb29a}#allies .dn{color:#ff5a3a}
+.wlab{position:fixed;left:0;top:0;display:none;pointer-events:none;transform-origin:0 0;font-size:9px;letter-spacing:.14em;color:#6fe0a0;text-shadow:0 0 4px #000;white-space:nowrap;margin-left:-24px}
+.wlab.low{color:#ffb29a}.wlab.down{color:#ff5a3a;font-size:10px}
+.alab{position:fixed;left:0;top:0;display:none;pointer-events:none;font-size:11px;color:#4fe0b8;margin:-7px 0 0 -4px;text-shadow:0 0 4px #000}
+#arty{left:0;right:0;top:max(12px,env(safe-area-inset-top));text-align:center;display:none}#arty1{font-size:13px;color:#ffb27a;letter-spacing:.14em}#arty2{font-size:10px;color:#6fe0a0;margin-top:4px;letter-spacing:.12em}
+#arty3{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom));text-align:center;font-size:11px;color:#9fb8b2;letter-spacing:.14em}
+body.arty #arty{display:block}body.arty #tl,body.arty #top,body.arty .pad,body.arty #radar,body.arty #lch,body.arty .mk,body.arty #bzoom,body.arty #bpause,body.arty #help{display:none!important}
+body:not(.arty) .alab{display:none!important}body.arty #tr .lbl,body.arty #conf{display:none}
 #tr{right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));text-align:right;width:112px}
 #radar{width:104px;height:104px;display:block;margin-left:auto}
 #tr .lbl{margin-top:4px}#conf{width:104px;margin-left:auto}#conf i{background:#4fe0b8}#conf.bad i{background:#ff4a2a}
@@ -105,8 +112,10 @@ body.touch #help{display:none}
   <div id="hov"><div class="lbl">Hover</div><div class="bar"><i id="hovb"></i></div></div>
   <div id="arms">GUN I ×2</div><div id="mslc">MSL 12</div>
   <div id="heat"><div class="lbl">Gun heat</div><div class="bar"><i id="heatb"></i></div></div>
+  <div class="lbl">Team</div><div id="allies"></div>
 </div>
-<div class="hud" id="top"><div id="wave"></div><div id="allies"></div></div>
+<div class="hud" id="top"><div id="wave"></div></div>
+<div class="hud" id="arty"><div id="arty1"></div><div id="arty2"></div><div id="arty3">TAP A SQUARE TO FIRE · KEEP IT OFF THE GREEN</div></div>
 <div class="hud" id="tr"><canvas id="radar" width="208" height="208"></canvas>
   <div class="lbl">Sensor</div><div class="bar" id="conf"><i id="confb"></i></div><div id="scrapc">SCRAP 0</div></div>
 <div id="tb"><button id="bthermal" class="tb sm">Thermal</button><button id="bzoom" class="tb sm">Cam</button><button id="bpause" class="tb sm">II</button></div>
@@ -118,7 +127,7 @@ body.touch #help{display:none}
 <div class="hud" id="fps"></div>
 <div class="panel" id="title">
   <h2>Intl. Rift Mech Defense · test arena</h2><h1>WRAITH</h1>
-  <div class="txt">Ironhowl&nbsp;4’s Wraith against the swarm. Every creature is a cluster of dots, and its dots are its hit points: shots knock them off. Keep the green dots alive: if a creature reaches one, it becomes part of it.</div>
+  <div class="txt">You and three more Wraiths against the swarm. Every creature is a cluster of dots, and its dots are its hit points: shots knock them off. Keep your team standing: stand next to a downed Wraith to bring it back. Every second wave, the guns: call shells onto a grid of red and green dots, and keep them off the green.</div>
   <div class="row" id="tdiff"><button data-d="easy">Easy</button><button data-d="medium">Medium</button><button data-d="hard">Hard</button></div>
   <div class="row"><button class="big" id="tgo">Deploy</button><button id="tupg">Upgrades</button></div>
 </div>

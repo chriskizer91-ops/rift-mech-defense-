@@ -26,10 +26,10 @@ function onMount(host,sc){sc.updateMatrixWorld(true);const mt=sc.getObjectByName
   const hold=new THREE.Group();hold.name='kit';host.add(hold);
   if(mt){const inv=mt.matrixWorld.clone().invert();inv.decompose(sc.position,sc.quaternion,sc.scale);}
   hold.add(sc);return hold;}
-function buildWraithModel(){
+function buildWraithModel(L){
   const W={root:new THREE.Group(),J:{},holds:{},kit:{}};const wf=kitFiles('wraith_v2');
   return loadGLB(wf.glb).then(sc=>{dressModel(sc,kitMat(wf));W.root.add(sc);sc.traverse(o=>{if(o.name)W.J[o.name]=W.J[o.name]||o;});W.body=sc;
-    return refitModel(W,loadout());}).then(()=>W);}
+    return refitModel(W,L||loadout());}).then(()=>W);}
 function refitModel(W,L){const gen=W.gen=(W.gen||0)+1;   /* a newer refit wins: pieces an older one loads late are dropped */
   for(const s in W.holds){const h=W.holds[s];if(h&&h.parent)h.parent.remove(h);}W.holds={};W.kit={};
   const jobs=SLOTS.filter(s=>L[s]&&KIT[L[s]]).map(s=>{const id=L[s],k=KIT[id],stem=kitStem(id,s),f=kitFiles(stem,k.orm);
@@ -39,14 +39,15 @@ function refitModel(W,L){const gen=W.gen=(W.gen||0)+1;   /* a newer refit wins: 
 /* ---------------- the Wraith in the arena ---------------- */
 const MT={flame:new THREE.MeshBasicMaterial({color:new THREE.Color(1,.46,.16).multiplyScalar(1.6),transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false}),
   flame2:new THREE.MeshBasicMaterial({color:new THREE.Color(.5,.7,1).multiplyScalar(2),transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false})};
-function buildMech(){
-  const M={root:new THREE.Group(),ready:false,phase:0,lean:0,roll:0,tier:0,arms:[],pods:[],jets:[]};S.add(M.root);
-  M.loaded=buildWraithModel().then(W=>{M.W=W;M.root.add(W.root);const J=W.J;
+/* L: a fixed loadout (the wingmates); none = the player's, from the upgrade screen */
+function buildMech(L){
+  const M={root:new THREE.Group(),ready:false,phase:0,lean:0,roll:0,tier:0,arms:[],pods:[],jets:[],wing:!!L};S.add(M.root);
+  M.loaded=buildWraithModel(L).then(W=>{M.W=W;M.root.add(W.root);const J=W.J;
     M.hips=J.hips;M.torso=J.torso;M.head=J.head;M.hip0=J.hips.position.y;M.tor0=J.torso.position.y;
     W.root.updateMatrixWorld(true);M.legs=[-1,1].map(sd=>legSetup(J,sd<0?'L':'R',sd,M.hip0));
-    M.jl=new THREE.PointLight(0xff9a40,0,14,1.8);M.jl.position.set(0,0,1.6);M.torso.add(M.jl);
+    if(!L){M.jl=new THREE.PointLight(0xff9a40,0,14,1.8);M.jl.position.set(0,0,1.6);M.torso.add(M.jl);}   /* the jet light: the player's only (lights cost on a phone) */
     M.rest=[M.hips,M.torso,J.arm_L,J.arm_R].filter(Boolean).map(o=>[o,o.rotation.clone()]);
-    rigKit(M);M.ready=true;M.tier=0;setTier(M,GUN.tier||1);});
+    rigKit(M);M.ready=true;M.tier=0;setTier(M,L?1:GUN.tier||1);});
   return M;
 }
 /* after the upgrade screen changes the loadout */

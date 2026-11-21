@@ -25,7 +25,7 @@ Only Christopher's decisions go here (20 Nov 2026 unless dated). Proposals live 
   heat map. When they come close, the sensor fogs and breaks up.
 - **Lore for why the sensor fails:** their geometry can't be measured (dots made of dots). A short intel brief before combat
   can show "the only information we have".
-- **Green dots are allies.** Rescuing them, or watching one succumb, carries the story.
+- **Green dots are allies.** Rescuing them, or watching one succumb, carries the story. *(Changed 20 Nov, night: see "The team and the artillery". In the fights your allies are now three other Wraiths; green dots are friendly Wraith teams seen on the long-range map.)*
 - **The big bad (end of chapter 1):** a huge mass of dots (100,000 to a million) that resolves into a shape. It's the first time
   the sensor ever resolves one, only because it is so big and far away: "something else is on the sensor… more than I've ever
   seen… wait, it's one mass." It needs a **detailed model**. In the fight the camera struggles: stutter and dropped frames, as if
@@ -85,6 +85,13 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
 - **Place names** stay as written (the Ember Coast, Port Arlen, Greywater Strand, Kessel Cut, the Saltpans, the Drowned
   Shelf, Hollin Ridge, Arlen Bay).
 - **Radio is voiced.** Christopher makes the dialogue in ElevenLabs from a voice-acting sheet (each voice described, every line).
+
+## The team and the artillery (20 Nov, night; Christopher to session C)
+- **You fight as a team of four Wraiths:** the player and three others. You still have to help keep your allies alive. This makes
+  more sense than the green-dot squads in the fights.
+- **Artillery as a separate level of the waves:** once your area is cleared, you set up heavy long-distance artillery to support
+  Wraith teams nearby. A battleship-style map of red and green dots: you aim so as not to hit your own (friendly fire).
+- **Keep the current top-down perspective.**
 
 ## Open questions (not decided)
 - Creature names. The viewer uses placeholders: MOTE, KNOT, SKEIN, RUNNER, STALKER, BRUTE, THE HOST.

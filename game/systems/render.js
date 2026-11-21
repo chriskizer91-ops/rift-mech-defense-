@@ -35,8 +35,9 @@ function pxScale(){return (H*PR)/(2*Math.tan(cam.fov*Math.PI/360));}
 
 /* ---------------- packed assets (models and pictures are inlined by systems/build.py) ---------------- */
 const ASSETS=window.RMD_ASSETS||{};
+/* decoded here, never fetched: a published page may not fetch (session B found this) */
 function b64bytes(b64){if(Uint8Array.fromBase64)return Promise.resolve(Uint8Array.fromBase64(b64));
-  return fetch('data:application/octet-stream;base64,'+b64).then(r=>r.arrayBuffer()).then(b=>new Uint8Array(b));}
+  const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return Promise.resolve(u);}
 const LM=new THREE.LoadingManager();
 const TL=new THREE.TextureLoader(LM);
 const TEXC={};

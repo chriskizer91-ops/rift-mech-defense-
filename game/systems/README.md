@@ -66,5 +66,7 @@ python3 -I tools/shoot.py builds/mech-arena.html out.png "#dev" 6 phone
 | `mech/wraith.js` | the Wraith model, kit on mounts, leg solve, walk |
 | `mech/player.js` | walk, hop, hover, shield and hull |
 | `mech/weapons.js` | aim, autocannon, Lance, Arc, missiles, salvo, vent, shots, blasts, pickups |
+| `mech/wingmates.js` | the three other Wraiths of the team: formation, fire, down and brought back up |
+| `systems/artillery.js` | the artillery round: the red-and-green grid, shells, friendly fire |
 | `systems/build.py`, `systems/test_arena.py` | the build and the headless test driver |
 

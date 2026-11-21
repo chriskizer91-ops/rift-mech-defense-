@@ -1,7 +1,7 @@
 /* systems/upgrades.js — scrap and upgrades, from Ironhowl 4 (06e_upgrades; the six tracks, five levels, the same costs).
    Scrap: half a creature's starting dots when it is cleared (KNOT 5, STALKER 50, BRUTE 250), plus 15 for each ally alive at the
    end of a wave. It is kept on this device. The upgrade screen opens between waves (and from the pause menu in this test arena);
-   it also sets the arms: each forearm takes the AC-4 autocannon, the LN-1 Lance or the AR-1 Arc (Ironhowl 4's bay did this). */
+   after an artillery round too; it also sets the arms: each forearm takes the AC-4 autocannon, the LN-1 Lance or the AR-1 Arc (Ironhowl 4's bay did this). */
 const UPG=[
   {id:'gun',name:'GUN',fx:['START AT TIER II','START AT TIER III','START AT TIER IV','+15% DAMAGE','+30% DAMAGE']},
   {id:'cool',name:'COOLING',fx:['-12% HEAT PER SHOT','-24% HEAT, FASTER COOLING','-36% HEAT, VENT 6 S','-48% HEAT, FASTER COOLING','-60% HEAT, VENT 4 S']},
@@ -36,9 +36,9 @@ function loadoutHas(id){const L=loadout();return SLOTS.some(k=>L[k]===id);}
 const ARMS=[['ac','AUTOCANNON'],['ln','LANCE'],['ar','ARC']];
 let UPG_FROM='';
 function openUpg(from,bonus,ok){UPG_FROM=from;saveScrap();const box=$('upg');
-  $('utitle').textContent=from==='clear'?'WAVE '+G.wave+' CLEAR':'UPGRADES';
-  $('usub').textContent=from==='clear'?('ALLIES ALIVE '+ok+' · +'+bonus+' SCRAP'):'TEST ARENA · BUY BETWEEN WAVES';
-  $('ugo').textContent=from==='clear'?'NEXT WAVE':from==='title'?'DEPLOY':'BACK';
+  $('utitle').textContent=from==='clear'?'WAVE '+G.wave+' CLEAR':from==='arty'?'GRID CLEAR':'UPGRADES';
+  $('usub').textContent=from==='clear'?('TEAM STANDING '+ok+'/3 · +'+bonus+' SCRAP'):from==='arty'?('GREEN ALIVE '+ok+'/8 · FRIENDLY FIRE '+(ART.last?ART.last.ff:0)+' · +'+bonus+' SCRAP'):'TEST ARENA · BUY BETWEEN WAVES';
+  $('ugo').textContent=from==='clear'||from==='arty'?'NEXT WAVE':from==='title'?'DEPLOY':'BACK';
   drawUpg();box.style.display='flex';G.paused=from==='pause'||G.paused;}
 function drawUpg(){
   $('uscrap').textContent='SCRAP '+scrap().toLocaleString('en-US');
@@ -51,6 +51,6 @@ function drawUpg(){
   $('uarms').querySelectorAll('.chip').forEach(b=>b.onclick=e=>{e.stopPropagation();const L2=loadout();L2[b.dataset.s]=b.dataset.k;setLoadout(L2);refitKit(M);drawUpg();});
 }
 function closeUpg(){$('upg').style.display='none';applyUpgrades(UPG_FROM==='title');
-  if(UPG_FROM==='clear'){G.mode='play';G.paused=false;startWave();}
+  if(UPG_FROM==='clear'||UPG_FROM==='arty'){G.mode='play';G.paused=false;CAMS.ready=false;startWave();}
   else if(UPG_FROM==='title')startPlay();
   else setPause(false);}

@@ -1,6 +1,6 @@
 /* systems/hud.js — the HUD, from Ironhowl 4 (09_hud and the Watcher's radar in 06k_kit), laid out for a phone held upright.
    Top left: shield, hull, jet cells, hover tank, the arms, missiles, gun heat. Top middle: the wave and the dots still to clear,
-   allies alive. Top right: the Watcher's radar (north up, like the camera), sensor confidence, scrap.
+   the three wingmates' hull. Names float over the wingmates (green on the radar). Top right: the Watcher's radar (north up, like the camera), sensor confidence, scrap.
    On the ground: the aim mark where the shots go, lock brackets on creatures the missiles are locking.
    Radio lines run along the bottom. Damage arcs at the screen edge point at whatever hit you. */
 const ROMAN=['','I','II','III','IV'];
@@ -29,7 +29,8 @@ const HUD={_c:{},
     this.set('bvent','cls','pad tb'+(GUN.ventCd>0?' cool':GUN.over?' hot':''));
     const sr=SALVO.cd<=0;this.set('bsalvo','cls','pad tb'+(sr?'':' cool'));this.set('bsalvo','html',sr?'SALVO':'SALVO<small>'+Math.ceil(SALVO.cd)+'</small>');
     this.set('wave','text',G.wave?'WAVE '+G.wave+' · '+dotsLeft().toLocaleString('en-US')+' DOTS':'');
-    const ok=alliesOK();this.set('allies','text',ALLIES.length?'ALLIES '+ok+'/'+ALLIES.length:'');this.set('allies','cls',ok<ALLIES.length?'bad':'');
+    /* the team: each wingmate's hull, or DOWN */
+    this.set('allies','html',WINGS.map(w=>'<span class="'+(w.down?'dn':w.hull<35?'lo':'')+'">'+w.name+' '+(w.down?'DOWN':Math.round(w.hull/w.hullMax*100))+'</span>').join('<br>'));wingLabels();
     this.set('scrapc','text','SCRAP '+scrap().toLocaleString('en-US'));
     this.set('confb','width',(conf*100).toFixed(0)+'%');this.set('conf','cls',conf<.45?'bar bad':'bar');
     this.set('bthermal','cls','tb sm'+(G.thermal?' on':''));
@@ -62,6 +63,7 @@ const HUD={_c:{},
     const pt=(x,z)=>{const dx=x-P.x,dz=z-P.z;return [w/2+dx*k,w/2+dz*k,Math.hypot(dx,dz)];};
     g.fillStyle='rgba(255,90,26,.7)';for(const rf of RIFTS){const [x,y,d]=pt(rf.x,rf.z);if(d<R)g.fillRect(x-2,y-2,4,4);}
     for(const a of ALLIES){if(a.state===2)continue;const [x,y,d]=pt(a.x,a.z);if(d>R)continue;g.fillStyle=a.state===1?(Math.sin(G.t*30)>0?'#ff3b26':'#4fe08a'):'#4fe08a';g.fillRect(x-1.5,y-1.5,3,3);}
+    for(const w of WINGS){const [x,y,d]=pt(w.x,w.z);if(d>R)continue;g.fillStyle=w.down?'#7a8a86':'#4fe08a';g.beginPath();g.moveTo(x,y-4);g.lineTo(x+3,y+3);g.lineTo(x-3,y+3);g.closePath();g.fill();}
     for(const e of EN){if(e.dead)continue;const [x,y,d]=pt(e.x,e.z);if(d>R)continue;g.fillStyle='#ff3b26';g.beginPath();g.arc(x,y,clamp(1.2+Math.sqrt(e.alive)*.22,1.4,6),0,TAU);g.fill();}
     g.fillStyle='#fff';g.save();g.translate(w/2,w/2);g.rotate(-P.yaw);g.beginPath();g.moveTo(0,-5);g.lineTo(3.5,4);g.lineTo(-3.5,4);g.closePath();g.fill();g.restore();},
   /* arrows at the screen edge for creatures off screen within 60 m */

@@ -22,7 +22,14 @@ canvas#gl{position:fixed;inset:0;display:block}
 #heat{margin-top:5px}#heat .bar i{background:#ffb347;width:0}#heat.warm .bar i{background:#ff7a2a}#heat.over .bar i{background:#ff2a1a;animation:bl .3s infinite}
 @keyframes bl{50%{opacity:.4}}
 #top{left:0;right:0;top:max(10px,env(safe-area-inset-top));text-align:center}
-#wave{font-size:12px;color:#ff8a70;letter-spacing:.14em}#allies{font-size:10px;color:#6fe0a0;margin-top:3px;letter-spacing:.16em}#allies.bad{color:#ffb29a}
+#wave{font-size:12px;color:#ff8a70;letter-spacing:.14em}#allies{font-size:10px;color:#6fe0a0;margin-top:2px;letter-spacing:.12em;line-height:1.4}#allies .lo{color:#ffb29a}#allies .dn{color:#ff5a3a}
+.wlab{position:fixed;left:0;top:0;display:none;pointer-events:none;transform-origin:0 0;font-size:9px;letter-spacing:.14em;color:#6fe0a0;text-shadow:0 0 4px #000;white-space:nowrap;margin-left:-24px}
+.wlab.low{color:#ffb29a}.wlab.down{color:#ff5a3a;font-size:10px}
+.alab{position:fixed;left:0;top:0;display:none;pointer-events:none;font-size:11px;color:#4fe0b8;margin:-7px 0 0 -4px;text-shadow:0 0 4px #000}
+#arty{left:0;right:0;top:max(12px,env(safe-area-inset-top));text-align:center;display:none}#arty1{font-size:13px;color:#ffb27a;letter-spacing:.14em}#arty2{font-size:10px;color:#6fe0a0;margin-top:4px;letter-spacing:.12em}
+#arty3{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom));text-align:center;font-size:11px;color:#9fb8b2;letter-spacing:.14em}
+body.arty #arty{display:block}body.arty #tl,body.arty #top,body.arty .pad,body.arty #radar,body.arty #lch,body.arty .mk,body.arty #bzoom,body.arty #bpause,body.arty #help{display:none!important}
+body:not(.arty) .alab{display:none!important}body.arty #tr .lbl,body.arty #conf{display:none}
 #tr{right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));text-align:right;width:112px}
 #radar{width:104px;height:104px;display:block;margin-left:auto}
 #tr .lbl{margin-top:4px}#conf{width:104px;margin-left:auto}#conf i{background:#4fe0b8}#conf.bad i{background:#ff4a2a}
@@ -105,8 +112,10 @@ body.touch #help{display:none}
   <div id="hov"><div class="lbl">Hover</div><div class="bar"><i id="hovb"></i></div></div>
   <div id="arms">GUN I ×2</div><div id="mslc">MSL 12</div>
   <div id="heat"><div class="lbl">Gun heat</div><div class="bar"><i id="heatb"></i></div></div>
+  <div class="lbl">Team</div><div id="allies"></div>
 </div>
-<div class="hud" id="top"><div id="wave"></div><div id="allies"></div></div>
+<div class="hud" id="top"><div id="wave"></div></div>
+<div class="hud" id="arty"><div id="arty1"></div><div id="arty2"></div><div id="arty3">TAP A SQUARE TO FIRE · KEEP IT OFF THE GREEN</div></div>
 <div class="hud" id="tr"><canvas id="radar" width="208" height="208"></canvas>
   <div class="lbl">Sensor</div><div class="bar" id="conf"><i id="confb"></i></div><div id="scrapc">SCRAP 0</div></div>
 <div id="tb"><button id="bthermal" class="tb sm">Thermal</button><button id="bzoom" class="tb sm">Cam</button><button id="bpause" class="tb sm">II</button></div>
@@ -118,7 +127,7 @@ body.touch #help{display:none}
 <div class="hud" id="fps"></div>
 <div class="panel" id="title">
   <h2>Intl. Rift Mech Defense · test arena</h2><h1>WRAITH</h1>
-  <div class="txt">Ironhowl&nbsp;4’s Wraith against the swarm. Every creature is a cluster of dots, and its dots are its hit points: shots knock them off. Keep the green dots alive: if a creature reaches one, it becomes part of it.</div>
+  <div class="txt">You and three more Wraiths against the swarm. Every creature is a cluster of dots, and its dots are its hit points: shots knock them off. Keep your team standing: stand next to a downed Wraith to bring it back. Every second wave, the guns: call shells onto a grid of red and green dots, and keep them off the green.</div>
   <div class="row" id="tdiff"><button data-d="easy">Easy</button><button data-d="medium">Medium</button><button data-d="hard">Hard</button></div>
   <div class="row"><button class="big" id="tgo">Deploy</button><button id="tupg">Upgrades</button></div>
 </div>
@@ -4969,7 +4978,14 @@ three/build/three.module.js:
    swarm.pick(rayOrigin, rayDir)    // -> {creature, point} or null
    swarm.hit(creature, point, radius, dots)   // knocks up to `dots` dots off near `point`; returns how many
    swarm.blast(point, radius, dots)           // artillery: every creature in reach
-   swarm.absorb(creature, pos)                // it takes something: one more dot (count can rise past where it started)
+   swarm.absorb(creature, pos, n)             // it takes something: n more dots (count can rise past where it started)
+   swarm.grow(creature, n) / swarm.shed(creature, n)   // a rift feeds it / it sheds (sealed rift)
+   swarm.pickAll(o, d)                        // every creature along a ray, nearest first (the Lance pierces)
+   swarm.burn(point, radius)                  // burns loose dots on the ground (Arc, barrages); returns how many
+   Cores: every creature of 100 dots or more has a core that wanders inside it. A hit on the core takes CORE_K (10) times
+   the dots (swarm.lastCore tells you it was a core hit); the core shows hot on thermal.
+   Loose dots: a share (swarm.liveK, 0.3) of knocked-off dots land alive and crawl back to the nearest creature within 25 m,
+   rejoining it, unless burned first.
    swarm.setThermal(on); swarm.pxScale(px)    // view mode; pixels per metre at distance 1 (see SensorView.pxScale)
    swarm.ground = (x,z) => y                  // the world's ground height (B's map); creatures walk on it, loose dots land on it
 
@@ -4992,7 +5008,10 @@ function legs(k,g,hips,len,lift,phOff,stride){ // simple gait helper
     const fx=hx+side*len[2],fz=hz+sw*stride*g.stride;const fy=up*lift*g.stride;
     k[nm+'h']=V(hx,hy,hz);k[nm+'k']=V(hx+side*len[0],hy+len[1]+fy*.5,hz+sw*stride*.4*g.stride+len[3]);k[nm+'f']=V(fx,fy,fz);}}
 // speeds (m/s) and how they fight; the rest of each rig comes from the viewer
-const MOVE={knot:{speed:7,dart:1},skein:{speed:5.5},runner:{speed:9},stalker:{speed:4.5},brute:{speed:3.2},drag:{speed:2.6},hulk:{speed:3},behemoth:{speed:4},titan:{speed:4.5}};
+// what each kind goes for first (asked by session C): 'mech' = the Wraith, 'ally' = people (green dots), 'any' = whatever is nearest.
+// A preferred target counts as if it were at 45% of its distance. Override per creature with c.prefers.
+const MOVE={knot:{speed:7,dart:1,prefers:'mech'},skein:{speed:5.5,prefers:'any'},runner:{speed:9,prefers:'any'},stalker:{speed:4.5,prefers:'ally'},
+  brute:{speed:3.2,prefers:'mech'},drag:{speed:2.6,prefers:'mech'},hulk:{speed:3,prefers:'mech'},behemoth:{speed:4,prefers:'mech'},titan:{speed:4.5,prefers:'ally'}};
 const RIGS=[
  {id:'knot',n:10,name:'KNOT',cls:'10 dots · darter',desc:'Darts in, bites, scatters. Never alone: they come in hundreds. Light Arc fire breaks them apart.',
   size:1.6,grid:14,cam:[6,.4,1],minD:2.2,maxD:60,base:.03,dot:.42,gain:1.25,reach:1.2,lane:9,
@@ -5117,12 +5136,12 @@ function dotMaterial(){return new T.ShaderMaterial(Object.assign({uniforms:{uSca
  void main(){vec2 d=gl_PointCoord-.5;float r=length(d)*2.;if(r>1.)discard;float core=exp(-r*r*mix(5.5,1.6,uSoft));gl_FragColor=vec4(vC*vA*core,1.);}`},ADD));}
 
 // ---------------------------------------------------------------- one creature: a rig, its dots, a little state machine
-function makeCreature(rig,pos,heading){
+function makeCreature(rig,pos,heading,opts){opts=opts||{};
   seedN=Math.floor(Math.random()*1e6)+11;
   const g0={phi:0,stride:0,low:0,stretch:0,hop:0,slam:0,ag:0};
   const kp=rig.pose(0,g0);
   const segs=rig.seg.map(([a,b,ra,rb,w])=>{const L=kp[a].distanceTo(kp[b]);return {a,b,ra,rb,w:(L*(ra+rb)*.5+ra*ra*1.6)*w};});
-  const tot=segs.reduce((s,x)=>s+x.w,0);const n=rig.n;
+  const tot=segs.reduce((s,x)=>s+x.w,0);const n=Math.max(4,Math.round(opts.n||rig.n));
   const cnt=segs.map(s=>s.w/tot*n);const flo=cnt.map(Math.floor);let left=n-flo.reduce((a,b)=>a+b,0);
   cnt.map((c,i)=>[c-flo[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,left).forEach(([,i])=>flo[i]++);
   const big=n>500;const gsz=n>=10000?60:n>=5000?40:16;const P=[];let cl=null,clLeft=0,nCl=0;
@@ -5133,11 +5152,12 @@ function makeCreature(rig,pos,heading){
     const sph=[gauss(),gauss(),gauss()];const sl=Math.hypot(...sph)||1;
     P.push({s:si,u,ox:Math.cos(a)*rr,oy:Math.sin(a)*rr,sx:sph[0]/sl*rr,sy:sph[1]/sl*rr,sz:sph[2]/sl*rr,cap,cr,ci,
       k:(big?40:70)+rnd()*(big?90:110),d:(big?9:11)+rnd()*7,ph:rnd()*6.283,jf:.7+rnd()*1.6,p:V(),v:V(),alive:true});}});
-  // spare slots: what it takes from the world becomes more of it (up to +30%)
-  const spare=Math.ceil(n*.3);for(let i=0;i<spare;i++){const q=P[Math.floor(rnd()*n)];P.push(Object.assign({},q,{p:V(),v:V(),alive:false,ph:rnd()*6.283}));}
+  // spare slots: what it takes from the world becomes more of it (up to +45%, or +220 dots for anything of 50 or more)
+  const spare=Math.max(Math.ceil(n*.45),n>=50?220:0);for(let i=0;i<spare;i++){const q=P[Math.floor(rnd()*n)];P.push(Object.assign({},q,{p:V(),v:V(),alive:false,ph:rnd()*6.283}));}
   return {rig,segs,P,n0:n,count:n,nCl,cw:new Float32Array(Math.max(1,nCl)*3),cph:Float32Array.from({length:Math.max(1,nCl)},()=>rnd()*6.283),
     pos:pos.clone(),heading:heading||0,scale:1,phi:Math.random()*6,state:'walk',st:0,target:null,first:true,dead:false,gone:false,fade:1,
-    id:Math.random().toString(36).slice(2,8),hp:1,mauling:false};
+    id:Math.random().toString(36).slice(2,8),hp:1,mauling:false,
+    core:n>=100?{seg:0,u:.5,to:{seg:0,u:.5},t:0,pos:V(),r:1,seen:false}:null,corePos:V()};
 }
 const _q=new T.Quaternion(),_e=new T.Euler();
 function gait(c,dt){const r=c.rig,g={phi:c.phi,stride:0,low:.1,stretch:0,hop:0,slam:0,ag:1,thrash:0};const st=c.st;
@@ -5159,11 +5179,11 @@ class Swarm{
     g.setAttribute('aI',new T.BufferAttribute(this.I,1).setUsage(T.DynamicDrawUsage));g.setAttribute('aS',new T.BufferAttribute(this.S,1).setUsage(T.DynamicDrawUsage));
     g.setAttribute('aB',new T.BufferAttribute(this.B,1).setUsage(T.DynamicDrawUsage));
     this.mat=dotMaterial();this.points=new T.Points(g,this.mat);this.points.frustumCulled=false;scene.add(this.points);
-    this.list=[];this.thermal=false;this.ground=(x,z)=>0;
+    this.list=[];this.thermal=false;this.ground=(x,z)=>0;this.liveK=.3;this.coreK=10;this.lastCore=false;this.dLive=new Uint8Array(opts.maxDebris||12000);this.rejoined=0;
     this.dPos=new Float32Array(this.maxDebris*3);this.dVel=new Float32Array(this.maxDebris*3);this.dLife=new Float32Array(this.maxDebris);this.dS=new Float32Array(this.maxDebris);this.dHead=0;
   }
   get dots(){return this.list.reduce((s,c)=>s+(c.dead?0:c.count),0);}
-  spawn(id,pos,heading){const rig=RIG[id];if(!rig)throw new Error('no creature '+id);const c=makeCreature(rig,pos,heading);this.list.push(c);return c;}
+  spawn(id,pos,heading,opts){const rig=RIG[id];if(!rig)throw new Error('no creature '+id);const c=makeCreature(rig,pos,heading,opts);this.list.push(c);return c;}
   setThermal(on){this.thermal=on;this.mat.uniforms.uSoft.value=on?1:0;this.mat.uniforms.uSizeMul.value=on?4.2:1;this.mat.uniforms.uMin.value=on?8:2.5;this.mat.uniforms.uMax.value=on?160:56;}
   pxScale(px){this.mat.uniforms.uScale.value=px;}
   center(c,out){return (out||V()).set(c.pos.x,c.pos.y+c.rig.size*.35*c.scale,c.pos.z);}
@@ -5172,30 +5192,44 @@ class Swarm{
     for(const c of this.list){if(c.dead)continue;this.center(c,cp);w.subVectors(cp,o);const t=w.dot(d);if(t<0)continue;
       const r=this.radius(c);const d2=w.lengthSq()-t*t;if(d2>r*r)continue;if(t<bt){bt=t;best={creature:c,point:o.clone().addScaledVector(d,t).lerp(cp,.35)};}}
     return best;}
-  _debris(p,from,speed,s){const i=this.dHead;this.dHead=(this.dHead+1)%this.maxDebris;
+  pickAll(o,d){const out=[];const cp=V(),w=V();
+    for(const c of this.list){if(c.dead)continue;this.center(c,cp);w.subVectors(cp,o);const t=w.dot(d);if(t<0)continue;
+      const r=this.radius(c);const d2=w.lengthSq()-t*t;if(d2>r*r)continue;out.push({creature:c,t,point:o.clone().addScaledVector(d,t).lerp(cp,.35)});}
+    return out.sort((a,b)=>a.t-b.t);}
+  burn(point,radius){let k=0;const r2=radius*radius;for(let i=0;i<this.maxDebris;i++){if(this.dLife[i]<=0||!this.dLive[i])continue;
+      const dx=this.dPos[i*3]-point.x,dz=this.dPos[i*3+2]-point.z;if(dx*dx+dz*dz<r2){this.dLive[i]=0;this.dLife[i]=Math.min(this.dLife[i],.25);k++;}}return k;}
+  _debris(p,from,speed,s,live){const i=this.dHead;this.dLive[i]=live&&Math.random()<this.liveK?1:0;this.dHead=(this.dHead+1)%this.maxDebris;
     const dx=p.x-from.x,dy=p.y-from.y,dz=p.z-from.z;const l=Math.hypot(dx,dy,dz)||1;
     this.dPos.set([p.x,p.y,p.z],i*3);this.dVel.set([dx/l*speed*(.5+Math.random()),Math.abs(dy/l)*speed*.6+speed*.4*Math.random()+2,dz/l*speed*(.5+Math.random())],i*3);
     this.dLife[i]=1;this.dS[i]=s;}
-  hit(c,point,radius,dots){if(!c||c.dead)return 0;const r2=radius*radius;let k=0;const sp=6+radius*2;
+  hit(c,point,radius,dots,opts){if(!c||c.dead)return 0;this.lastCore=false;
+    if(c.core&&point.distanceTo(c.corePos)<c.core.r*1.4+radius*.5){dots*=this.coreK;radius=Math.max(radius*2.5,c.core.r*1.6);this.lastCore=true;c.core.seen=true;}
+    const r2=radius*radius;let k=0;const sp=6+radius*2;const live=!(opts&&opts.burn);
     const near=[];for(let i=0;i<c.P.length;i++){const q=c.P[i];if(!q.alive)continue;const d2=q.p.distanceToSquared(point);if(d2<r2)near.push([d2,i]);}
     near.sort((a,b)=>a[0]-b[0]);
-    for(const [,i] of near){if(k>=dots)break;const q=c.P[i];q.alive=false;this._debris(q.p,point,sp,c.rig.dot);k++;}
+    for(const [,i] of near){if(k>=dots)break;const q=c.P[i];q.alive=false;this._debris(q.p,point,sp,c.rig.dot,live);k++;}
     // nothing close enough: the shot still tears dots off the nearest skin
     if(k===0&&dots>0){let bi=-1,bd=1e9;for(let i=0;i<c.P.length;i++){const q=c.P[i];if(!q.alive)continue;const d2=q.p.distanceToSquared(point);if(d2<bd){bd=d2;bi=i;}}
-      if(bi>=0&&bd<(radius*3)*(radius*3)){c.P[bi].alive=false;this._debris(c.P[bi].p,point,sp,c.rig.dot);k=1;}}
+      if(bi>=0&&bd<(radius*3)*(radius*3)){c.P[bi].alive=false;this._debris(c.P[bi].p,point,sp,c.rig.dot,live);k=1;}}
     c.count-=k;c.hp=c.count/c.n0;
     if(c.count<Math.max(2,c.n0*.12)){for(const q of c.P)if(q.alive){q.alive=false;this._debris(q.p,this.center(c),8+c.rig.size*.6,c.rig.dot);}c.count=0;c.dead=true;}
     return k;}
   blast(point,radius,dots){let tot=0;for(const c of this.list){if(c.dead)continue;const d=Math.hypot(c.pos.x-point.x,c.pos.z-point.z);
       if(d<radius+this.radius(c)){const share=Math.round(dots*clamp(1-d/(radius+this.radius(c)),.25,1));tot+=this.hit(c,this.center(c).lerp(point,.5),radius+c.rig.size*.4,share);}}
     return tot;}
-  absorb(c,pos){if(!c||c.dead)return false;const q=c.P.find(q=>!q.alive);if(!q)return false;q.alive=true;q.p.copy(pos);q.v.set(0,0,0);c.count++;c.hp=c.count/c.n0;return true;}
+  absorb(c,pos,n){if(!c||c.dead)return 0;n=n||1;let k=0;for(const q of c.P){if(k>=n)break;if(q.alive)continue;q.alive=true;q.p.copy(pos);q.p.x+=(Math.random()-.5)*2;q.p.z+=(Math.random()-.5)*2;q.v.set(0,0,0);k++;}
+    c.count+=k;c.hp=c.count/c.n0;return k;}
+  grow(c,n){if(!c||c.dead)return 0;let k=0;const al=c.P.filter(q=>q.alive);for(const q of c.P){if(k>=n)break;if(q.alive)continue;const src=al[Math.floor(Math.random()*al.length)];q.alive=true;q.p.copy(src?src.p:c.pos);q.v.set(0,0,0);k++;}
+    c.count+=k;c.hp=c.count/c.n0;return k;}
+  shed(c,n){if(!c||c.dead)return 0;let k=0;for(const q of c.P){if(k>=n)break;if(!q.alive)continue;if(Math.random()>.2)continue;q.alive=false;this._debris(q.p,this.center(c),4,c.rig.dot,false);k++;}
+    c.count-=k;c.hp=c.count/c.n0;return k;}
   update(dt,t,targets){
     let o=0;const P3=this.pos,C3=this.col,I=this.I,S=this.S,B=this.B;
     for(const c of this.list){if(c.gone)continue;
       if(c.dead){c.gone=true;continue;}
       // brain: nearest target, walk, lunge, maul, back off
-      let tg=null,td=1e9;for(const x of targets||[]){if(x.gone)continue;const d=Math.hypot(x.pos.x-c.pos.x,x.pos.z-c.pos.z);if(d<td&&d<(x.notice||1e9)){td=d;tg=x;}}
+      const pref=c.prefers||c.rig.prefers||'any';let tg=null,td=1e9,ts=1e9;for(const x of targets||[]){if(x.gone)continue;const d=Math.hypot(x.pos.x-c.pos.x,x.pos.z-c.pos.z);if(d>=(x.notice||1e9))continue;
+        const sc=d*(pref!=='any'&&x.kind===pref?.45:1);if(sc<ts){ts=sc;td=d;tg=x;}}
       c.target=tg;c.st+=dt;const r=c.rig,reach=(r.reach||2)*c.scale+1.2;c.mauling=false;
       if(tg){const want=Math.atan2(tg.pos.x-c.pos.x,tg.pos.z-c.pos.z);let dh=want-c.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));c.heading+=dh*Math.min(1,dt*(c.state==='walk'?3:1.2));}
       const fx=Math.sin(c.heading),fz=Math.cos(c.heading);const sp=r.speed*(.6+.4*c.scale);
@@ -5211,6 +5245,11 @@ class Swarm{
       const F=c.segs.map(sg=>{const A=kp[sg.a].clone().multiplyScalar(s).applyQuaternion(_q).add(c.pos),Bp=kp[sg.b].clone().multiplyScalar(s).applyQuaternion(_q).add(c.pos);
         const d=Bp.clone().sub(A);const L=d.length();if(L>1e-4)d.multiplyScalar(1/L);const n1=new T.Vector3().crossVectors(Math.abs(d.y)>.9?V(1,0,0):_up,d).normalize();const n2=new T.Vector3().crossVectors(d,n1);
         return {A,d,L,n1,n2,ra:sg.ra*s,rb:sg.rb*s};});
+      if(c.core){const co=c.core;co.t-=dt;if(co.t<=0){const sg=c.segs;let tw=0;for(const x of sg)tw+=x.w;let r=Math.random()*tw,si=0;for(;si<sg.length-1;si++){r-=sg[si].w;if(r<=0)break;}
+          co.to={seg:si,u:.2+Math.random()*.6};co.t=3+Math.random()*2.5;}
+        const f=F[co.to.seg];const tx=f.A.x+f.d.x*f.L*co.to.u,ty=f.A.y+f.d.y*f.L*co.to.u,tz=f.A.z+f.d.z*f.L*co.to.u;
+        if(c.first)c.corePos.set(tx,ty,tz);else{const k=Math.min(1,dt*1.8);c.corePos.x+=(tx-c.corePos.x)*k;c.corePos.y+=(ty-c.corePos.y)*k;c.corePos.z+=(tz-c.corePos.z)*k;}
+        co.r=Math.max(.7,r.size*s*.1);}
       const big=c.n0>500;const jit=big?0:(c.state==='walk'?.1:.2)*(1+g.thrash*2.2)*Math.max(.5,r.size*s/4);
       if(big){const am=r.size*s*.035;for(let k=0;k<c.nCl;k++){const ph=c.cph[k];c.cw[k*3]=Math.sin(t*.7+ph)*am;c.cw[k*3+1]=Math.sin(t*.55+ph*1.7)*am*.7;c.cw[k*3+2]=Math.cos(t*.62+ph*2.3)*am;}}
       const sub=Math.max(1,Math.ceil(dt/(1/90)));const h=dt/sub;const gain=r.gain*(this.thermal?.07*Math.pow(Math.min(1,500/r.n),.33):1);
@@ -5222,11 +5261,21 @@ class Swarm{
         if(jit>0){const w=t*p.jf*(c.state==='walk'?3:5.5)+p.ph;tx+=Math.sin(w)*jit;ty+=Math.sin(w*1.31+1.7)*jit*.7;tz+=Math.cos(w*.87)*jit;}
         if(c.first){p.p.set(tx,ty,tz);}
         else for(let k=0;k<sub;k++){p.v.x+=((tx-p.p.x)*p.k-p.v.x*p.d)*h;p.v.y+=((ty-p.p.y)*p.k-p.v.y*p.d)*h;p.v.z+=((tz-p.p.z)*p.k-p.v.z*p.d)*h;p.p.x+=p.v.x*h;p.p.y+=p.v.y*h;p.p.z+=p.v.z*h;}
-        if(o>=this.max)continue;P3[o*3]=p.p.x;P3[o*3+1]=p.p.y;P3[o*3+2]=p.p.z;C3[o*3]=1;C3[o*3+1]=0;C3[o*3+2]=0;I[o]=gain;S[o]=r.dot;B[o]=big?r.size*s:0;o++;}
+        if(o>=this.max)continue;let gi=gain;if(c.core){const cr=c.core.r*1.7,dx=p.p.x-c.corePos.x,dy=p.p.y-c.corePos.y,dz=p.p.z-c.corePos.z;if(dx*dx+dy*dy+dz*dz<cr*cr)gi*=this.thermal?7:2.2;}
+        P3[o*3]=p.p.x;P3[o*3+1]=p.p.y;P3[o*3+2]=p.p.z;C3[o*3]=1;C3[o*3+1]=0;C3[o*3+2]=0;I[o]=gi;S[o]=r.dot;B[o]=big?r.size*s:0;o++;}
       c.first=false;}
-    // loose dots: fly, fall, fade
-    const dg=this.thermal?.05:1;
-    for(let i=0;i<this.maxDebris;i++){if(this.dLife[i]<=0)continue;const k=i*3;this.dVel[k+1]-=14*dt;
+    // loose dots: fly, fall, fade; live ones land and crawl back to the nearest creature
+    const dg=this.thermal?.05:1;const alive=this.list.filter(c=>!c.dead&&!c.gone).map(c=>({c,x:c.pos.x,z:c.pos.z,r:this.radius(c)}));
+    for(let i=0;i<this.maxDebris;i++){if(this.dLife[i]<=0)continue;const k=i*3;
+      if(this.dLive[i]&&this.dPos[k+1]<this.ground(this.dPos[k],this.dPos[k+2])+.4&&Math.abs(this.dVel[k+1])<3){
+        let best=null,bd=25;for(const a of alive){const d=Math.hypot(a.x-this.dPos[k],a.z-this.dPos[k+2])-a.r*.6;if(d<bd){bd=d;best=a;}}
+        if(!best){this.dLive[i]=0;}
+        else if(bd<.5){if(this.absorb(best.c,V(this.dPos[k],this.dPos[k+1],this.dPos[k+2]),1))this.rejoined++;this.dLife[i]=0;this.dLive[i]=0;continue;}
+        else{const dx=best.x-this.dPos[k],dz=best.z-this.dPos[k+2],l=Math.hypot(dx,dz)||1;this.dVel[k]=dx/l*3.2;this.dVel[k+2]=dz/l*3.2;this.dVel[k+1]=0;
+          this.dPos[k]+=this.dVel[k]*dt;this.dPos[k+2]+=this.dVel[k+2]*dt;this.dPos[k+1]=this.ground(this.dPos[k],this.dPos[k+2])+.15;this.dLife[i]-=dt*.08;
+          if(o<this.max+this.maxDebris){P3[o*3]=this.dPos[k];P3[o*3+1]=this.dPos[k+1];P3[o*3+2]=this.dPos[k+2];C3[o*3]=1;C3[o*3+1]=0;C3[o*3+2]=0;I[o]=.55*dg;S[o]=this.dS[i]*.8;B[o]=0;o++;}
+          continue;}}
+      this.dVel[k+1]-=14*dt;
       this.dPos[k]+=this.dVel[k]*dt;this.dPos[k+1]+=this.dVel[k+1]*dt;this.dPos[k+2]+=this.dVel[k+2]*dt;
       const gy=this.ground(this.dPos[k],this.dPos[k+2])+.1;if(this.dPos[k+1]<gy){this.dPos[k+1]=gy;this.dVel[k]*=.6;this.dVel[k+2]*=.6;this.dVel[k+1]*=-.25;}
       this.dLife[i]-=dt*.9;if(o>=this.max+this.maxDebris)continue;const L=Math.max(0,this.dLife[i]);
@@ -5378,8 +5427,9 @@ function pxScale(){return (H*PR)/(2*Math.tan(cam.fov*Math.PI/360));}
 
 /* ---------------- packed assets (models and pictures are inlined by systems/build.py) ---------------- */
 const ASSETS=window.RMD_ASSETS||{};
+/* decoded here, never fetched: a published page may not fetch (session B found this) */
 function b64bytes(b64){if(Uint8Array.fromBase64)return Promise.resolve(Uint8Array.fromBase64(b64));
-  return fetch('data:application/octet-stream;base64,'+b64).then(r=>r.arrayBuffer()).then(b=>new Uint8Array(b));}
+  const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return Promise.resolve(u);}
 const LM=new THREE.LoadingManager();
 const TL=new THREE.TextureLoader(LM);
 const TEXC={};
@@ -5658,10 +5708,10 @@ function onMount(host,sc){sc.updateMatrixWorld(true);const mt=sc.getObjectByName
   const hold=new THREE.Group();hold.name='kit';host.add(hold);
   if(mt){const inv=mt.matrixWorld.clone().invert();inv.decompose(sc.position,sc.quaternion,sc.scale);}
   hold.add(sc);return hold;}
-function buildWraithModel(){
+function buildWraithModel(L){
   const W={root:new THREE.Group(),J:{},holds:{},kit:{}};const wf=kitFiles('wraith_v2');
   return loadGLB(wf.glb).then(sc=>{dressModel(sc,kitMat(wf));W.root.add(sc);sc.traverse(o=>{if(o.name)W.J[o.name]=W.J[o.name]||o;});W.body=sc;
-    return refitModel(W,loadout());}).then(()=>W);}
+    return refitModel(W,L||loadout());}).then(()=>W);}
 function refitModel(W,L){const gen=W.gen=(W.gen||0)+1;   /* a newer refit wins: pieces an older one loads late are dropped */
   for(const s in W.holds){const h=W.holds[s];if(h&&h.parent)h.parent.remove(h);}W.holds={};W.kit={};
   const jobs=SLOTS.filter(s=>L[s]&&KIT[L[s]]).map(s=>{const id=L[s],k=KIT[id],stem=kitStem(id,s),f=kitFiles(stem,k.orm);
@@ -5671,14 +5721,15 @@ function refitModel(W,L){const gen=W.gen=(W.gen||0)+1;   /* a newer refit wins: 
 /* ---------------- the Wraith in the arena ---------------- */
 const MT={flame:new THREE.MeshBasicMaterial({color:new THREE.Color(1,.46,.16).multiplyScalar(1.6),transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false}),
   flame2:new THREE.MeshBasicMaterial({color:new THREE.Color(.5,.7,1).multiplyScalar(2),transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false})};
-function buildMech(){
-  const M={root:new THREE.Group(),ready:false,phase:0,lean:0,roll:0,tier:0,arms:[],pods:[],jets:[]};S.add(M.root);
-  M.loaded=buildWraithModel().then(W=>{M.W=W;M.root.add(W.root);const J=W.J;
+/* L: a fixed loadout (the wingmates); none = the player's, from the upgrade screen */
+function buildMech(L){
+  const M={root:new THREE.Group(),ready:false,phase:0,lean:0,roll:0,tier:0,arms:[],pods:[],jets:[],wing:!!L};S.add(M.root);
+  M.loaded=buildWraithModel(L).then(W=>{M.W=W;M.root.add(W.root);const J=W.J;
     M.hips=J.hips;M.torso=J.torso;M.head=J.head;M.hip0=J.hips.position.y;M.tor0=J.torso.position.y;
     W.root.updateMatrixWorld(true);M.legs=[-1,1].map(sd=>legSetup(J,sd<0?'L':'R',sd,M.hip0));
-    M.jl=new THREE.PointLight(0xff9a40,0,14,1.8);M.jl.position.set(0,0,1.6);M.torso.add(M.jl);
+    if(!L){M.jl=new THREE.PointLight(0xff9a40,0,14,1.8);M.jl.position.set(0,0,1.6);M.torso.add(M.jl);}   /* the jet light: the player's only (lights cost on a phone) */
     M.rest=[M.hips,M.torso,J.arm_L,J.arm_R].filter(Boolean).map(o=>[o,o.rotation.clone()]);
-    rigKit(M);M.ready=true;M.tier=0;setTier(M,GUN.tier||1);});
+    rigKit(M);M.ready=true;M.tier=0;setTier(M,L?1:GUN.tier||1);});
   return M;
 }
 /* after the upgrade screen changes the loadout */
@@ -6095,6 +6146,80 @@ function collect(k){sPickup();
   else {P.fuel=P.cells;HUD.msg('JET FUEL FULL',1.2);}}
 function clearPickups(){for(const p of PK)S.remove(p.g);PK.length=0;}
 
+/* ==== game/mech/wingmates.js ==== */
+/* mech/wingmates.js — the team: three more Wraiths beside the player (Christopher, 20 Nov: "a team of 4 Wraiths, the player
+   and three others, and you still have to help keep your allies alive").
+   Each wingmate walks with the Wraith's own legs (poseMech), carries two autocannons and fires Ironhowl 4's rounds (the same
+   shots, the same through-the-gaps rule), keeps a loose formation round the player, backs off from anything that gets close,
+   and is a target for the swarm like the player is.
+   Shield 30 (back at 8 a second after 3 s without a hit), hull 100. At 0 hull it goes down and stays down; stand within 7 m of it for 3 s and it gets back up at 40 % hull.
+   Downed wingmates are repaired between waves. Every wingmate standing at the end of a wave is worth 40 scrap.
+   The names are placeholders for session D. */
+const WING_NAMES=['KESTREL','VESPER','HALE'];
+const WING_LOAD={fa_L:'ac',fa_R:'ac',sh_L:'watcher',sh_R:'mpod',bk:'jetpack'};
+const WING_OFF=[[-10,5],[10,5],[0,-11]];   /* where each keeps to, round the player (metres east, south) */
+const WING={rate:3.2,dmg:8,spread:.05,range:36,revive:3,reviveR:7};   /* weaker than the player: 3.2 rounds a second, 8 each, 36 m */
+const WINGS=[];
+function buildWings(){
+  for(let i=0;i<3;i++){const M2=buildMech(WING_LOAD);
+    /* a green ring on the ground under each, so they read as yours from above */
+    const ring=new THREE.Mesh(new THREE.RingGeometry(2.6,3.1,40),new THREE.MeshBasicMaterial({color:new THREE.Color(.2,1,.45).multiplyScalar(1.6),transparent:true,opacity:.55,depthWrite:false}));
+    ring.rotation.x=-Math.PI/2;ring.position.y=.06;S.add(ring);
+    const lab=document.createElement('div');lab.className='wlab';document.body.appendChild(lab);
+    WINGS.push({name:WING_NAMES[i],i,M:M2,ring,lab,kind:'wing',pos:new THREE.Vector3(),x:0,z:0,y:0,yaw:0,legYaw:0,vx:0,vz:0,spd:0,
+      hull:100,hullMax:100,shield:30,shieldMax:30,regenT:0,down:false,revive:0,cd:Math.random()*.2,side:0,tgt:null,tgtT:0});}
+}
+function resetWings(full){WINGS.forEach((w,i)=>{const o=WING_OFF[i];if(full){w.x=P.x+o[0];w.z=P.z+o[1];w.vx=w.vz=0;w.yaw=w.legYaw=0;}
+  w.hull=w.hullMax;w.shield=w.shieldMax;w.down=false;w.revive=0;w.M.root.visible=true;});}
+function wingsUp(){let n=0;for(const w of WINGS)if(!w.down)n++;return n;}
+function hurtWing(w,dmg,fx,fz){if(w.down||G.mode!=='play')return;dmg*=DIFF.bite;w.regenT=3;
+  const s=Math.min(w.shield,dmg);w.shield-=s;dmg-=s;if(dmg>0)w.hull-=dmg;
+  if(w.hull<=0){w.hull=0;w.down=true;w.revive=0;boom(w.x,3,w.z,1.4);radio('<b>OVERWATCH</b> '+w.name+' is down. Get to them, stand close and I’ll bring them up.',4);sLost();}
+  else if(w.hull<35&&!w.warned){w.warned=true;radio('<b>'+w.name+'</b> Taking a beating here!',2.2);}}
+const _wm=new THREE.Vector3();
+function updWings(dt,live){
+  for(const w of WINGS){
+    if(w.down){/* down: the player brings it back up by standing close */
+      const d=Math.hypot(P.x-w.x,P.z-w.z);if(live&&!P.dead&&d<WING.reviveR){w.revive+=dt;if(w.revive>=WING.revive){w.down=false;w.hull=w.hullMax*.4;w.shield=0;w.warned=false;
+        radio('<b>'+w.name+'</b> I’m up. Thanks.',2.4);sPickup();}}else w.revive=Math.max(0,w.revive-dt*.5);
+      if(Math.random()<dt*6)part({x:w.x+(Math.random()-.5)*2,y:1+Math.random()*2,z:w.z+(Math.random()-.5)*2,vx:0,vy:2,vz:0,life:2,s0:1,s1:4,a:.35,col:[.2,.2,.21],drag:.6,grav:-.5});
+      poseW(w,0,dt);continue;}
+    if(w.regenT>0)w.regenT-=dt;else w.shield=Math.min(w.shieldMax,w.shield+8*dt);
+    /* the target: the nearest creature in range (checked a few times a second) */
+    w.tgtT-=dt;if(w.tgtT<=0||w.tgt&&w.tgt.dead){w.tgtT=.3;w.tgt=null;let bd=WING.range;for(const e of EN){if(e.dead||e.spawnT>0)continue;const d=Math.hypot(e.x-w.x,e.z-w.z)-e.r;if(d<bd){bd=d;w.tgt=e;}}}
+    /* where to stand: its spot round the player, pushed back from anything within 9 m of it */
+    let tx=P.x+WING_OFF[w.i][0],tz=P.z+WING_OFF[w.i][1];
+    for(const e of EN){if(e.dead||e.spawnT>0)continue;const dx=w.x-e.x,dz=w.z-e.z,d=Math.hypot(dx,dz)-e.r;if(d<9){const k=(9-d)*1.4/(Math.hypot(dx,dz)||1);tx+=dx*k;tz+=dz*k;}}
+    for(const o of WINGS)if(o!==w){const dx=w.x-o.x,dz=w.z-o.z,d=Math.hypot(dx,dz);if(d<6&&d>0){tx+=dx/d*(6-d);tz+=dz/d*(6-d);}}
+    const l=Math.hypot(tx,tz);if(l>ARENA_R-4){tx*=(ARENA_R-4)/l;tz*=(ARENA_R-4)/l;}
+    let mx=tx-w.x,mz=tz-w.z;const md=Math.hypot(mx,mz);const sp=md>1.2?Math.min(WALK,md*1.2):0;if(md>0){mx/=md;mz/=md;}
+    const k=damp(3.4,dt);w.vx+=(mx*sp-w.vx)*k;w.vz+=(mz*sp-w.vz)*k;
+    if(!live){w.vx*=.9;w.vz*=.9;}
+    w.x+=w.vx*dt;w.z+=w.vz*dt;
+    /* the body turns to the target (or the way it walks), the legs to the walk (the player's rule) */
+    let want=w.yaw;if(w.tgt)want=Math.atan2(-(w.tgt.x-w.x),-(w.tgt.z-w.z));else if(Math.hypot(w.vx,w.vz)>1)want=Math.atan2(-w.vx,-w.vz);
+    const da=angD(want,w.yaw);w.yaw+=clamp(da,-6*dt,6*dt);
+    /* fire: when facing the target */
+    w.cd-=dt;if(live&&w.tgt&&Math.abs(da)<.25&&w.cd<=0&&w.M.ready){w.cd+=1/WING.rate;if(w.cd<0)w.cd=0;
+      const A=w.M.ac[w.side++%w.M.ac.length];if(A){A.muzzle.getWorldPosition(_wm);A.kick=1;}else _wm.set(w.x,3.6,w.z);
+      let ax=w.tgt.x-_wm.x,ay=w.tgt.cy-_wm.y,az=w.tgt.z-_wm.z;const al=Math.hypot(ax,ay,az)||1;ax=ax/al+(Math.random()-.5)*WING.spread*2;ay/=al;az=az/al+(Math.random()-.5)*WING.spread*2;
+      BOLTS.push({x:_wm.x,y:_wm.y,z:_wm.z,vx:ax*BOLT.speed,vy:ay*BOLT.speed,vz:az*BOLT.speed,life:BOLT.range/BOLT.speed,dmg:WING.dmg});
+      part({x:_wm.x,y:_wm.y,z:_wm.z,vx:0,vy:0,vz:0,life:.07,s0:1.5,s1:.7,a:2.2,col:[1,.7,.35],glow:true});if(Math.random()<.35)sGun(1);}
+    poseW(w,live?1:0,dt);}
+}
+function poseW(w,live,dt){w.pos.set(w.x,0,w.z);w.ring.position.set(w.x,hgt(w.x,w.z)+.06,w.z);w.ring.visible=!w.down;
+  const hs=Math.hypot(w.vx,w.vz);let tgt=w.legYaw;if(hs>.6){const my=Math.atan2(-w.vx,-w.vz);tgt=Math.abs(angD(my,w.yaw))>1.95?my+Math.PI:my;}else if(Math.abs(angD(w.yaw,w.legYaw))>.55)tgt=w.yaw;
+  const dl=angD(tgt,w.legYaw);w.legYaw+=clamp(dl,-5.5*dt,5.5*dt);w.spd=w.vx*-Math.sin(w.legYaw)+w.vz*-Math.cos(w.legYaw);
+  if(!w.M.ready)return;
+  if(w.down){w.M.root.rotation.z=lerp(w.M.root.rotation.z,.35,damp(3,dt));}else w.M.root.rotation.z*=.9;
+  poseMech(w.M,{x:w.x,z:w.z,gy:hgt(w.x,w.z)-(w.down?.8:0),legYaw:w.legYaw,aimYaw:w.yaw,spd:w.down?0:w.spd,air:false,vy:0,land:0,thrust:0,pitch:0},live||w.down?dt:0);}
+/* the names over them, and the revive bar over a downed one */
+function wingLabels(){for(const w of WINGS){const el=w.lab;if(G.mode==='arty'||G.mode==='title'){sty(el,'display','none');continue;}
+  _hp.set(w.x,8.5,w.z).project(cam);if(_hp.z>1||Math.abs(_hp.x)>1.1||Math.abs(_hp.y)>1.1){sty(el,'display','none');continue;}
+  sty(el,'display','block');sty(el,'transform','translate('+((_hp.x*.5+.5)*innerWidth).toFixed(0)+'px,'+((-_hp.y*.5+.5)*innerHeight).toFixed(0)+'px)');
+  const t=w.down?(w.revive>0?w.name+' · '+Math.round(w.revive/WING.revive*100)+'%':w.name+' DOWN'):w.name;if(el._t!==t){el._t=t;el.textContent=t;}
+  const c='wlab'+(w.down?' down':w.hull<35?' low':'');if(el.className!==c)el.className=c;}}
+
 /* ==== game/systems/camera.js ==== */
 /* systems/camera.js — the top-down camera (replaces Ironhowl 4's third-person cameras, 08_camera).
    High three-quarter view, always facing north, following the Wraith. It leans ahead of where you aim (up to 4.5 m, up to 10 m with the
@@ -6125,7 +6250,7 @@ function updCam(dt){
 /* ==== game/systems/hud.js ==== */
 /* systems/hud.js — the HUD, from Ironhowl 4 (09_hud and the Watcher's radar in 06k_kit), laid out for a phone held upright.
    Top left: shield, hull, jet cells, hover tank, the arms, missiles, gun heat. Top middle: the wave and the dots still to clear,
-   allies alive. Top right: the Watcher's radar (north up, like the camera), sensor confidence, scrap.
+   the three wingmates' hull. Names float over the wingmates (green on the radar). Top right: the Watcher's radar (north up, like the camera), sensor confidence, scrap.
    On the ground: the aim mark where the shots go, lock brackets on creatures the missiles are locking.
    Radio lines run along the bottom. Damage arcs at the screen edge point at whatever hit you. */
 const ROMAN=['','I','II','III','IV'];
@@ -6154,7 +6279,8 @@ const HUD={_c:{},
     this.set('bvent','cls','pad tb'+(GUN.ventCd>0?' cool':GUN.over?' hot':''));
     const sr=SALVO.cd<=0;this.set('bsalvo','cls','pad tb'+(sr?'':' cool'));this.set('bsalvo','html',sr?'SALVO':'SALVO<small>'+Math.ceil(SALVO.cd)+'</small>');
     this.set('wave','text',G.wave?'WAVE '+G.wave+' · '+dotsLeft().toLocaleString('en-US')+' DOTS':'');
-    const ok=alliesOK();this.set('allies','text',ALLIES.length?'ALLIES '+ok+'/'+ALLIES.length:'');this.set('allies','cls',ok<ALLIES.length?'bad':'');
+    /* the team: each wingmate's hull, or DOWN */
+    this.set('allies','html',WINGS.map(w=>'<span class="'+(w.down?'dn':w.hull<35?'lo':'')+'">'+w.name+' '+(w.down?'DOWN':Math.round(w.hull/w.hullMax*100))+'</span>').join('<br>'));wingLabels();
     this.set('scrapc','text','SCRAP '+scrap().toLocaleString('en-US'));
     this.set('confb','width',(conf*100).toFixed(0)+'%');this.set('conf','cls',conf<.45?'bar bad':'bar');
     this.set('bthermal','cls','tb sm'+(G.thermal?' on':''));
@@ -6187,6 +6313,7 @@ const HUD={_c:{},
     const pt=(x,z)=>{const dx=x-P.x,dz=z-P.z;return [w/2+dx*k,w/2+dz*k,Math.hypot(dx,dz)];};
     g.fillStyle='rgba(255,90,26,.7)';for(const rf of RIFTS){const [x,y,d]=pt(rf.x,rf.z);if(d<R)g.fillRect(x-2,y-2,4,4);}
     for(const a of ALLIES){if(a.state===2)continue;const [x,y,d]=pt(a.x,a.z);if(d>R)continue;g.fillStyle=a.state===1?(Math.sin(G.t*30)>0?'#ff3b26':'#4fe08a'):'#4fe08a';g.fillRect(x-1.5,y-1.5,3,3);}
+    for(const w of WINGS){const [x,y,d]=pt(w.x,w.z);if(d>R)continue;g.fillStyle=w.down?'#7a8a86':'#4fe08a';g.beginPath();g.moveTo(x,y-4);g.lineTo(x+3,y+3);g.lineTo(x-3,y+3);g.closePath();g.fill();}
     for(const e of EN){if(e.dead)continue;const [x,y,d]=pt(e.x,e.z);if(d>R)continue;g.fillStyle='#ff3b26';g.beginPath();g.arc(x,y,clamp(1.2+Math.sqrt(e.alive)*.22,1.4,6),0,TAU);g.fill();}
     g.fillStyle='#fff';g.save();g.translate(w/2,w/2);g.rotate(-P.yaw);g.beginPath();g.moveTo(0,-5);g.lineTo(3.5,4);g.lineTo(-3.5,4);g.closePath();g.fill();g.restore();},
   /* arrows at the screen edge for creatures off screen within 60 m */
@@ -6224,10 +6351,10 @@ function setupHud(){
    its hit points and its size (being tested): every point of damage knocks a dot off, it shrinks as it thins, and below
    12 % of where it started it comes apart.
    This file adds the arena's rules on top:
-   - targets: the Wraith and every ally not already taken;
+   - targets: the Wraith and its three wingmates (mech/wingmates.js); on the artillery map, the friendly Wraith teams (green dots);
    - bites: two a maul, power 1.2 + 0.8 × √dots, times the difficulty; a mauling creature hangs on to a Wraith that walks away;
-   - an ally that is bitten flickers for 1.25 s (kill the creature in time and it is saved), then turns red and is absorbed:
-     one more dot of the creature;
+   - a green dot that is bitten (a friendly Wraith on the artillery map) flickers for 1.25 s (kill the creature in time and it is
+     saved), then turns red and is absorbed: one more dot of the creature;
    - bodies keep apart, and the big ones shove the Wraith; vents, rails and stomps knock creatures back;
    - waves out of the rifts, scrap, and how hard the sensor struggles. */
 const SW=new RMD.Creatures.Swarm(DS,{max:60000,maxDebris:9000});
@@ -6249,6 +6376,7 @@ const WAVES=[
   [{t:'brute',n:2},{t:'stalker',n:6},{t:'knot',n:60},{t:'runner',n:8},{t:'brute',n:2},{t:'stalker',n:4},{t:'knot',n:60}]];
 const WV={groups:[],gi:0,t:0,spawnQ:[],lastDots:0,total:0};
 const SQUADS=['ALPHA','BRAVO','CHARLIE','DELTA'];
+const TEAM_K=2.2;
 /* the arena reads a creature through these names (x, z, r = its reach on the ground, cy = the middle of its body, alive = dots) */
 const CDEF={x:{get(){return this.pos.x;},set(v){this.pos.x=v;}},z:{get(){return this.pos.z;},set(v){this.pos.z=v;}},
   alive:{get(){return this.count;}},tier:{get(){return this.rig;}},r:{get(){return this.rig.size*.42*this.scale;}},cy:{get(){return this.pos.y+this.rig.size*.4*this.scale;}}};
@@ -6260,10 +6388,12 @@ function spawnCluster(id,rift){const a=Math.random()*TAU,rr=Math.random()*4;cons
   EN.push(c);return c;}
 function startWave(){
   G.wave++;const base=WAVES[Math.min(G.wave-1,WAVES.length-1)],more=1+Math.max(0,G.wave-WAVES.length)*.25;
-  for(const id in BASE_SPEED)RIG[id].speed=BASE_SPEED[id]*DIFF.speed;
-  WV.groups=base.map(g=>({t:g.t,n:Math.max(1,Math.round(g.n*DIFF.count*more))}));WV.gi=0;WV.t=0;WV.spawnQ.length=0;
+  /* 35 % faster than A's walking speeds (KNOT 7 → 9.5 m/s), so a pack can catch a Wraith (7.5 m/s) */
+  for(const id in BASE_SPEED)RIG[id].speed=BASE_SPEED[id]*DIFF.speed*1.35;
+  /* four Wraiths now, not one: every group is 2.2 times as big as it was for the Wraith alone */
+  WV.groups=base.map(g=>({t:g.t,n:Math.max(1,Math.round(g.n*DIFF.count*more*TEAM_K))}));WV.gi=0;WV.t=0;WV.spawnQ.length=0;
   WV.total=WV.groups.reduce((s,g)=>s+g.n*RIG[g.t].n,0);
-  makeSquads();sendGroup();HUD.banner('WAVE '+G.wave);G.waveOn=true;G.lostWave=0;
+  ALLIES.length=0;resetWings(false);sendGroup();HUD.banner('WAVE '+G.wave);G.waveOn=true;G.lostWave=0;
 }
 function sendGroup(){const g=WV.groups[WV.gi++];if(!g)return;
   /* rifts 45 to 120 m from the Wraith (close enough to arrive, far enough to be seen coming), else the nearest ones past 40 m */
@@ -6308,7 +6438,8 @@ function updSwarm(dt){
     if(e.state==='maul'&&e.target===TG_P&&!P.dead){const dx=P.x-e.x,dz=P.z-e.z,d=Math.hypot(dx,dz)||1,reach=(e.rig.reach||2)*e.scale+1.2+RAD;
       if(d>reach){const s=Math.min(d-reach,e.rig.speed*1.05*dt);e.x+=dx/d*s;e.z+=dz/d*s;}}}
   /* the targets: the Wraith and every ally not yet taken */
-  const tg=[];if(!P.dead){TG_P.pos.set(P.x,0,P.z);tg.push(TG_P);}for(const a of ALLIES)if(a.state===0){a.pos.set(a.x,0,a.z);tg.push(a);}
+  const tg=[];if(!ART.on){if(!P.dead){TG_P.pos.set(P.x,0,P.z);tg.push(TG_P);}for(const w of WINGS)if(!w.down)tg.push(w);}
+  for(const a of ALLIES)if(a.state===0){a.pos.set(a.x,0,a.z);tg.push(a);}
   SW.update(dt,G.t,tg);
   /* still pouring out of the rift: it stays where it came up */
   for(const e of EN){if(e.dead)continue;if(e.spawnT>0){e.spawnT-=dt;e.x=e.sx;e.z=e.sz;}}
@@ -6316,10 +6447,11 @@ function updSwarm(dt){
   for(const e of EN){if(e.dead||e.spawnT>0)continue;
     if(e.state==='maul'){if(e.st<e.lastSt)e.bit=0;const bites=e.st>.3?(e.st>.95?2:1):0;if(bites>e.bit){e.bit=bites;if(e.mauling&&e.target)bite(e,e.target);}}
     else e.bit=0;e.lastSt=e.st;
-    const ad=Math.hypot(e.x,e.z);if(ad>ARENA_R+6){e.x*=(ARENA_R+6)/ad;e.z*=(ARENA_R+6)/ad;}}
+    if(!ART.on){const ad=Math.hypot(e.x,e.z);if(ad>ARENA_R+6){e.x*=(ARENA_R+6)/ad;e.z*=(ARENA_R+6)/ad;}}}
   /* bodies keep apart; the big ones shove the Wraith */
   for(let i=0;i<EN.length;i++){const a=EN[i];if(a.dead)continue;
     if(!P.dead&&!P.air){const dx=a.x-P.x,dz=a.z-P.z,d=Math.hypot(dx,dz)||1,m=a.r*.7+RAD;if(d<m){const o=m-d,wa=a.alive>300?.35:1;a.x+=dx/d*o*wa;a.z+=dz/d*o*wa;P.x-=dx/d*o*(1-wa);P.z-=dz/d*o*(1-wa);}}
+    for(const w of WINGS){if(w.down)continue;const dx=a.x-w.x,dz=a.z-w.z,d=Math.hypot(dx,dz)||1,m=a.r*.7+RAD;if(d<m){const o=m-d,wa=a.alive>300?.35:1;a.x+=dx/d*o*wa;a.z+=dz/d*o*wa;w.x-=dx/d*o*(1-wa);w.z-=dz/d*o*(1-wa);}}
     for(let j=i+1;j<EN.length;j++){const b=EN[j];if(b.dead)continue;const dx=b.x-a.x,dz=b.z-a.z,m=(a.r+b.r)*.6;if(Math.abs(dx)>m||Math.abs(dz)>m)continue;
       const d=Math.hypot(dx,dz)||.01;if(d<m){const o=(m-d)*.5,wa=b.alive/(a.alive+b.alive);a.x-=dx/d*o*wa*2;a.z-=dz/d*o*wa*2;b.x+=dx/d*o*(1-wa)*2;b.z+=dz/d*o*(1-wa)*2;}}}
   for(const e of EN)if(e.dead&&!e.killed)killCluster(e);
@@ -6331,6 +6463,7 @@ function updSwarm(dt){
 /* a bite: the dot count is the power (1.2 + 0.8 × √dots), times the difficulty */
 function bite(e,t){const pw=1.2+Math.sqrt(e.alive)*.8;
   if(t===TG_P){hurtPlayer(pw,e.x,e.z);sBite(Math.min(1,pw/15));}
+  else if(t.kind==='wing')hurtWing(t,pw,e.x,e.z);
   else if(t.kind==='ally'&&t.state===0){t.state=1;t.t0=G.t;t.by=e;radio('<b>RADIO</b> '+t.sq+' squad: it’s on us!',2);}}
 function updAllies(dt){
   for(const a of ALLIES){if(a.state===2)continue;
@@ -6339,6 +6472,9 @@ function updAllies(dt){
       if(G.t-a.t0>1.25){a.state=2;G.lost++;G.lostWave++;SW.absorb(e,V3(a.x,1,a.z));sLost();
         radio('<b>RADIO</b> Lost contact with '+a.sq+'-'+a.i+'… the marker just turned red.',3.2);}
       continue;}
+    /* on the artillery map they are Wraith teams: they hold their ground and fire on anything within 28 m */
+    if(ART.on){a.cd=(a.cd||Math.random()*.6)-dt;if(a.cd<=0){a.cd=.6;let t=null,bd=28;for(const e of EN){if(e.dead||e.spawnT>0)continue;const d=Math.hypot(e.x-a.x,e.z-a.z)-e.r;if(d<bd){bd=d;t=e;}}
+      if(t)hurtCluster(t,4,lerp(t.x,a.x,.3),t.cy,lerp(t.z,a.z,.3));}continue;}
     /* scatter from anything close; otherwise drift back to the squad's spot */
     let nx=0,nz=0,nd=1e9;for(const e of EN){if(e.dead||e.spawnT>0)continue;const dx=a.x-e.x,dz=a.z-e.z,d=Math.hypot(dx,dz)-e.r;if(d<nd){nd=d;nx=dx;nz=dz;}}
     let tvx=0,tvz=0;if(nd<12){const l=Math.hypot(nx,nz)||1;tvx=nx/l*3.4;tvz=nz/l*3.4;}else{const dx=a.hx-a.x,dz=a.hz-a.z,d=Math.hypot(dx,dz);if(d>.6){tvx=dx/d*1.2;tvz=dz/d*1.2;}}
@@ -6349,29 +6485,35 @@ function updAllies(dt){
    allies (green; a bitten one flickers, then turns red) */
 let SW_TH=null;
 function drawSwarm(dt,thermal){
-  if(SW_TH!==thermal){SW_TH=thermal;SW.setThermal(thermal);SW.mat.uniforms.uSizeMul.value*=TOPK;SW.mat.uniforms.uGain.value=thermal?1:TOPI;}
+  if(SW_TH!==thermal){SW_TH=thermal;SW.setThermal(thermal);}
+  /* on the long-range artillery map the camera is about 500 m up: the dots are drawn bigger there */
+  SW.mat.uniforms.uSizeMul.value=(thermal?4.2:1)*TOPK*(ART.on?2.6:1);SW.mat.uniforms.uGain.value=(thermal?1:TOPI)*(ART.on?1.5:1);
   SW.pxScale(pxScale());
+  /* in the fight, a green dot over each wingmate and the player: the sensor's friend-or-foe mark */
+  if(!ART.on){for(const w of WINGS)if(!w.down)DOTS.put(w.x,8,w.z,0,0,1,thermal?.05:.9,thermal?2:.7);}
   for(const a of ALLIES){if(a.state===2)continue;let col=[0,0,1];
     if(a.state===1){const f=(G.t-a.t0)/1.25;const fl=Math.sin((G.t-a.t0)*(8+f*30))>0;col=(f>.55?fl||f>.85:fl&&Math.random()<f*1.6)?[1,0,0]:[0,0,1];}
     for(let k=4;k>0;k--)a.h[k].copy(a.h[k-1]);a.h[0].set(a.x,1,a.z);
-    if(thermal)DOTS.put(a.x,1,a.z,col[0],0,col[2],.09,2.4);
-    else for(let k=0;k<5;k++)DOTS.put(a.h[k].x,a.h[k].y,a.h[k].z,col[0],0,col[2],1.3*[1,.42,.24,.13,.07][k],.55);}
+    const az=ART.on?3.2:1;
+    if(thermal)DOTS.put(a.x,1,a.z,col[0],0,col[2],.09,2.4*az);
+    else for(let k=0;k<5;k++)DOTS.put(a.h[k].x,a.h[k].y,a.h[k].z,col[0],0,col[2],1.3*[1,.42,.24,.13,.07][k]*(ART.on?1.4:1),.55*az);}
 }
 /* how hard the sensor struggles: close and big clusters break it up (0 = clear; held under 0.7 so the fight stays playable) */
 function sensorInterference(){let s=0;
   for(const e of EN){if(e.dead)continue;const d=Math.hypot(e.x-P.x,e.z-P.z),R=e.rig.size*e.scale;s+=smooth(R*3.2+8,R*.75+2.5,d)*Math.sqrt(e.alive/100);}
   return clamp(.035+.6*(1-Math.exp(-s*.6)),0,.7);}
-function waveClear(){G.waveOn=false;const ok=alliesOK(),bonus=ok*15;addScrap(bonus);saveScrap();
-  G.mode='clear';HUD.banner('WAVE '+G.wave+' CLEAR');
-  radio('<b>OVERWATCH</b> Rift’s quiet. '+(ok===ALLIES.length?'Everyone made it.':ok+' of '+ALLIES.length+' made it.'),4);
-  setTimeout(()=>{if(G.mode==='clear')openUpg('clear',bonus,ok);},1600);}
+/* a wave cleared: 40 scrap for each wingmate standing; every second wave the guns are set up for the artillery round */
+function waveClear(){G.waveOn=false;const ok=wingsUp(),bonus=ok*40;addScrap(bonus);saveScrap();
+  G.mode='clear';HUD.banner('WAVE '+G.wave+' CLEAR');const arty=G.wave%2===0;
+  radio('<b>OVERWATCH</b> Rift\u2019s quiet. '+(ok===3?'Whole team standing.':ok+' of 3 standing.')+(arty?' Get the guns set up: two Wraith teams are in contact two klicks north.':''),4.5);
+  setTimeout(()=>{if(G.mode!=='clear')return;if(arty)startArty();else openUpg('clear',bonus,ok);},arty?3200:1600);}
 function clearSwarm(){EN.length=0;SW.list.length=0;SW.dLife.fill(0);ALLIES.length=0;WV.groups=[];WV.gi=0;WV.spawnQ.length=0;}
 
 /* ==== game/systems/upgrades.js ==== */
 /* systems/upgrades.js — scrap and upgrades, from Ironhowl 4 (06e_upgrades; the six tracks, five levels, the same costs).
    Scrap: half a creature's starting dots when it is cleared (KNOT 5, STALKER 50, BRUTE 250), plus 15 for each ally alive at the
    end of a wave. It is kept on this device. The upgrade screen opens between waves (and from the pause menu in this test arena);
-   it also sets the arms: each forearm takes the AC-4 autocannon, the LN-1 Lance or the AR-1 Arc (Ironhowl 4's bay did this). */
+   after an artillery round too; it also sets the arms: each forearm takes the AC-4 autocannon, the LN-1 Lance or the AR-1 Arc (Ironhowl 4's bay did this). */
 const UPG=[
   {id:'gun',name:'GUN',fx:['START AT TIER II','START AT TIER III','START AT TIER IV','+15% DAMAGE','+30% DAMAGE']},
   {id:'cool',name:'COOLING',fx:['-12% HEAT PER SHOT','-24% HEAT, FASTER COOLING','-36% HEAT, VENT 6 S','-48% HEAT, FASTER COOLING','-60% HEAT, VENT 4 S']},
@@ -6406,9 +6548,9 @@ function loadoutHas(id){const L=loadout();return SLOTS.some(k=>L[k]===id);}
 const ARMS=[['ac','AUTOCANNON'],['ln','LANCE'],['ar','ARC']];
 let UPG_FROM='';
 function openUpg(from,bonus,ok){UPG_FROM=from;saveScrap();const box=$('upg');
-  $('utitle').textContent=from==='clear'?'WAVE '+G.wave+' CLEAR':'UPGRADES';
-  $('usub').textContent=from==='clear'?('ALLIES ALIVE '+ok+' · +'+bonus+' SCRAP'):'TEST ARENA · BUY BETWEEN WAVES';
-  $('ugo').textContent=from==='clear'?'NEXT WAVE':from==='title'?'DEPLOY':'BACK';
+  $('utitle').textContent=from==='clear'?'WAVE '+G.wave+' CLEAR':from==='arty'?'GRID CLEAR':'UPGRADES';
+  $('usub').textContent=from==='clear'?('TEAM STANDING '+ok+'/3 · +'+bonus+' SCRAP'):from==='arty'?('GREEN ALIVE '+ok+'/8 · FRIENDLY FIRE '+(ART.last?ART.last.ff:0)+' · +'+bonus+' SCRAP'):'TEST ARENA · BUY BETWEEN WAVES';
+  $('ugo').textContent=from==='clear'||from==='arty'?'NEXT WAVE':from==='title'?'DEPLOY':'BACK';
   drawUpg();box.style.display='flex';G.paused=from==='pause'||G.paused;}
 function drawUpg(){
   $('uscrap').textContent='SCRAP '+scrap().toLocaleString('en-US');
@@ -6421,9 +6563,79 @@ function drawUpg(){
   $('uarms').querySelectorAll('.chip').forEach(b=>b.onclick=e=>{e.stopPropagation();const L2=loadout();L2[b.dataset.s]=b.dataset.k;setLoadout(L2);refitKit(M);drawUpg();});
 }
 function closeUpg(){$('upg').style.display='none';applyUpgrades(UPG_FROM==='title');
-  if(UPG_FROM==='clear'){G.mode='play';G.paused=false;startWave();}
+  if(UPG_FROM==='clear'||UPG_FROM==='arty'){G.mode='play';G.paused=false;CAMS.ready=false;startWave();}
   else if(UPG_FROM==='title')startPlay();
   else setPause(false);}
+
+/* ==== game/systems/artillery.js ==== */
+/* systems/artillery.js — the artillery round (Christopher, 20 Nov: once your area is clear you set up heavy long-range guns to
+   support Wraith teams nearby; a battleship-style map of red and green dots; aim so as not to hit your own).
+   After every second wave cleared, the view goes to the sensor's long-range map: an 8 × 8 grid (A–H across, 1–8 down) of 20 m
+   squares, two km north. Two friendly Wraith teams (green dots, four each) hold the south of it and fire on anything within 28 m;
+   red clusters come down from the north at them. Tap a square: a shell lands there 3.2 s later and hits everything within 14 m
+   (300 damage at the middle, 40 % of that at the edge). A green dot inside it is lost (friendly fire). Shells: 8, plus one for
+   every two waves. The round ends when the red is gone, when both teams are gone, or after 90 s.
+   Scrap: half of the dots destroyed, plus 20 for each green dot alive, minus 60 for each one you hit. */
+const ART={on:false,cx:0,cz:-2400,n:8,cell:20,shells:0,t:0,tmax:90,flights:[],ff:0,dots0:0,cd:0,end:0,grid:null,labels:[]};
+function artyCellC(i,j){const h=ART.n*ART.cell/2;return [ART.cx-h+(i+.5)*ART.cell,ART.cz-h+(j+.5)*ART.cell];}
+function artyCellName(i,j){return 'ABCDEFGH'[i]+(j+1);}
+function buildArtyGrid(){if(ART.grid)return;const p=[],c=[],h=ART.n*ART.cell/2,x0=ART.cx-h,z0=ART.cz-h;
+  for(let k=0;k<=ART.n;k++){const v=k*ART.cell,a=(k===0||k===ART.n)?.7:.35;
+    p.push(x0+v,.05,z0,x0+v,.05,z0+2*h, x0,.05,z0+v,x0+2*h,.05,z0+v);c.push(0,a,0,0,a,0,0,a,0,0,a,0);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
+  ART.grid=new THREE.LineSegments(g,new THREE.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));ART.grid.frustumCulled=false;ART.grid.visible=false;DS.add(ART.grid);
+  for(let k=0;k<ART.n*2;k++){const el=document.createElement('div');el.className='alab';el.textContent=k<ART.n?'ABCDEFGH'[k]:String(k-ART.n+1);document.body.appendChild(el);ART.labels.push(el);}
+  ART.ringG=new THREE.RingGeometry(.86,1,40);ART.ringG.rotateX(-Math.PI/2);}
+function startArty(){buildArtyGrid();G.mode='arty';ART.on=true;ART.t=0;ART.ff=0;ART.end=0;ART.cd=0;ART.flights.length=0;ART.shells=8+Math.floor(G.wave/2);
+  EN.length=0;SW.list.length=0;ALLIES.length=0;document.body.classList.add('arty');$('upg').style.display='none';ART.grid.visible=true;
+  /* two friendly teams in the south rows, apart */
+  const ci=[1+(Math.random()*2|0),5+(Math.random()*2|0)];
+  ['BRAVO','CHARLIE'].forEach((sq,k)=>{const [x,z]=artyCellC(ci[k],5+(Math.random()*2|0));
+    for(let i=0;i<4;i++){const ax=x+(i%2-.5)*6,az=z+((i>>1)-.5)*6;ALLIES.push({x:ax,z:az,hx:ax,hz:az,vx:0,vz:0,state:0,t0:0,by:null,sq,i:i+1,ph:Math.random()*6,pos:V3(ax,0,az),kind:'ally',h:[V3(ax,1,az),V3(ax,1,az),V3(ax,1,az),V3(ax,1,az),V3(ax,1,az)]});}});
+  /* the red: packs out of the north rows, bigger every time */
+  const w=G.wave,list=[['knot',6],['knot',6],['knot',6],['runner',1],['runner',1],['stalker',1]];
+  if(w>=4)list.push(['stalker',1],['brute',1],['knot',8]);if(w>=6)list.push(['brute',1],['stalker',2],['runner',3]);
+  for(const [id,n] of list){const i=Math.random()*ART.n|0,j=Math.random()*2|0;const [x,z]=artyCellC(i,j);
+    for(let k=0;k<n;k++){const c=spawnCluster(id,{x:x+(Math.random()-.5)*10,z:z+(Math.random()-.5)*10});c.spawnT=.6+Math.random()*.6;}}
+  ART.dots0=liveDots();CAMS.ready=false;
+  radio('<b>OVERWATCH</b> Guns are up. BRAVO and CHARLIE are the green. Call the squares, and keep it off them.',4.5);HUD.banner('ARTILLERY');}
+/* a tap on the map: which square */
+const _ar=new THREE.Raycaster(),_ap=new THREE.Vector2(),_apl=new THREE.Plane(new THREE.Vector3(0,1,0),0),_ah=new THREE.Vector3();
+addEventListener('pointerdown',e=>{if(!ART.on||G.mode!=='arty'||ART.end)return;if(e.target.closest&&e.target.closest('button,.panel'))return;audioInit();
+  _ap.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);_ar.setFromCamera(_ap,cam);if(!_ar.ray.intersectPlane(_apl,_ah))return;
+  const h=ART.n*ART.cell/2,i=Math.floor((_ah.x-(ART.cx-h))/ART.cell),j=Math.floor((_ah.z-(ART.cz-h))/ART.cell);if(i<0||j<0||i>=ART.n||j>=ART.n)return;artyFire(i,j);});
+function artyFire(i,j){if(ART.shells<=0||ART.cd>0){sClick();if(ART.shells<=0)HUD.msg('NO SHELLS LEFT',1);return;}
+  ART.shells--;ART.cd=.5;const [x,z]=artyCellC(i,j);
+  const ring=new THREE.Mesh(ART.ringG,new THREE.MeshBasicMaterial({color:new THREE.Color(1,.6,.2).multiplyScalar(2),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  ring.position.set(x,.1,z);ring.scale.setScalar(14);S.add(ring);
+  ART.flights.push({x,z,t:3.2,ring,name:artyCellName(i,j)});tone('sine',1500,420,3.1,.05);HUD.msg('SHOT OUT · '+artyCellName(i,j),1);}
+function artyLand(f){S.remove(f.ring);const x=f.x+(Math.random()-.5)*5,z=f.z+(Math.random()-.5)*5,r=14;
+  for(const e of EN){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<r+e.r){const k=1-.6*clamp(d/r,0,1);hurtCluster(e,300*k,lerp(e.x,x,.4),e.cy,lerp(e.z,z,.4));}}
+  for(const a of ALLIES){if(a.state===2)continue;if(Math.hypot(a.x-x,a.z-z)<r){if(a.state===1&&a.by)a.by=null;a.state=2;ART.ff++;
+    radio('<b>'+a.sq+'</b> CHECK FIRE! CHECK FIRE! You hit '+a.sq+'-'+a.i+'!',3);sLost();}}
+  part({x,y:1,z,vx:0,vy:0,vz:0,life:.5,s0:10,s1:16,a:1.8,col:[1,.62,.28],glow:true});part({x,y:1,z,vx:0,vy:0,vz:0,life:.45,s0:6,s1:34,a:.9,col:[1,.85,.6],glow:true,ring:true,vr:0});
+  for(let k=0;k<30;k++){const a=Math.random()*TAU,s=6+Math.random()*14;part({x,y:1,z,vx:Math.cos(a)*s,vy:2+Math.random()*6,vz:Math.sin(a)*s,life:1.6+Math.random(),s0:3,s1:9,a:.4,col:[.32,.3,.29],drag:1.5,grav:-.5});}
+  sBoom(2.5);CAMS.shake=Math.max(CAMS.shake,1.1);}
+function updArty(dt){if(!ART.on)return;ART.t+=dt;ART.cd=Math.max(0,ART.cd-dt);
+  for(let i=ART.flights.length-1;i>=0;i--){const f=ART.flights[i];f.t-=dt;f.ring.scale.setScalar(14*(.6+.4*Math.abs(Math.sin(f.t*6))));if(f.t<=0){artyLand(f);ART.flights.splice(i,1);}}
+  const ok=alliesOK(),red=EN.length;
+  if(!ART.end&&(red===0&&ART.t>2||ok===0||ART.t>=ART.tmax)){ART.end=G.t;
+    radio(red===0?'<b>OVERWATCH</b> Grid’s clear. Good shooting.':ok===0?'<b>OVERWATCH</b> We lost both teams.':'<b>OVERWATCH</b> Out of time. The teams will take it from here.',3.5);}
+  if(ART.end&&G.t-ART.end>2.5)endArty();
+  /* the labels along the grid's top and left edges */
+  const h=ART.n*ART.cell/2;ART.labels.forEach((el,k)=>{if(k<ART.n)_hp.set(ART.cx-h+(k+.5)*ART.cell,0,ART.cz-h-4);else _hp.set(ART.cx-h-4,0,ART.cz-h+(k-ART.n+.5)*ART.cell);
+    _hp.project(cam);sty(el,'display','block');sty(el,'transform','translate('+((_hp.x*.5+.5)*innerWidth).toFixed(0)+'px,'+((-_hp.y*.5+.5)*innerHeight).toFixed(0)+'px)');});
+  const s=Math.max(0,Math.ceil(ART.tmax-ART.t));HUD.set('arty1','text','ARTILLERY · SHELLS '+ART.shells+' · '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'));
+  HUD.set('arty2','text','BRAVO '+ALLIES.filter(a=>a.sq==='BRAVO'&&a.state!==2).length+'/4 · CHARLIE '+ALLIES.filter(a=>a.sq==='CHARLIE'&&a.state!==2).length+'/4 · RED '+liveDots().toLocaleString('en-US')+' DOTS');}
+function endArty(){const ok=alliesOK(),killed=Math.max(0,ART.dots0-liveDots());const bonus=Math.max(0,Math.round(killed/2)+ok*20-ART.ff*60);addScrap(bonus);saveScrap();
+  for(const f of ART.flights)S.remove(f.ring);ART.flights.length=0;ART.on=false;ART.grid.visible=false;ART.labels.forEach(el=>sty(el,'display','none'));
+  EN.length=0;SW.list.length=0;SW.dLife.fill(0);document.body.classList.remove('arty');G.mode='clear';CAMS.ready=false;
+  ART.last={ok,ff:ART.ff,killed,bonus};const okA=ok;ALLIES.length=0;openUpg('arty',bonus,okA);}
+/* the camera over the grid: straight down, the whole grid on screen */
+function artyCam(dt){const tv=Math.tan(cam.fov*Math.PI/360),Wg=ART.n*ART.cell+24;
+  const dist=Math.max(Wg/(2*tv),Wg/(2*tv*cam.aspect))*1.04,pitch=82*Math.PI/180;
+  CAMS.shake=Math.max(0,CAMS.shake-dt*2.2);const sh=CAMS.shake*CAMS.shake*2;
+  cam.position.set(ART.cx+(Math.random()-.5)*sh,dist*Math.sin(pitch),ART.cz+dist*Math.cos(pitch)+(Math.random()-.5)*sh);cam.lookAt(ART.cx,0,ART.cz);}
 
 /* ==== game/systems/main.js ==== */
 /* systems/main.js — the arena's flow and the frame loop (from Ironhowl 4's 10_main, cut down).
@@ -6436,7 +6648,7 @@ function setThermal(on){G.thermal=on;HUD.msg(on?'THERMAL':'SENSOR',.7);}
 function setPause(b){if(G.mode!=='play'&&b)return;G.paused=b;$('menu').style.display=b?'flex':'none';setVolume();if(b)jetLoop(0);}
 function resetRun(){P=mkPlayer();CAMS.ready=false;clearSwarm();BOLTS.length=MISS.length=0;clearPickups();
   Object.assign(GUN,{heat:0,over:false,cd:0,ventCd:0});SALVO.cd=0;SALVO.left=0;
-  Object.assign(G,{wave:0,waveOn:false,kills:0,lost:0,lostWave:0,hurt:0});if(M)M.root.visible=true;$('down').style.display='none';}
+  Object.assign(G,{wave:0,waveOn:false,kills:0,lost:0,lostWave:0,hurt:0});resetWings(true);if(M)M.root.visible=true;$('down').style.display='none';}
 function startPlay(){audioInit();resetRun();applyUpgrades(true);G.mode='play';G.paused=false;$('title').style.display='none';
   HUD.msg(touchy?'LEFT THUMB MOVES · RIGHT THUMB AIMS AND FIRES':'WASD MOVE · MOUSE AIMS · HOLD LEFT BUTTON TO FIRE · SPACE JET',4);
   setTimeout(()=>{if(G.mode==='play'&&!G.wave)startWave();},1800);}
@@ -6466,14 +6678,15 @@ function tick(dt){
   if(c.upg&&G.mode==='play'&&!G.paused){setPause(true);openUpg('pause');}
   if(!live)c=Object.assign({},IDLE);
   if(live){updAim(c);updPlayer(c,dt);updGun(c,dt);handleEvents();}
-  const fight=live||G.mode==='down'||G.mode==='clear';
+  const fight=live||G.mode==='down'||G.mode==='clear'||G.mode==='arty';
   if(fight){updShots(dt);updSwarm(dt);updPickups(dt);}
+  updArty(dt);updWings(dt,live);
   updBeams(fight?dt:0);updShieldFx(dt);updRadio(dt);
   if(M&&M.ready){const ev=poseMech(M,{x:P.x,z:P.z,gy:P.y,legYaw:P.legYaw,aimYaw:P.yaw,spd:live?P.spd:0,air:P.air,vy:P.vy,land:P.land,thrust:P.thrust,pitch:0},fight||G.mode==='title'?dt:0);
     for(const e of ev){const k=clamp(Math.abs(P.spd)/WALK,.35,1);sStep(k);if(e.x!==undefined)dustPuff(e.x,e.z,3,.55);}}
   if(G.mode==='down'){G.downT-=dt;if(G.downT<=0&&$('down').style.display!=='flex')$('down').style.display='flex';
     if(Math.random()<dt*20)part({x:P.x+(Math.random()-.5)*2,y:P.y+1+Math.random()*2,z:P.z+(Math.random()-.5)*2,vx:0,vy:2.5,vz:0,life:2.4,s0:1.2,s1:5,a:.4,col:[.2,.2,.21],drag:.6,grav:-.5});}
-  updCam(dt);placeSun(P.x,P.z);
+  if(ART.on)artyCam(dt);else updCam(dt);placeSun(P.x,P.z);
   if(live)jetFX(dt);updFX(fight?dt:dt*.3);
   jetLoop(live?P.thrust:0);
   G.hurt=Math.max(0,G.hurt-dt*1.5);
@@ -6483,7 +6696,7 @@ function tick(dt){
   DOTS.end();
   const S_=pxScale();dotMat.uniforms.uScale.value=S_;dotMat.uniforms.uSoft.value=G.thermal?1:0;
   dotMat.uniforms.uMin.value=(G.thermal?7:2)*PR*.5+1;dotMat.uniforms.uMax.value=G.thermal?160:56;
-  G.interf=fight||G.mode==='title'?sensorInterference():.035;hissLoop(G.interf);
+  G.interf=ART.on?.07:fight||G.mode==='title'?sensorInterference():.035;hissLoop(G.interf);
 }
 /* auto quality: if frames are slow, draw fewer pixels (down to 60 % of the screen's) */
 function autoQ(dt){if(G.mode!=='play'||G.paused)return;const pf=G.perf;pf.t+=dt;pf.n++;
@@ -6494,7 +6707,7 @@ function frame(now){requestAnimationFrame(frame);
   const raw=(now-last)/1000,dt=Math.min(.05,raw);last=now;G.fdt+=(raw-G.fdt)*.1;
   if(DEV&&window.__freeze)return;
   tick(dt);autoQ(dt);
-  if(G.mode==='play'||G.mode==='clear'||G.mode==='down'||G.mode==='title')HUD.frame(dt,clamp(1-G.interf*.95,0,1));
+  if(G.mode!=='load')HUD.frame(dt,clamp(1-G.interf*.95,0,1));
   if((fpsT-=raw)<=0&&DEV){fpsT=.5;$('fps').textContent=Math.round(1/Math.max(.001,G.fdt))+' fps · x'+DYN.toFixed(2)+' · dots '+DOTS.n;}
   /* the sensor struggles: hold the picture (only while playing, never on a menu) */
   const stut=G.mode==='play'&&!G.paused?smooth(.3,.62,G.interf)*.5:0;
@@ -6503,7 +6716,7 @@ function frame(now){requestAnimationFrame(frame);
   renderFrame({thermal:G.thermal,interf:G.interf,t:G.t,flash:0,hurt:G.hurt});
 }
 function boot(){
-  setupHud();resize();buildArena();buildFX();buildWeapons();P=mkPlayer();M=buildMech();
+  setupHud();resize();buildArena();buildFX();buildWeapons();P=mkPlayer();M=buildMech();buildWings();resetWings(true);
   G.mode='title';
   /* the title: pick a difficulty, deploy, or open the upgrades first */
   const dsel=()=>document.querySelectorAll('#tdiff button').forEach(b=>b.classList.toggle('on',DIFFS[b.dataset.d]===DIFF));
@@ -6526,10 +6739,10 @@ function boot(){
 }
 /* resetting progress asks twice by tapping: the first tap arms it for 3 s (no browser dialogs) */
 let RESET_ARM=0;function confirmReset(){const now=performance.now();if(now<RESET_ARM){RESET_ARM=0;$('ureset').textContent='RESET';return true;}RESET_ARM=now+3000;$('ureset').textContent='TAP AGAIN';setTimeout(()=>{$('ureset').textContent='RESET';},3000);return false;}
-if(DEV)window.__rmd={G,get P(){return P;},get M(){return M;},EN,ALLIES,GUN,MSL,SALVO,UP,AIM,WV,DOTS,SW,startPlay,startWave,spawnCluster,RIFTS,hurtCluster,openUpg,closeUpg,setThermal,refit(L){setLoadout(Object.assign(loadout(),L));return refitKit(M).then(()=>applyUpgrades(true));},buyUpg,upgLv,addScrap,saveScrap,SAVE,PK,dropPickup,
+if(DEV)window.__rmd={G,get P(){return P;},get M(){return M;},EN,ALLIES,GUN,MSL,SALVO,UP,AIM,WV,DOTS,SW,startPlay,startWave,spawnCluster,RIFTS,hurtCluster,WINGS,ART,startArty,artyFire,openUpg,closeUpg,setThermal,refit(L){setLoadout(Object.assign(loadout(),L));return refitKit(M).then(()=>applyUpgrades(true));},buyUpg,upgLv,addScrap,saveScrap,SAVE,PK,dropPickup,
   ctl(o){CTLX=o;},ff(t){const n=Math.round(t*60);for(let i=0;i<n;i++)tick(1/60);},
   info(){return {mode:G.mode,wave:G.wave,x:+P.x.toFixed(1),z:+P.z.toFixed(1),hull:+P.hull.toFixed(0),shield:+P.shield.toFixed(0),heat:+GUN.heat.toFixed(0),msl:MSL.ammo,
-    alive:EN.filter(e=>!e.dead).map(e=>e.kind+':'+e.alive).join(' '),dots:liveDots(),allies:alliesOK()+'/'+ALLIES.length,kills:G.kills,scrap:scrap(),interf:+G.interf.toFixed(2),fps:Math.round(1/G.fdt),ready:!!(M&&M.ready)};}};
+    alive:EN.filter(e=>!e.dead).map(e=>e.kind+':'+e.alive).join(' '),dots:liveDots(),allies:alliesOK()+'/'+ALLIES.length,wings:WINGS.map(w=>w.name+':'+(w.down?'down':Math.round(w.hull))).join(' '),kills:G.kills,scrap:scrap(),interf:+G.interf.toFixed(2),fps:Math.round(1/G.fdt),ready:!!(M&&M.ready)};}};
 boot();
 
 })();</script>
