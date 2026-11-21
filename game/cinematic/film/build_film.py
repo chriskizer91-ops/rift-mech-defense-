@@ -20,6 +20,7 @@ SCENES = {
     "m1": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-strand.js", "film/scene-m1.js"], "out": "film-m1-first-light.html"},
     "brief": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-strand.js", "film/set-city.js", "film/scene-brief.js"], "out": "film-brief.html"},
     "m3": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-quarry.js", "film/scene-m3.js"], "out": "film-m3-the-dig.html"},
+    "m4": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-portarlen.js", "film/scene-m4.js"], "out": "film-m4-landfall.html"},
     "m5c": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-saltpans.js", "film/scene-m5c.js"], "out": "film-m5-copper.html"},
 }
 
