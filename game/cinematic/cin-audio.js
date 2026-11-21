@@ -111,12 +111,42 @@ RMD.Score=function(ctx){const S={},master=ctx.createGain();master.gain.value=.5;
   strF.connect(strT);strT.connect(strG);strG.connect(music);strG.connect(hall);
   const trem=ctx.createOscillator();trem.frequency.value=9;const tremG=ctx.createGain();tremG.gain.value=.5;trem.connect(tremG);tremG.connect(strT.gain);strT.gain.value=.5;trem.start();
   [146.8,174.6,220,293.7,349.2].forEach((f,i)=>[-9,0,8].forEach(dt=>{const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=f;o.detune.value=dt+i;const g=ctx.createGain();g.gain.value=.035;o.connect(g);g.connect(strF);o.start();}));
-  S.params={wind,sea,rain,rise,riseF,stat,pad:padG.gain,padF:padF.frequency,str:strG.gain,strF:strF.frequency};
+  /* the harbour's mains hum (dies with the lamps) */
+  const buzzF=ctx.createBiquadFilter();buzzF.type='bandpass';buzzF.frequency.value=240;buzzF.Q.value=1.2;const buzzG=ctx.createGain();buzzG.gain.value=0;buzzF.connect(buzzG);buzzG.connect(sfx);
+  [60,120,180].forEach((f,i)=>{const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=f;const g=ctx.createGain();g.gain.value=[.25,.18,.1][i];o.connect(g);g.connect(buzzF);o.start();});
+  /* the low hum that builds before it comes: two sines a hair apart, beating, and a slow swell */
+  const humG=ctx.createGain();humG.gain.value=0;humG.connect(music);humG.connect(hall);
+  [[41.2,.5],[41.9,.5],[82.4,.25],[123.6,.12]].forEach(([f,a])=>{const o=ctx.createOscillator();o.type='sine';o.frequency.value=f;const g=ctx.createGain();g.gain.value=a;o.connect(g);g.connect(humG);o.start();});
+  S.params={wind,sea,rain,rise,riseF,stat,pad:padG.gain,padF:padF.frequency,str:strG.gain,strF:strF.frequency,buzz:buzzG.gain,hum:humG.gain};
   /* ---------- foley ---------- */
-  S.horn=function(when,p,len){const dest=pan(ctx,p,sfx);const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=520;f.Q.value=1.5;const g=ctx.createGain();f.connect(g);g.connect(dest);g.connect(wide);
-    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.55,when+.45);g.gain.setValueAtTime(.55,when+len);g.gain.linearRampToValueAtTime(0,when+len+1.3);
+  /* the foghorn; choke: it dies mid-blast, the pitch falling away like a machine losing power */
+  S.horn=function(when,p,len,choke){const dest=pan(ctx,p,sfx);const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=520;f.Q.value=1.5;const g=ctx.createGain();f.connect(g);g.connect(dest);g.connect(wide);
+    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.55,when+.45);g.gain.setValueAtTime(.55,when+len);
+    if(choke){g.gain.linearRampToValueAtTime(.7,when+len+.08);g.gain.setValueAtTime(.2,when+len+.25);g.gain.linearRampToValueAtTime(.45,when+len+.3);g.gain.exponentialRampToValueAtTime(.001,when+len+.75);}
+    else g.gain.linearRampToValueAtTime(0,when+len+1.3);
     [[73.4,'sawtooth',.5],[110,'sawtooth',.35],[36.7,'square',.25]].forEach(([fr,ty,k])=>{const o=ctx.createOscillator();o.type=ty;o.frequency.setValueAtTime(fr*.97,when);o.frequency.linearRampToValueAtTime(fr,when+.4);
+      if(choke){o.frequency.setValueAtTime(fr,when+len);o.frequency.exponentialRampToValueAtTime(fr*.28,when+len+.7);}
       const og=ctx.createGain();og.gain.value=k;o.connect(og);og.connect(f);o.start(when);o.stop(when+len+1.4);});};
+  /* a lamp dying: a crackle of arcing, a pop, the hum of it gone */
+  S.pop=function(when,p,k){k=k||1;const dest=pan(ctx,p,sfx);for(let i=0;i<5;i++){const t=when-.3+Math.random()*.28;const n=ctx.createBufferSource();n.buffer=white;const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=2500;
+      const g=ctx.createGain();env(g,t,.001,.08*k,.03);n.connect(f);f.connect(g);g.connect(dest);n.start(t,Math.random()*2,.05);}
+    const n=ctx.createBufferSource();n.buffer=white;const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1400;f.Q.value=.8;const g=ctx.createGain();env(g,when,.001,.3*k,.12);n.connect(f);f.connect(g);g.connect(dest);n.start(when,Math.random()*2,.15);
+    const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(140,when);o.frequency.exponentialRampToValueAtTime(40,when+.12);const og=ctx.createGain();env(og,when,.002,.25*k,.18);o.connect(og);og.connect(dest);o.start(when);o.stop(when+.25);};
+  /* the sea pulling back: a long sucking roar, the water draining off the wall */
+  S.drain=function(when,dur){const n=ctx.createBufferSource();n.buffer=pink;n.loop=true;const f=ctx.createBiquadFilter();f.type='lowpass';f.Q.value=2;f.frequency.setValueAtTime(1600,when);f.frequency.exponentialRampToValueAtTime(110,when+dur);
+    const g=ctx.createGain();g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.9,when+dur*.25);g.gain.exponentialRampToValueAtTime(.001,when+dur);n.connect(f);f.connect(g);g.connect(sfx);g.connect(wide);n.start(when);n.stop(when+dur+.1);
+    for(let i=0;i<40;i++){const t=when+Math.random()*dur*.8;const o=ctx.createOscillator();o.type='sine';const fr=220+Math.random()*420;o.frequency.setValueAtTime(fr,t);o.frequency.exponentialRampToValueAtTime(fr*1.8,t+.05);
+      const og=ctx.createGain();env(og,t,.003,.03,.07);o.connect(og);og.connect(pan(ctx,Math.random()*1.6-.8,sfx));o.start(t);o.stop(t+.1);}};
+  /* the sea coming back */
+  S.wash=function(when,dur){const n=ctx.createBufferSource();n.buffer=pink;n.loop=true;const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(250,when);f.frequency.exponentialRampToValueAtTime(2600,when+dur*.5);f.frequency.exponentialRampToValueAtTime(400,when+dur);
+    const g=ctx.createGain();g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(1,when+dur*.45);g.gain.exponentialRampToValueAtTime(.001,when+dur);n.connect(f);f.connect(g);g.connect(sfx);g.connect(wide);n.start(when);n.stop(when+dur+.1);};
+  /* the Signal rising: a groan, low saws through moving vowel-like bands, sinking in pitch */
+  S.moan=function(when,dur){const out=ctx.createGain();out.gain.setValueAtTime(0,when);out.gain.linearRampToValueAtTime(.75,when+dur*.3);out.gain.setValueAtTime(.75,when+dur*.7);out.gain.exponentialRampToValueAtTime(.001,when+dur);
+    out.connect(sfx);out.connect(wide);const d=drive(ctx,2);d.connect(out);
+    [[300,520],[700,420],[1150,1500]].forEach(([a,b],i)=>{const f=ctx.createBiquadFilter();f.type='bandpass';f.Q.value=6;f.frequency.setValueAtTime(a,when);f.frequency.linearRampToValueAtTime(b,when+dur*.5);f.frequency.linearRampToValueAtTime(a*.8,when+dur);
+      const fg=ctx.createGain();fg.gain.value=[1,.7,.35][i];f.connect(fg);fg.connect(d);
+      [55,82.4,110,41.2].forEach(fr=>{const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(fr,when);o.frequency.exponentialRampToValueAtTime(fr*.82,when+dur);
+        const v=ctx.createOscillator();v.frequency.value=4.5+i;const vg=ctx.createGain();vg.gain.value=9;v.connect(vg);vg.connect(o.detune);o.connect(f);o.start(when);v.start(when);o.stop(when+dur+.1);v.stop(when+dur+.1);});});};
   S.step=function(when,p,k){const dest=pan(ctx,p,sfx);const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(70,when);o.frequency.exponentialRampToValueAtTime(32,when+.18);
     const g=ctx.createGain();env(g,when,.006,.55*k,.35);o.connect(g);g.connect(dest);o.start(when);o.stop(when+.45);
     const n=ctx.createBufferSource();n.buffer=white;const nf=ctx.createBiquadFilter();nf.type='bandpass';nf.frequency.value=2300;nf.Q.value=3;const ng=ctx.createGain();env(ng,when+.01,.003,.12*k,.12);

@@ -1,20 +1,21 @@
 # game/cinematic: the Signal's reveal (session D)
 
-The one cinematic of chapter 1 (decided 20 Nov, night): 2 min 30, three acts, twenty shots, rendered live in three.js and
-timed exactly, with Christopher's ElevenLabs takes on the radio.
+The one cinematic of chapter 1: 2 min 44, four parts, 23 shots, rendered live in three.js and timed exactly, with
+Christopher's ElevenLabs takes (the 24 frightened re-takes, 21 Nov) on a failing radio.
 
-| Act | Time | What happens |
+| Part | Time | What happens |
 |---|---|---|
-| Arrival | 0:00–0:38 | down through the rain onto Arlen Bay; the team walks the harbour wall; Harrow, Miller, Wren and ANVIL check in on the tactical map; "Copy." |
-| The reveal | 0:38–1:39 | the count climbs, the sensor chokes, "It's one mass", three clear seconds, ANVIL, "The Signal." |
-| First contact | 1:39–2:30 | four rifts feed it; ANVIL's barrage seals rift 4 (−100,000); it rises, comes ashore, slams the water; "Here it comes." |
+| Arrival | 0:00–0:20 | down through the rain onto Arlen Bay; the team walks the wall; Harrow, Miller, Wren and ANVIL check in |
+| Omens | 0:20–0:40 | the lamps die one by one; the foghorn chokes; the lighthouse goes out; the sea drains off the wall; the magma under the bay beats faster; steam; the rain stops and drifts up; the grid bends to the rift |
+| Emergence | 0:40–1:53 | dots pour slowly out of the rift; the swarm spreads, pulls into one mass, sinks; it rises while the team steps back; three clear seconds; ANVIL; the sea floods back; "The Signal." |
+| First contact | 1:53–2:44 | four rifts feed it; ANVIL's barrage seals rift 4 (−100,000); it comes ashore and slams the water; "Here it comes." |
 
 The fight that follows starts at **900,000 dots with three rifts left**.
 It is its own page. The game cuts to it and gets control back at the end.
 
 ```
 python3 game/cinematic/build.py                          # -> builds/signal-reveal.html (one file, works offline)
-python3 -I game/cinematic/shots.py OUTDIR 24 83 121.5   # stills at those seconds (headless)
+python3 -I game/cinematic/shots.py OUTDIR 25 43 88 110   # stills at those seconds (headless)
 python3 -I game/cinematic/sound.py OUT.wav               # the whole soundtrack, rendered offline (to check the mix)
 ```
 

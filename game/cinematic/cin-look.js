@@ -91,14 +91,22 @@ L.render=function(scene,cam,o){const R=L.R;
   u.uMode.value=o.mode;u.uI.value=o.interf;u.uT.value=o.t;u.uPix.value=o.pix;u.uRes.value.set(rtS.width,rtS.height);u.uFlash.value=o.flash;
   u.uExp.value=o.exp;u.uReal.value=o.real;u.uMono.value=o.mono;u.uWExp.value=o.wexp;u.uClear.value=o.clear;u.uFade.value=o.fade;u.uDots.value=o.dots;
   pass(finMat,null);};
-/* the range rings and spokes of the sensor's grid, round the team (green channel) */
-L.grid=function(radius){const ADD={transparent:true,depthTest:false,depthWrite:false,blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneFactor};
+/* the range rings and spokes of the sensor's grid, round the team (green channel). uWarp bends it toward uC (the rift),
+   the way a weight bends a sheet: the sensor's geometry going wrong before anything shows */
+L.grid=function(radius){
   const p=[],c=[];const ring=(r,a)=>{for(let i=0;i<160;i++){const a0=i/160*Math.PI*2,a1=(i+1)/160*Math.PI*2;
    p.push(Math.cos(a0)*r,0,Math.sin(a0)*r,Math.cos(a1)*r,0,Math.sin(a1)*r);c.push(0,a,0,0,a,0);}};
   for(let i=1;i<=10;i++)ring(i/10,(i%5===0?.5:.24)*(1-i/12));
-  for(let i=0;i<16;i++){const a=i/16*Math.PI*2;p.push(Math.cos(a)*.04,0,Math.sin(a)*.04,Math.cos(a),0,Math.sin(a));c.push(0,.22,0,0,.02,0);}
+  for(let i=0;i<16;i++){const a=i/16*Math.PI*2;for(let j=0;j<20;j++){const r0=.04+j/20*.96,r1=.04+(j+1)/20*.96;
+    p.push(Math.cos(a)*r0,0,Math.sin(a)*r0,Math.cos(a)*r1,0,Math.sin(a)*r1);c.push(0,.22*(1-r0*.9),0,0,.22*(1-r1*.9),0);}}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c,3));
-  const m=new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD));const gr=new T.LineSegments(g,m);gr.scale.setScalar(radius);gr.position.y=.3;gr.frustumCulled=false;
+  const m=new T.ShaderMaterial({uniforms:{uK:{value:1},uWarp:{value:0},uC:{value:new T.Vector2()},uT:{value:0}},transparent:true,depthTest:false,depthWrite:false,
+    blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneFactor,
+    vertexShader:`attribute vec3 color;uniform float uWarp,uT;uniform vec2 uC;varying vec3 vC;void main(){vec3 q=position;vec2 d=uC-q.xz;float r=length(d);
+      float pull=uWarp*exp(-r*2.2)*(.85+.15*sin(uT*3.-r*30.));q.xz+=d*pull*.45;q.y-=uWarp*.035*exp(-r*3.5);vC=color*(1.+uWarp*exp(-r*4.)*2.);
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(q,1.);}`,
+    fragmentShader:`uniform float uK;varying vec3 vC;void main(){gl_FragColor=vec4(vC*uK,1.);}`});
+  const gr=new T.LineSegments(g,m);gr.scale.setScalar(radius);gr.position.y=.3;gr.frustumCulled=false;
   return {obj:gr,mat:m};};
 return L;
 })();

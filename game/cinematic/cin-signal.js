@@ -18,9 +18,9 @@ const ADD={transparent:true,depthTest:true,depthWrite:false,blending:T.CustomBle
 const NPART=12;
 const hostMat=new T.ShaderMaterial(Object.assign({uniforms:{uPart:{value:Array.from({length:NPART},()=>new T.Matrix4())},uPartL:{value:Array.from({length:NPART},()=>new T.Matrix4())},
   uT:{value:0},uRes:{value:1},uQ:{value:0},uPulse:{value:0},uCoreC:{value:new T.Vector3()},uMaw:{value:0},uReach:{value:0},uAg:{value:0},uTB:{value:Array.from({length:12},()=>new T.Vector4())},uTD:{value:Array.from({length:12},()=>new T.Vector4())},
-  uSize:{value:.45},uScale:{value:1},uMin:{value:1.2},uMax:{value:6},uSoft:{value:0},uGain:{value:.03},uCG:{value:6},uCloud:{value:new T.Vector3(0,0,0)},uWS:{value:1}},
+  uSize:{value:.45},uScale:{value:1},uMin:{value:1.2},uMax:{value:6},uSoft:{value:0},uGain:{value:.03},uCG:{value:6},uCloud:{value:new T.Vector3(0,0,0)},uWS:{value:1},uCR:{value:1},uCol:{value:70},uClipY:{value:-1e4}},
  vertexShader:`attribute vec4 aSeed;attribute float aPart;uniform mat4 uPart[${NPART}];uniform mat4 uPartL[${NPART}];uniform vec4 uTB[12];uniform vec4 uTD[12];
- uniform float uT,uRes,uQ,uPulse,uSize,uScale,uMin,uMax,uGain,uCG,uMaw,uReach,uAg,uWS;uniform vec3 uCoreC,uCloud;varying vec3 vC;varying float vA;${HASH}
+ uniform float uT,uRes,uQ,uPulse,uSize,uScale,uMin,uMax,uGain,uCG,uMaw,uReach,uAg,uWS,uCR,uCol,uClipY;uniform vec3 uCoreC,uCloud;varying vec3 vC;varying float vA;${HASH}
  void main(){int pi=int(aPart+.5);vec3 tp;float hot=0.;float lag=aSeed.z*aSeed.z*.85;
   if(pi==8){float Hh=60.;float y=mod(position.y*Hh+uT*(5.+aSeed.y*9.),Hh);float f=y/Hh;
     float rad=mix(64.,17.,pow(f,.5))*(.15+.85*position.z);float ang=position.x+uT*(.3+.45*aSeed.x)+f*6.;
@@ -36,15 +36,17 @@ const hostMat=new T.ShaderMaterial(Object.assign({uniforms:{uPart:{value:Array.f
   vec3 w=tp*.045;tp+=vec3(sin(w.y*1.7+uT*1.1)+sin(w.z*2.3-uT*.8),sin(w.z*1.9+uT*.9)+sin(w.x*2.1+uT*1.3),sin(w.x*1.5-uT*1.2)+sin(w.y*2.5+uT*.7))*(1.5+uAg*1.3);
   if(aSeed.w>.983&&pi!=8){float dk=fract(uT*.11+aSeed.y*7.);tp+=vec3((aSeed.x-.5)*12.*dk,-dk*dk*75.,(aSeed.z-.5)*12.*dk);}
   float ph=aSeed.y*6.2832,ca2=1.6+2.4*fract(aSeed.y*7.31);tp+=vec3(sin(uT*.55+ph),sin(uT*.43+ph*1.7),cos(uT*.5+ph*2.3))*(pi==8?.4:ca2)+vec3(sin(uT*2.1+aSeed.w*40.),cos(uT*1.9+aSeed.x*40.),sin(uT*2.3+aSeed.z*40.))*.35;
-  float ca=aSeed.w*6.2832+uT*.04*(.5+aSeed.x);float cr=40.+aSeed.z*aSeed.z*620.;
-  vec3 cp=uCloud+vec3(cos(ca)*cr,1.+aSeed.y*aSeed.y*70.,sin(ca)*cr*.55);
+  float ca=aSeed.w*6.2832+uT*.04*(.5+aSeed.x);float cr=(40.+aSeed.z*aSeed.z*620.)*uCR;
+  vec3 cp=uCloud+vec3(cos(ca)*cr,1.+aSeed.y*aSeed.y*uCol,sin(ca)*cr*.55);
   float k=clamp(uRes*1.7-aSeed.x*.7,0.,1.);k=k*k*(3.-2.*k);
   vec3 p=mix(cp,tp,k);float sw=sin(k*3.1416);p.y+=sw*50.*aSeed.z;p.xz+=sw*vec2(cos(ca*3.),sin(ca*3.))*70.*aSeed.y;
   float q=uQ*(1.-k*.6);float st=floor(uT*9.+aSeed.x*3.);
   p+=(vec3(hs(st+aSeed.y*91.7),hs(st*1.3+aSeed.z*57.1),hs(st*.7+aSeed.w*33.3))-.5)*q*(3.+aSeed.x*14.);
   vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
   float un=1.-k;float px=uSize*uWS*(1.+hot*.7+un*1.6)*uScale/max(.001,-mv.z);float cl=clamp(px,uMin+un*.8,uMax);
-  vA=uGain*mix(1.,uCG,un)*(1.+hot*2.2*(.5+.5*uPulse)*k)*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);}`,
+  vA=uGain*mix(1.,uCG,un)*(1.+hot*2.2*(.5+.5*uPulse)*k)*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);
+  /* still under the sea (or still in the rift): not here yet */
+  float wy=(modelMatrix*vec4(p,1.)).y;vA*=smoothstep(uClipY-2.,uClipY+9.,wy);}`,
  fragmentShader:DOT_FRAG},ADD));
 
 /* ---------- the body: the viewer's parts, verbatim ---------- */
