@@ -43,3 +43,16 @@ document from it.
 
 ## Done when
 The design document exists with all of the above, linked from `docs/BOARD.md`, and the open questions are in it.
+
+## Proposals (waiting on Christopher)
+
+### Chapter 1 as a 30-minute film (21 Nov)
+- Every piece is a game scene. The cutscenes and combat clips play in the game between levels, and played in order they make one film.
+- Shape: a 1:30 opening; missions 1 to 7 each get a ~1:00 arrival, a ~1:45 battle and a ~0:30 aftermath; mission 8 gets the
+  reveal (2:44), the Signal fight (3:00) and the ending (1:30). About 31 minutes.
+- Battles are staged with the real game pieces (B's maps, C's Wraith and weapons, A's creatures), driven by a script, filmed with
+  the reveal's look. Later the same scripts can replay real play.
+- Needs first: one shared scene format (the reveal's engine split out of `cin-main.js`), a 30-minute script and shot list, a
+  voice sheet for the new lines (~100), and a "director mode" from A/B/C (script the Wraith and the swarm, same result every run).
+- Render: about 22 min of headless rendering per film minute on one session (about 11 h in all), so split it across sessions.
+  Videos stay out of git (100 MB limit).
