@@ -46,11 +46,11 @@ F.puff=function(t,at,k,n){n=n||14;for(let j=0;j<n;j++){const i=F.pHead;F.pHead=(
   F.puffPts.geometry.attributes.position.needsUpdate=true;F.puffPts.geometry.attributes.aS.needsUpdate=true;};
 const _d=new T.Vector3(),_s=new T.Vector3(),_c=new T.Vector3();
 F.update=function(t,cam,px){F.pu.uT.value=t;F.pu.uScale.value=px||1;
-  let n=0;for(const s of F.shots){const age=t-s.t;if(age<0||age>.09||n>=NT)continue;
-    const L=s.a.distanceTo(s.b);const u0=Math.max(0,age/.09-.35),u1=Math.min(1,age/.09+.15);
+  let n=0;for(const s of F.shots){const life=s.k>=3?.4:.09;const age=t-s.t;if(age<0||age>life||n>=NT)continue;
+    const u0=s.k>=3?0:Math.max(0,age/life-.35),u1=s.k>=3?1:Math.min(1,age/life+.15);
     _d.subVectors(s.b,s.a);const A=s.a.clone().addScaledVector(_d,u0),B=s.a.clone().addScaledVector(_d,u1);
     _c.subVectors(cam.position,A);_s.crossVectors(_d,_c).normalize().multiplyScalar(.07*s.k+.0015*A.distanceTo(cam.position));
-    const q=[A.clone().add(_s),A.clone().sub(_s),B.clone().add(_s),B.clone().sub(_s)];const al=s.k*(1-age/.09)*.8;
+    const q=[A.clone().add(_s),A.clone().sub(_s),B.clone().add(_s),B.clone().sub(_s)];const al=s.k*(1-age/life)*.8*(s.k>=3?2.5:1);
     const P=[q[0],q[1],q[2],q[2],q[1],q[3]];for(let j=0;j<6;j++){F.tp.set([P[j].x,P[j].y,P[j].z],(n*6+j)*3);F.ta[n*6+j]=al;}n++;}
   for(let i=n;i<NT;i++)for(let j=0;j<6;j++)F.ta[i*6+j]=0;
   F.tracers.geometry.attributes.position.needsUpdate=true;F.tracers.geometry.attributes.aA.needsUpdate=true;F.tracers.geometry.setDrawRange(0,Math.max(1,n)*6);

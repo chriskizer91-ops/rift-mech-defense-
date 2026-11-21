@@ -309,7 +309,9 @@ function cue(){const A=t=>t0+t,P=score.params,S=score;
   return ps;}
 window.CIN_AUDIO=async function(){const off=new OfflineAudioContext(2,Math.ceil(44100*DUR),44100);const sv=[ctx,score,radio,t0];
   ctx=off;score=RMD.Score(off);radio=RMD.RadioVoice(off,score.voice);t0=0;const ps=cue();
-  for(let t=0;t<DUR;t+=.05){const o=tracks(t),v=o.interf*o.interf*.3*(1-o.clear)+(rnd()<Math.max(o.stut,ss(.55,1,o.interf)*.6*(1-o.clear))*.22?.16:0);score.params.stat.setValueAtTime(v,t);}
+  const st=score.params.stat;st.setValueAtTime(0,0);for(let t=.05;t<DUR;t+=.05){const o=tracks(t);st.linearRampToValueAtTime(o.interf*o.interf*.3*(1-o.clear),t);}
+  {const fps=24,sv=sd;sd=7;let h=-1,l=-1;for(let i=0;i<DUR*fps;i++){const o=tracks(i/fps);const s2=Math.max(o.stut,ss(.55,1,o.interf)*.6*(1-o.clear));if(i<=h&&l>=0)continue;
+    if(s2>0&&rnd()<s2*.22*(30/fps)*1.6){h=i+Math.max(1,Math.round((30+rnd()*rnd()*260*s2)/1000*fps));score.burst((i+1)/fps,(h-i)/fps,s2);}l=i;}sd=sv;}
   await Promise.all(ps);const buf=await off.startRendering();[ctx,score,radio,t0]=sv;return buf;};
 function startSound(){ctx=new (window.AudioContext||window.webkitAudioContext)();score=RMD.Score(ctx);radio=RMD.RadioVoice(ctx,score.voice);t0=ctx.currentTime+.4;cue();}
 let statLvl=0;

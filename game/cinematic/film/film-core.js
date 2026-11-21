@@ -92,8 +92,10 @@ function cue(){const A=t=>t0+t;const S=score;if(typeof FSFX!=="undefined")FSFX.e
   return Promise.all(ps).then(()=>{queue.sort((a,b)=>a.w-b.w);});}
 window.CIN_AUDIO=async function(){const off=new OfflineAudioContext(2,Math.ceil(44100*DUR),44100);const sv=[ctx,score,radio,t0];
   ctx=off;score=RMD.Score(off);radio=RMD.RadioVoice(off,score.voice);t0=0;const ready=cue();
-  for(let t=0;t<DUR;t+=.05){const o=SC.tracks(t);const v=o.interf*o.interf*.3*(1-(o.clear||0))+(rnd()<stutAt(o)*.22?.16:0);score.params.stat.setValueAtTime(v,t);}
-  await ready;pump(LEAD);for(let t=.5;t<DUR;t+=.5){const tt=t;off.suspend(tt).then(()=>{pump(tt+LEAD);off.resume();});}
+  /* the static: a smooth bed from the interference, and a burst on every frame the recording holds (same dice as CIN.frame at 24 fps) */
+  const st=score.params.stat;st.setValueAtTime(0,0);for(let t=.05;t<DUR;t+=.05){const o=SC.tracks(t);st.linearRampToValueAtTime(o.interf*o.interf*.3*(1-(o.clear||0)),t);}
+  const H=holdsAt(24);
+  await ready;for(const [a,b,k] of H)queue.push({w:a,f:()=>score.burst(a,b-a,k)});queue.sort((x,y)=>x.w-y.w);pump(LEAD);for(let t=.5;t<DUR;t+=.5){const tt=t;off.suspend(tt).then(()=>{pump(tt+LEAD);off.resume();});}
   const buf=await off.startRendering();[ctx,score,radio,t0]=sv;return buf;};
 let pumpI=null;
 function startSound(){ctx=new (window.AudioContext||window.webkitAudioContext)();score=RMD.Score(ctx);radio=RMD.RadioVoice(ctx,score.voice);t0=ctx.currentTime+.6;
@@ -118,6 +120,8 @@ Promise.resolve(SC.build(scene,F)).then(()=>{(SC.TAGS||[]).forEach(g=>tag(...g))
   const pt=SC.poster!=null?SC.poster:Math.min(10,DUR/2);const o=frameAt(pt);o.fade=.5;draw(pt,o);if(REC)$('start').classList.remove('on');window.CIN.ready=true;})
   .catch(e=>{console.error(e);$('load').textContent='Failed to load: '+e;});
 let recHold=-1,recLast=-1;
+function holdsAt(fps){const sv=sd;sd=7;let h=-1,l=-1;const out=[];for(let i=0;i<DUR*fps;i++){const o=SC.tracks(i/fps);const st=stutAt(o);if(i<=h&&l>=0)continue;
+    if(st>0&&rnd()<st*.22*(30/fps)*1.6){h=i+Math.max(1,Math.round((30+rnd()*rnd()*260*st)/1000*fps));out.push([(i+1)/fps,(h+1)/fps,st]);}l=i;}sd=sv;return out;}
 window.CIN={ready:false,DUR,LINES,
   frame(i,fps){fps=fps||30;const t=i/fps;const o=frameAt(t);const st=stutAt(o);if(i<=recHold&&recLast>=0)return 'held';
     if(st>0&&rnd()<st*.22*(30/fps)*1.6)recHold=i+Math.max(1,Math.round((30+rnd()*rnd()*260*st)/1000*fps));draw(t,o);recLast=i;return 'drawn';},

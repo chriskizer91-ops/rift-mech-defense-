@@ -5067,7 +5067,7 @@ RMD.Score=function(ctx){const S={},master=ctx.createGain();master.gain.value=.5;
     const g=ctx.createGain();env(g,when,.006,.55*k,.35);o.connect(g);g.connect(dest);o.start(when);o.stop(when+.45);
     const n=ctx.createBufferSource();n.buffer=white;const nf=ctx.createBiquadFilter();nf.type='bandpass';nf.frequency.value=2300;nf.Q.value=3;const ng=ctx.createGain();env(ng,when+.01,.003,.12*k,.12);
     n.connect(nf);nf.connect(ng);ng.connect(dest);n.start(when,Math.random()*2,.2);
-    const r=ctx.createOscillator();r.type='triangle';r.frequency.value=880+Math.random()*120;const rg=ctx.createGain();env(rg,when+.012,.002,.03*k,.25);r.connect(rg);rg.connect(dest);r.start(when);r.stop(when+.3);};
+    const r=ctx.createOscillator();r.type='sine';r.frequency.value=880+Math.random()*120;const rg=ctx.createGain();env(rg,when+.012,.012,.006*k,.2);r.connect(rg);rg.connect(dest);r.start(when);r.stop(when+.3);};
   S.servo=function(when,p,k){const dest=pan(ctx,p,sfx);const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(420,when);o.frequency.linearRampToValueAtTime(640,when+.5);o.frequency.linearRampToValueAtTime(560,when+.85);
     const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=950;f.Q.value=6;const g=ctx.createGain();g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.06*(k||1),when+.1);g.gain.linearRampToValueAtTime(0,when+.9);
     o.connect(f);f.connect(g);g.connect(dest);o.start(when);o.stop(when+.95);};
@@ -5081,7 +5081,7 @@ RMD.Score=function(ctx){const S={},master=ctx.createGain();master.gain.value=.5;
   S.blast=function(when,p,k){S.boom(when,p,1.3*k);const dest=pan(ctx,p,sfx);const n=ctx.createBufferSource();n.buffer=white;const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=1100;f.Q.value=.5;
     const g=ctx.createGain();g.gain.setValueAtTime(0,when+.15);g.gain.linearRampToValueAtTime(.35*k,when+.3);g.gain.exponentialRampToValueAtTime(.001,when+3.2);n.connect(f);f.connect(g);g.connect(dest);g.connect(wide);n.start(when,0,3.4);};
   S.burst=function(when,len,k){const n=ctx.createBufferSource();n.buffer=white;const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=2500+Math.random()*3000;f.Q.value=.7;
-    const g=ctx.createGain();g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.3*k,when+.005);g.gain.setValueAtTime(.3*k,when+len);g.gain.linearRampToValueAtTime(0,when+len+.02);
+    const g=ctx.createGain();g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.26*k,when+.012);g.gain.setValueAtTime(.26*k,when+Math.max(.012,len));g.gain.linearRampToValueAtTime(0,when+Math.max(.012,len)+.03);
     n.connect(f);f.connect(g);g.connect(sfx);n.start(when,Math.random()*2,len+.05);};
   /* ---------- music ---------- */
   S.pluck=function(when,fr,k,p){const dest=pan(ctx,p||0,music);const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(3200,when);f.frequency.exponentialRampToValueAtTime(500,when+2);
@@ -5582,7 +5582,7 @@ TM.build=function(scene,occluders){
     onMount(J.bk,jp);const hL=onMount(J.fa_L,aL),hR=onMount(J.fa_R,aR);
     for(const h of [hL,hR])h.traverse(o=>{const m=/^t(\d)_/.exec(o.name||'');if(m)o.visible=+m[1]===1;});
     const M={root,J,hips:J.hips,torso:J.torso,head:J.head,hip0:J.hips.position.y,tor0:J.torso.position.y,arms:[J.arm_L,J.arm_R].filter(Boolean),
-      name:NAMES[i],spot:p,phase:i*1.7,yaw:0,headPitch:0,headYaw:0,torsoYaw:0};
+      guns:[hL,hR],name:NAMES[i],spot:p,phase:i*1.7,yaw:0,headPitch:0,headYaw:0,torsoYaw:0};
     root.updateMatrixWorld(true);M.legs=[-1,1].map(sd=>legSetup(J,sd<0?'L':'R',sd,M.hip0));
     root.traverse(o=>{if(o.isMesh)occluders.push(o);});
     /* a small cold light at the visor, so each one reads in the dark */
@@ -5594,7 +5594,7 @@ TM.build=function(scene,occluders){
 const lerp=(a,b,t)=>a+(b-a)*t,sm=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 TM.pose=function(t,look,mv){for(let k=0;k<TM.list.length;k++){const M=TM.list[k];if(!M)continue;const L=look[k]||{pitch:0,yaw:0,torso:0},m=mv&&mv[k];
   const x=m?m.x:M.spot.x,z=m?m.z:M.spot.z,yaw=m?m.yaw:0,sp=m?m.spd:0,dist=m?m.dist:0;
-  M.root.position.set(x,M.spot.y,z);M.root.rotation.y=yaw;
+  M.root.position.set(x,m&&m.y!=null?m.y:M.spot.y,z);M.root.rotation.y=yaw;
   const sf=clamp(sp/7.5,0,1),w=sm(.15,1.4,sp),S_=lerp(1.3,3.2,sf);const phase=dist/(2*S_)+M.phase;
   const bob=Math.abs(Math.sin(phase*Math.PI*2))*.1*w;const br=Math.sin(t*1.1+M.phase)*.035*(1-w);
   const hipY=M.hip0-.08+br-bob-.05*w;
@@ -6036,7 +6036,9 @@ function cue(){const A=t=>t0+t,P=score.params,S=score;
   return ps;}
 window.CIN_AUDIO=async function(){const off=new OfflineAudioContext(2,Math.ceil(44100*DUR),44100);const sv=[ctx,score,radio,t0];
   ctx=off;score=RMD.Score(off);radio=RMD.RadioVoice(off,score.voice);t0=0;const ps=cue();
-  for(let t=0;t<DUR;t+=.05){const o=tracks(t),v=o.interf*o.interf*.3*(1-o.clear)+(rnd()<Math.max(o.stut,ss(.55,1,o.interf)*.6*(1-o.clear))*.22?.16:0);score.params.stat.setValueAtTime(v,t);}
+  const st=score.params.stat;st.setValueAtTime(0,0);for(let t=.05;t<DUR;t+=.05){const o=tracks(t);st.linearRampToValueAtTime(o.interf*o.interf*.3*(1-o.clear),t);}
+  {const fps=24,sv=sd;sd=7;let h=-1,l=-1;for(let i=0;i<DUR*fps;i++){const o=tracks(i/fps);const s2=Math.max(o.stut,ss(.55,1,o.interf)*.6*(1-o.clear));if(i<=h&&l>=0)continue;
+    if(s2>0&&rnd()<s2*.22*(30/fps)*1.6){h=i+Math.max(1,Math.round((30+rnd()*rnd()*260*s2)/1000*fps));score.burst((i+1)/fps,(h-i)/fps,s2);}l=i;}sd=sv;}
   await Promise.all(ps);const buf=await off.startRendering();[ctx,score,radio,t0]=sv;return buf;};
 function startSound(){ctx=new (window.AudioContext||window.webkitAudioContext)();score=RMD.Score(ctx);radio=RMD.RadioVoice(ctx,score.voice);t0=ctx.currentTime+.4;cue();}
 let statLvl=0;

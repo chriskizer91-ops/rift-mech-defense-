@@ -12,8 +12,9 @@ Christopher said yes on 21 Nov. Session D coordinates the film. This file is the
 ## The pieces (target times)
 | # | Piece | Where | What happens | Time |
 |---|---|---|---|---|
-| 00 | Intel Brief 00 | the feed | what the Static is, what the rifts are, the team of four (lines `BRIEF`) | 1:15 |
+| 00 | Intel Brief 00 **(built, 1:20)** | the feed | what the Static is, what the rifts are, the team of four (lines `BRIEF`) | 1:15 |
 | 1a | First Light: arrival | Greywater Strand, dawn | the team lands in REAL view; OVERWATCH switches them to SENSOR | 0:50 |
+| 1a–c | First Light **(built as one piece, 2:20)** |
 | 1b | First Light: battle | | KNOTs out of the surf; SKEINs go for Gull's boats on the pier | 1:40 |
 | 1c | First Light: after | | the beach quiet; the first count goes to zero | 0:20 |
 | 2a | High Water: arrival | Port Arlen low town, morning | flooded streets; Lantern's distress call from the cannery | 0:45 |
@@ -49,6 +50,23 @@ Christopher said yes on 21 Nov. Session D coordinates the film. This file is the
 - **Battles are staged** with the real game pieces: B's maps (Field 1, the coast), C's Wraiths, weapons and squads, A's creatures
   as dots. A script drives them, and they're filmed like the reveal. Later the same scripts can replay real play.
 - **The film** is every piece recorded with `game/cinematic/record.py` and joined in order, with title cards between missions.
+
+## The scene kit (built 21 Nov)
+`game/cinematic/film/`. A scene is one file, `scene-<name>.js`, that hands `FILM.run()` its lines, shots, tracks, sound cues
+and a set. `build_film.py <name>` makes `builds/film-<name>.html`. Stills: `shots_film.py`. Sound alone: `sound_film.py`.
+Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.mp4`.
+- **Sets:** `set-strand.js` (Greywater Strand at dawn: beach, surf, pier, boats, the sunk truck), `set-city.js` (a city in
+  static; the cracked seafloor from orbit), `set-saltpans.js` (the Saltpans at night, the channel). The reveal's Arlen Bay is
+  `cin-world.js`.
+- **Battles:** A's creature module drives the swarm (seeded, stepped at 1/60 s, so every run is the same). The Wraiths fire
+  by script; every round is logged, and the log drives the tracers, the sand, and the sound.
+- **Sound:** `film-sfx.js` adds surf, gulls, boat motors, the autocannon, the dot-shatter fizz, the Lance, the Arc, the view
+  switch, and chord instruments (strings, brass, choir, piano) with a battle pulse. Sounds are built about a second before
+  they play (Chrome processes every scheduled node, so a battle scheduled up front was 4× too slow to play live).
+- **Test scenes:** `brief` (Intel Brief 00, 1:20, narrated montage), `m1` (First Light, 2:20, battle), `m5c` (Copper, 1:02,
+  the quiet loss; the dots turn red on OVERWATCH's words "Two. Five. All of them.").
+  `m3` (The Dig, 2:52, boss fight: the rift streams until ANVIL caves it in, BRUTE eats the trucks, thermal finds the core,
+  the Lance). Sets: `set-quarry.js` (Kessel Cut).
 
 ## What each session needs to give (asks on the board)
 - **A (creatures):** spawn a creature at a point with a goal or a path, and step it by a fixed time step with a seed, so a run
