@@ -13,7 +13,7 @@ function treesInit(scene){if(WT.phone){TREE.NEAR=16;TREE.FAR=520;}const L=MAP.de
   Promise.all(['oak','oakfar'].map(k=>glbRaw(k))).then(([n,f])=>{parts(n,TREE.NEAR,TREE.near);parts(f,TREE.FAR,TREE.far);for(const im of TREE.far)im.castShadow=false;TREE.cx=1e9;if(WT.view)setView(WT.view);});}
 /* a model with its own materials (the trees carry vertex colours, no pictures) */
 function glbRaw(key){const A=window.WT_ASSETS.glb[key];
-  return fetch('data:application/octet-stream;base64,'+A.b64).then(r=>r.arrayBuffer())
+  return Promise.resolve(b64bytes(A.b64))
    .then(b=>new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer())
    .then(buf=>new Promise((ok,no)=>new THREE.GLTFLoader().parse(buf,'',g=>ok(g.scene),no)));}
 const _tm=new THREE.Matrix4(),_tq=new THREE.Quaternion(),_tv=new THREE.Vector3(),_ts=new THREE.Vector3(),_ty=new THREE.Vector3(0,1,0);

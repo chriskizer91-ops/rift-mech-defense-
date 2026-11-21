@@ -11,9 +11,10 @@
    ===================================================================================================================== */
 const WALK=7.5,RAD=1.35,HOVSPD=9,HOVH=2.6;
 const MECH={M:null,P:null,ready:false};
-/* ---------- the models (Ironhowl 4 ships them as .glb gzipped and in base64) ---------- */
+/* ---------- the models (Ironhowl 4 ships them as .glb gzipped and in base64; decoded here, not fetched: a published page may not fetch) ---------- */
+function b64bytes(s){if(Uint8Array.fromBase64)return Uint8Array.fromBase64(s);const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
 function glbParse(key){const A=window.WT_ASSETS.glb[key];
-  return fetch('data:application/octet-stream;base64,'+A.b64).then(r=>r.arrayBuffer())
+  return Promise.resolve(b64bytes(A.b64))
    .then(b=>new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer())
    .then(buf=>new Promise((ok,no)=>new THREE.GLTFLoader().parse(buf,'',g=>ok(g.scene),no)));}
 const KMAT={};
