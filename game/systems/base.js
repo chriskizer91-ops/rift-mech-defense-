@@ -16,4 +16,5 @@ const touchy=Q.has('touch')||matchMedia('(hover: none)').matches;
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
 /* the arena is flat for now; session B's world will answer this with its ground */
 const hgt=(x,z)=>0;
-const ARENA_R=95;   /* the Wraith and the swarm stay inside this circle (metres) */
+/* the Wraith and the swarm stay inside this circle (metres). A stand-in open field until session B's map lands (PLAN: big open fields) */
+const ARENA_R=170;

@@ -43,6 +43,14 @@ body.touch .pad{display:block}
 #bmsl{right:calc(22px + env(safe-area-inset-right));bottom:calc(286px + env(safe-area-inset-bottom));width:58px;height:58px}
 #bvent{right:calc(96px + env(safe-area-inset-right));bottom:calc(286px + env(safe-area-inset-bottom));width:52px;height:52px;font-size:10px}
 .pad.on{background:#3a0d07ee;border-color:#ff4a2a;color:#fff}
+/* a phone on its side: the buttons go low on the right, and the side buttons move left of the radar */
+@media (orientation:landscape) and (max-height:520px){
+  #bjet{bottom:calc(22px + env(safe-area-inset-bottom));right:calc(16px + env(safe-area-inset-right))}
+  #bsalvo{bottom:calc(30px + env(safe-area-inset-bottom));right:calc(104px + env(safe-area-inset-right))}
+  #bmsl{bottom:calc(108px + env(safe-area-inset-bottom));right:calc(24px + env(safe-area-inset-right))}
+  #bvent{bottom:calc(100px + env(safe-area-inset-bottom));right:calc(100px + env(safe-area-inset-right))}
+  #tb{flex-direction:row;top:max(10px,env(safe-area-inset-top));right:calc(132px + env(safe-area-inset-right))}
+  #lch{bottom:calc(60px + env(safe-area-inset-bottom))}}
 .stick{position:fixed;display:none;width:116px;height:116px;margin:-58px 0 0 -58px;border-radius:50%;border:2px solid #4fe0b844;background:#4fe0b80d;pointer-events:none}
 .stick i{position:absolute;left:38px;top:38px;width:40px;height:40px;border-radius:50%;background:#4fe0b855;border:2px solid #4fe0b8aa}
 #astick{border-color:#ff4a2a55;background:#ff4a2a0d}#astick i{background:#ff4a2a55;border-color:#ff4a2aaa}

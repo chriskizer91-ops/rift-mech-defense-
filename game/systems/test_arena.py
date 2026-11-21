@@ -30,9 +30,11 @@ with sync_playwright() as p:
     pg.wait_for_function("window.__rmd && window.__rmd.info().ready", timeout=120000)
     if js:
         pg.evaluate(js)
+        pg.wait_for_function("!window.__busy", timeout=120000)
     pg.wait_for_timeout(int(wait * 1000))
     pg.screenshot(path=out, timeout=180000)
     print(pg.evaluate("JSON.stringify(window.__rmd.info())"))
+    print(pg.evaluate("JSON.stringify(window.__out||null)"))
     for e in errs[:20]:
         print(e)
     b.close()

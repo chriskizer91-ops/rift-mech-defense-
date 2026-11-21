@@ -69,9 +69,10 @@ function placeSun(fx,fz){const s=KEY.shadow.mapSize.x,r=KEY.shadow.camera.right,
 S.background=new THREE.Color(0x0b0d0f);
 
 /* ---------------- the test arena: flat ground, rocks for scale, rift mouths glowing at the edge ---------------- */
-const RIFTS=[-100,-25,55,140,215].map((a,i)=>{const r=a*Math.PI/180;return {x:Math.cos(r)*82,z:Math.sin(r)*82,a:r,i};});
+/* rift mouths scattered over the field: [angle in degrees, distance from the middle in metres] */
+const RIFTS=[[-100,82],[-25,96],[55,78],[140,90],[215,84],[10,150],[175,148],[260,140],[95,152]].map(([a,d],i)=>{const r=a*Math.PI/180;return {x:Math.cos(r)*d,z:Math.sin(r)*d,a:r,i};});
 function buildArena(){
-  const gm=new THREE.MeshStandardMaterial({map:assetTex('06-dirt-and-gravel.webp',{rep:34}),normalMap:assetTex('06-dirt-and-gravel-n.webp',{rep:34,lin:true}),
+  const gm=new THREE.MeshStandardMaterial({map:assetTex('06-dirt-and-gravel.webp',{rep:72}),normalMap:assetTex('06-dirt-and-gravel-n.webp',{rep:72,lin:true}),
     normalScale:new THREE.Vector2(.9,.9),roughness:.95,metalness:0,color:0x8a8d8c});
   /* the ground darkens past the arena's edge, and big soft patches break up the tiling */
   gm.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;').replace('#include <project_vertex>','#include <project_vertex>\nvWP=(modelMatrix*vec4(transformed,1.)).xyz;');
@@ -79,14 +80,14 @@ function buildArena(){
       .replace('#include <map_fragment>',`#include <map_fragment>
         {float n=gn(vWP.xz/23.)*.6+gn(vWP.xz/7.)*.4;diffuseColor.rgb=mix(diffuseColor.rgb,vec3(dot(diffuseColor.rgb,vec3(.33))),.45)*(.78+.4*n);
          float e=smoothstep(${ARENA_R}.,${ARENA_R+30}.,length(vWP.xz));diffuseColor.rgb*=1.-.75*e;}`);};
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(420,420,1,1),gm);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;S.add(ground);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(900,900,1,1),gm);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;S.add(ground);
   /* rocks: one instanced mesh, more of them near the edge */
   const rg=new THREE.IcosahedronGeometry(1,1),pa=rg.attributes.position;
   for(let i=0;i<pa.count;i++){const x=pa.getX(i),y=pa.getY(i),z=pa.getZ(i),k=.75+.5*Math.abs(Math.sin(x*3.1+y*1.7)*Math.cos(z*2.3));pa.setXYZ(i,x*k,y*k*.62,z*k);}
   rg.computeVertexNormals();
   const rm=new THREE.MeshStandardMaterial({color:0x5a5753,roughness:.9,metalness:.05,flatShading:true});
-  const N=150,rocks=new THREE.InstancedMesh(rg,rm,N),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler();
-  let made=0;for(let t=0;t<2000&&made<N;t++){const a=Math.random()*TAU,d=Math.sqrt(Math.random())*150;if(d<14)continue;if(d<ARENA_R&&Math.random()>.35)continue;
+  const N=520,rocks=new THREE.InstancedMesh(rg,rm,N),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler();
+  let made=0;for(let t=0;t<6000&&made<N;t++){const a=Math.random()*TAU,d=Math.sqrt(Math.random())*260;if(d<14)continue;if(d<ARENA_R&&Math.random()>.45)continue;
     const x=Math.cos(a)*d,z=Math.sin(a)*d;if(RIFTS.some(r=>Math.hypot(r.x-x,r.z-z)<12))continue;
     const s=d>ARENA_R?1+Math.random()*3.5:.4+Math.random()*1.4;q.setFromEuler(e.set(Math.random()*.4,Math.random()*TAU,Math.random()*.4));
     m4.compose(V3(x,s*.15,z),q,V3(s*(.8+Math.random()*.6),s,s*(.8+Math.random()*.6)));rocks.setMatrixAt(made++,m4);}
@@ -182,7 +183,7 @@ const finMat=new THREE.ShaderMaterial({uniforms:{tW:{value:null},tS:{value:null}
   float on=step(1.-I*.55,h(vec2(band*.37,fr)));uv.x+=(h(vec2(band,fr*1.7))-.5)*.09*I*on;
   vec2 blk=floor(uv*vec2(10.,16.));float bg=step(1.-I*I*.3,h(blk+fr*.31));
   uv+=bg*(vec2(h(blk+1.3+fr),h(blk+2.7+fr))-.5)*.07;
-  float ca=.0012+.011*I;
+  float ca=.0004+.012*I*I+.004*I;
   vec3 col=vec3(look(uv+vec2(ca,0.)).r,look(uv).g,look(uv-vec2(ca,0.)).b);
   float snow=h(uv*uRes*.5+fract(uT*61.)*vec2(91.,17.));
   col=mix(col,vec3(.16,.2,.2)*(.6+.8*snow),I*.3);

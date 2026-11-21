@@ -98,7 +98,7 @@ function boot(){
 }
 /* resetting progress asks twice by tapping: the first tap arms it for 3 s (no browser dialogs) */
 let RESET_ARM=0;function confirmReset(){const now=performance.now();if(now<RESET_ARM){RESET_ARM=0;$('ureset').textContent='RESET';return true;}RESET_ARM=now+3000;$('ureset').textContent='TAP AGAIN';setTimeout(()=>{$('ureset').textContent='RESET';},3000);return false;}
-if(DEV)window.__rmd={G,get P(){return P;},get M(){return M;},EN,ALLIES,GUN,MSL,SALVO,UP,AIM,WV,DOTS,startPlay,startWave,spawnCluster,RIFTS,hurtCluster,openUpg,closeUpg,setThermal,
+if(DEV)window.__rmd={G,get P(){return P;},get M(){return M;},EN,ALLIES,GUN,MSL,SALVO,UP,AIM,WV,DOTS,startPlay,startWave,spawnCluster,RIFTS,hurtCluster,openUpg,closeUpg,setThermal,refit(L){setLoadout(Object.assign(loadout(),L));return refitKit(M).then(()=>applyUpgrades(true));},buyUpg,upgLv,addScrap,saveScrap,SAVE,PK,dropPickup,
   ctl(o){CTLX=o;},ff(t){const n=Math.round(t*60);for(let i=0;i<n;i++)tick(1/60);},
   info(){return {mode:G.mode,wave:G.wave,x:+P.x.toFixed(1),z:+P.z.toFixed(1),hull:+P.hull.toFixed(0),shield:+P.shield.toFixed(0),heat:+GUN.heat.toFixed(0),msl:MSL.ammo,
     alive:EN.filter(e=>!e.dead).map(e=>e.id+':'+e.alive).join(' '),dots:liveDots(),allies:alliesOK()+'/'+ALLIES.length,kills:G.kills,scrap:scrap(),interf:+G.interf.toFixed(2),fps:Math.round(1/G.fdt),ready:!!(M&&M.ready)};}};

@@ -37,14 +37,20 @@ function buildWeapons(){
   kitFxInit();
 }
 /* ---------------- where the Wraith is aiming ----------------
-   Touch and gamepad: the aim stick gives a direction; aim assist bends it onto the creature nearest that line within 0.2 rad.
+   Touch and gamepad: the aim stick gives a direction; aim assist bends it onto the creature nearest that line within 0.2 rad
+   and 48 m (about what the screen shows; the rounds still fly 170 m).
    Mouse: the shot goes to the point under the cursor, or to a creature the cursor is on (within 2.5 m of its edge). */
 const AIM={x:0,y:1.2,z:0,e:null,dist:0,dx:0,dz:-1,mouse:false};
+/* GAPS (being tested): a cluster is mostly empty space. A gun round that crosses it hits with a chance of dots/(dots+22):
+   KNOT 31 %, SKEIN 48 %, RUNNER 69 %, STALKER 82 %, BRUTE 96 %, and less as a cluster thins (never under 30 %). The Lance (a beam), the Arc and blasts
+   always hit. ?solid in the address turns it off. */
+const GAPS=Q.has('solid')?0:22;
+const ASSIST_R=48;   /* aim assist only reaches what the top-down camera shows (Ironhowl 4's reached 170 m) */
 function updAim(c){
   let dx=-Math.sin(P.yaw),dz=-Math.cos(P.yaw);if(c.aim){dx=c.ax;dz=c.az;}
   AIM.dx=dx;AIM.dz=dz;AIM.mouse=!!c.aimPt;let hitE=null;
   if(c.aimPt){let bd=1e9;for(const e of EN){if(e.dead||e.spawnT>0)continue;const d=Math.hypot(e.x-c.aimPt.x,e.z-c.aimPt.z)-e.r;if(d<2.5&&d<bd){bd=d;hitE=e;}}}
-  else{let ba=.2;for(const e of EN){if(e.dead||e.spawnT>0)continue;const ex=e.x-P.x,ez=e.z-P.z,t=ex*dx+ez*dz;if(t<2||t>BOLT.range)continue;
+  else{let ba=.2;for(const e of EN){if(e.dead||e.spawnT>0)continue;const ex=e.x-P.x,ez=e.z-P.z,t=ex*dx+ez*dz;if(t<2||t>ASSIST_R)continue;
     const perp=Math.abs(ex*dz-ez*dx),ang=Math.max(0,perp-e.r)/t;if(ang<ba){ba=ang;hitE=e;}}}
   if(hitE){AIM.e=hitE;AIM.x=hitE.x;AIM.z=hitE.z;AIM.y=hitE.cy;AIM.dist=Math.hypot(hitE.x-P.x,hitE.z-P.z);return;}
   const d=c.aimPt?clamp(c.aimPt.d,6,BOLT.range):40;
@@ -122,7 +128,9 @@ function updShots(dt){
   const drop=i=>{const b=BOLTS[i];if(b.tg)b.tg.pend=Math.max(0,(b.tg.pend||0)-b.dmg);BOLTS.splice(i,1);};
   for(let i=BOLTS.length-1;i>=0;i--){const b=BOLTS[i];b.life-=dt;if(b.life<=0){drop(i);continue;}
     const nx=b.x+b.vx*dt,ny=b.y+b.vy*dt,nz=b.z+b.vz*dt;let hit=null,ht=1;
-    for(const e of EN){if(e.dead||e.spawnT>0)continue;const top=e.tier.size*e.scale+.8;if(Math.min(b.y,ny)>top)continue;const t=segCircle(b.x,b.z,nx,nz,e.x,e.z,e.r);if(t>=0&&t<ht){ht=t;hit=e;}}
+    for(const e of EN){if(e.dead||e.spawnT>0||b.pass&&b.pass.includes(e))continue;const top=e.tier.size*e.scale+.8;if(Math.min(b.y,ny)>top)continue;const t=segCircle(b.x,b.z,nx,nz,e.x,e.z,e.r);if(t>=0&&t<ht){ht=t;hit=e;}}
+    /* through the gaps: a round only knocks dots off if it meets some (see GAPS) */
+    if(hit&&GAPS&&Math.random()>Math.max(.3,hit.alive/(hit.alive+GAPS))){(b.pass||(b.pass=[])).push(hit);hit=null;ht=1;}
     const hx=lerp(b.x,nx,ht),hy=lerp(b.y,ny,ht),hz=lerp(b.z,nz,ht);
     if(hit){drop(i);hurtCluster(hit,b.dmg,hx,Math.max(.5,hy),hz);GUN.hitT=.12;sparks(hx,Math.max(.5,hy),hz,3,[1,.75,.35]);continue;}
     if(ny<hgt(nx,nz)){sparks(nx,.1,nz,3,[1,.7,.3]);part({x:nx,y:.2,z:nz,vx:0,vy:1,vz:0,life:.8,s0:.5,s1:1.6,a:.3,col:DUST,drag:1.5});drop(i);continue;}
