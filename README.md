@@ -12,7 +12,7 @@ HULK 5,000, BEHEMOTH 10,000, TITAN 50,000, then THE SIGNAL 1,000,000 with its co
 breaks up. A link with `#host`, `#brute,aggro`, `#stalker,thermal` and so on opens a creature directly.
 
 ## Where it stands
-- **The creatures can be fought** (20 Nov): `builds/creature-hits.html`, a top-down hit test. Waves walk at the Wraith and its
+- **The creatures can be fought** (20 Nov): `builds/creature-hits.html` (also at https://claude.ai/artifact/QSgAwk2AEyMWQxifz8qY5D), a top-down hit test. Waves walk at the Wraith and its
   squad; tap or hold to fire the cannon, tap for the arc or artillery. Every hit knocks dots off, so they shrink as they're hurt,
   and a squad they reach turns red and makes them bigger. It runs on the shared module in `game/creatures/`.
 - **Concept 1 is built: the swarm creatures** (`concept/swarm-viewer.src.html`). The Host is a placeholder: a hunched heap of
