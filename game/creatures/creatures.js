@@ -37,7 +37,10 @@ function legs(k,g,hips,len,lift,phOff,stride){ // simple gait helper
     const fx=hx+side*len[2],fz=hz+sw*stride*g.stride;const fy=up*lift*g.stride;
     k[nm+'h']=V(hx,hy,hz);k[nm+'k']=V(hx+side*len[0],hy+len[1]+fy*.5,hz+sw*stride*.4*g.stride+len[3]);k[nm+'f']=V(fx,fy,fz);}}
 // speeds (m/s) and how they fight; the rest of each rig comes from the viewer
-const MOVE={knot:{speed:7,dart:1},skein:{speed:5.5},runner:{speed:9},stalker:{speed:4.5},brute:{speed:3.2},drag:{speed:2.6},hulk:{speed:3},behemoth:{speed:4},titan:{speed:4.5}};
+// what each kind goes for first (asked by session C): 'mech' = the Wraith, 'ally' = people (green dots), 'any' = whatever is nearest.
+// A preferred target counts as if it were at 45% of its distance. Override per creature with c.prefers.
+const MOVE={knot:{speed:7,dart:1,prefers:'mech'},skein:{speed:5.5,prefers:'any'},runner:{speed:9,prefers:'any'},stalker:{speed:4.5,prefers:'ally'},
+  brute:{speed:3.2,prefers:'mech'},drag:{speed:2.6,prefers:'mech'},hulk:{speed:3,prefers:'mech'},behemoth:{speed:4,prefers:'mech'},titan:{speed:4.5,prefers:'ally'}};
 const RIGS=[
  {id:'knot',n:10,name:'KNOT',cls:'10 dots · darter',desc:'Darts in, bites, scatters. Never alone: they come in hundreds. Light Arc fire breaks them apart.',
   size:1.6,grid:14,cam:[6,.4,1],minD:2.2,maxD:60,base:.03,dot:.42,gain:1.25,reach:1.2,lane:9,
@@ -254,7 +257,8 @@ class Swarm{
     for(const c of this.list){if(c.gone)continue;
       if(c.dead){c.gone=true;continue;}
       // brain: nearest target, walk, lunge, maul, back off
-      let tg=null,td=1e9;for(const x of targets||[]){if(x.gone)continue;const d=Math.hypot(x.pos.x-c.pos.x,x.pos.z-c.pos.z);if(d<td&&d<(x.notice||1e9)){td=d;tg=x;}}
+      const pref=c.prefers||c.rig.prefers||'any';let tg=null,td=1e9,ts=1e9;for(const x of targets||[]){if(x.gone)continue;const d=Math.hypot(x.pos.x-c.pos.x,x.pos.z-c.pos.z);if(d>=(x.notice||1e9))continue;
+        const sc=d*(pref!=='any'&&x.kind===pref?.45:1);if(sc<ts){ts=sc;td=d;tg=x;}}
       c.target=tg;c.st+=dt;const r=c.rig,reach=(r.reach||2)*c.scale+1.2;c.mauling=false;
       if(tg){const want=Math.atan2(tg.pos.x-c.pos.x,tg.pos.z-c.pos.z);let dh=want-c.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));c.heading+=dh*Math.min(1,dt*(c.state==='walk'?3:1.2));}
       const fx=Math.sin(c.heading),fz=Math.cos(c.heading);const sp=r.speed*(.6+.4*c.scale);

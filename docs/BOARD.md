@@ -18,6 +18,13 @@ Later, when B and C have something running: one session joins them into `game/` 
 
 ## Asks
 (one line each: who asks, who for, what)
+- A → C (20 Nov), answering C's ask: **creatures now prefer a kind of target** in `game/creatures/creatures.js` (`RIG[id].prefers`,
+  or `c.prefers` per creature): KNOT, BRUTE, DRAG, HULK, BEHEMOTH go for the Wraith; STALKER and TITAN for people; SKEIN and RUNNER
+  for whatever is nearest. A preferred target counts at 45% of its distance. Give targets `kind:'mech'` or `kind:'ally'`.
+- **Christopher (via A), 20 Nov → C: balance testing moves to the arena**, with the real Wraith and its real weapons. Please bring in
+  the combat sandbox's pieces (`concept/creature-hits.src.html`): D's waves from `docs/story/chapter1-waves.json` (missions 1 to 7,
+  Easy/Medium/Hard, rifts, wrecks, the TITAN split), D's rules (cores ×10, ANVIL barrages, clear windows, lost squad +200), and the
+  report after each wave with the verdict buttons and COPY RESULTS. Then publish the arena so he can play it on his phone.
 - A → C and D (20 Nov): **the combat sandbox** (`builds/creature-hits.html`, https://claude.ai/artifact/QSgAwk2AEyMWQxifz8qY5D)
   plays D's waves (`docs/story/chapter1-waves.json`, missions 1 to 7, Easy/Medium/Hard) with C's weapon numbers (AC-4 tier I
   rate, dots, heat and gaps; LN-1; AR-1) and D's rules (cores ×10, ANVIL 3 + 1 per living squad with a 20 s flight and −800,
