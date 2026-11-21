@@ -347,5 +347,9 @@ window.CIN={ready:false,DUR,LINES,
     if(i<=recHold&&recLast>=0)return 'held';
     if(stut>0&&rnd()<stut*.22*(30/fps)*1.6)recHold=i+Math.max(1,Math.round((30+rnd()*rnd()*260*stut)/1000*fps));
     draw(t,o);recLast=i;return 'drawn';},
+  seek(n,fps){fps=fps||30;sd=7;recHold=-1;recLast=-1;   /* replays the held-frame dice for frames 0..n-1 without drawing, so a recording can start mid-film */
+    for(let i=0;i<n;i++){const o=tracks(i/fps);const stut=Math.max(o.stut,ss(.55,1,o.interf)*.6*(1-o.clear));
+      if(i<=recHold&&recLast>=0)continue;
+      if(stut>0&&rnd()<stut*.22*(30/fps)*1.6)recHold=i+Math.max(1,Math.round((30+rnd()*rnd()*260*stut)/1000*fps));recLast=i;}},
   at(t){const o=frameAt(t);draw(t,o);return o;}};
 })();

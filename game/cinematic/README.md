@@ -17,6 +17,7 @@ It is its own page. The game cuts to it and gets control back at the end.
 python3 game/cinematic/build.py                          # -> builds/signal-reveal.html (one file, works offline)
 python3 -I game/cinematic/shots.py OUTDIR 25 43 88 110   # stills at those seconds (headless)
 python3 -I game/cinematic/sound.py OUT.wav               # the whole soundtrack, rendered offline (to check the mix)
+python3 -I game/cinematic/record.py OUT.mp4 1280x640 24   # the whole film with its sound as a video (~1 h headless; FROM TO frames split it)
 ```
 
 ## The hand-off (for whoever builds mission 8)
