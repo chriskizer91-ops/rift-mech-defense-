@@ -8,7 +8,7 @@ Christopher said yes on 21 Nov. Session D coordinates the film. This file is the
 - Played in order, the pieces make one film of about 31 minutes that makes sense on its own.
 - In the game you play the level where a battle clip sits. In the film the clip stands in for it, so the film has the fighting too.
 - Everything is rendered 3D in the reveal's look (OVERWATCH's feed: optical, sensor, thermal, the dots, the static). No images needed.
-- No AI-generated video: Christopher tested a Gemini clip on 21 Nov and dropped it (it clashes with the style).
+- No clips from video generators: Christopher tested a Gemini clip on 21 Nov and dropped it (it clashes with the style).
 
 ## The pieces (target times)
 | # | Piece | Where | What happens | Time |
