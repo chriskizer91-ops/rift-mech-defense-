@@ -1,52 +1,67 @@
 <!doctype html>
-<!-- RIFT MECH DEFENSE — creature hit test (session A). The shared creature module (game/creatures/) in action:
-     waves walk at the Wraith and its squad; tap to fire; every hit knocks dots off, so they shrink as they're hurt.
+<!-- RIFT MECH DEFENSE — combat balance sandbox (session A). The shared creature module (game/creatures/) fighting session D's
+     chapter 1 waves (docs/story/chapter1-waves.json) with session C's weapon numbers (game/mech/weapons.js).
+     The Wraith stands still here (C's arena has the walking Wraith); this page is for feel and numbers.
      tools/build_viewer.py concept/creature-hits.src.html → builds/creature-hits.html (one file, works offline). -->
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>IRMD · Hit test</title>
+<title>IRMD · Combat sandbox</title>
 <style>
 html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#d8e6e2;font:700 12px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.08em;
   -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
 canvas{position:fixed;inset:0;display:block;width:100%;height:100%}
 .hud{position:fixed;pointer-events:none;text-transform:uppercase}
-#tl{left:max(14px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top))}
-#tl .org{font-size:10px;color:#6fae9f;letter-spacing:.22em}
-#tl .wave{font-size:clamp(22px,6vw,36px);color:#ff3b26;letter-spacing:.12em;margin-top:3px;text-shadow:0 0 16px #ff2a1088}
-#tl .sub{font-size:11px;color:#ffb29a;margin-top:2px}
-#tr{right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));text-align:right;font-size:10px;color:#6fae9f;letter-spacing:.16em}
-#tr .v{font-size:15px;color:#d8e6e2;letter-spacing:.08em}
-.bar{width:120px;height:5px;background:#ffffff18;margin:3px 0 7px auto;overflow:hidden}.bar i{display:block;height:100%;background:#4fe0b8;width:100%}
-.bar.bad i{background:#ff4a2a}
-#cap{left:0;right:0;bottom:calc(118px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,17px);color:#e9f3f0;text-transform:none;letter-spacing:.04em;
-  text-shadow:0 0 6px #000,0 0 14px #000;padding:0 18px;min-height:1.3em}
+#tl{left:max(12px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));max-width:calc(100vw - 150px)}
+#tl .org{font-size:9px;color:#6fae9f;letter-spacing:.2em}
+#tl .wave{font-size:clamp(18px,5vw,30px);color:#ff3b26;letter-spacing:.1em;margin-top:2px;text-shadow:0 0 16px #ff2a1088}
+#tl .sub{font-size:10px;color:#ffb29a;margin-top:2px}#tl .note{font-size:10px;color:#8fb0a9;margin-top:4px;text-transform:none;letter-spacing:.03em;font-weight:600}
+#tl .tm{font-size:13px;color:#d8e6e2;margin-top:5px}
+#tr{right:max(12px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));text-align:right;font-size:9px;color:#6fae9f;letter-spacing:.14em}
+#tr .v{font-size:14px;color:#d8e6e2;letter-spacing:.06em;margin-bottom:4px}
+.bar{width:116px;height:5px;background:#ffffff18;margin:2px 0 6px auto;overflow:hidden}.bar i{display:block;height:100%;background:#4fe0b8;width:100%}
+.bar.sh i{background:#7fb8ff}.bar.bad i{background:#ff4a2a}
+#lock{font-size:12px;letter-spacing:.2em;margin-top:2px}#lock.on{color:#4fe0b8;text-shadow:0 0 10px #4fe0b8}#lock.off{color:#ff6a4a}
+#cap{left:0;right:0;bottom:calc(126px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,16px);color:#e9f3f0;text-transform:none;letter-spacing:.03em;
+  text-shadow:0 0 6px #000,0 0 14px #000;padding:0 16px;min-height:1.3em}
 #cap b{color:#4fe0b8;font-weight:800;letter-spacing:.12em;font-size:.8em}
 #ui{position:fixed;left:0;right:0;bottom:0;padding:8px 8px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:7px;align-items:center;background:linear-gradient(#0000,#000c 40%)}
 .row{display:flex;gap:6px;max-width:100%;overflow-x:auto;scrollbar-width:none;padding:0 4px}.row::-webkit-scrollbar{display:none}
-button{flex:0 0 auto;font:800 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.1em;color:#bcd3cd;background:#0b1513cc;border:1px solid #2c4a43;border-radius:3px;
-  padding:9px 11px;min-width:44px;white-space:nowrap;cursor:pointer;text-transform:uppercase;position:relative;overflow:hidden}
-button small{display:block;font-size:8px;color:#6f8f88;letter-spacing:.14em;margin-top:2px}
+button{flex:0 0 auto;font:800 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.09em;color:#bcd3cd;background:#0b1513cc;border:1px solid #2c4a43;border-radius:3px;
+  padding:9px 10px;min-width:44px;white-space:nowrap;cursor:pointer;text-transform:uppercase;position:relative;overflow:hidden}
+button small{display:block;font-size:8px;color:#6f8f88;letter-spacing:.12em;margin-top:2px}
 button.on{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 12px #ff2a1055 inset}button.on small{color:#ffb29a}
 button.alt.on{background:#0a2c24ee;border-color:#4fe0b8;box-shadow:0 0 12px #4fe0b855 inset}
-button .cd{position:absolute;left:0;bottom:0;height:3px;background:#ff4a2a;width:0}
-button.hide{display:none}
-#over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#000a;font-size:20px;letter-spacing:.3em;color:#ff3b26;text-transform:uppercase}
-#help{right:max(14px,env(safe-area-inset-right));top:calc(150px + env(safe-area-inset-top));font-size:8px;color:#56776f;letter-spacing:.14em;text-align:right;max-width:150px}
+button .meter{position:absolute;left:0;bottom:0;height:3px;background:#ffb347;width:0}button .meter.hot{background:#ff3b26}
+.card{position:fixed;left:50%;top:50%;transform:translate(-50%,-55%);width:min(360px,88vw);max-height:70vh;overflow:auto;background:#081110f2;border:1px solid #2c4a43;border-radius:6px;
+  padding:16px;display:none;text-transform:none;letter-spacing:.02em;font-weight:600;font-size:13px;z-index:3}
+.card h2{margin:0 0 8px;font-size:15px;color:#ff5a3c;letter-spacing:.12em;text-transform:uppercase}
+.card table{width:100%;border-collapse:collapse;font-size:12px}.card td{padding:3px 0;border-bottom:1px solid #16231f}.card td:last-child{text-align:right;color:#fff}
+.card .btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.card .btns button{flex:1 1 auto}
+.card .grp{margin-top:10px;font-size:10px;color:#6fae9f;letter-spacing:.16em;text-transform:uppercase}
+.card .list{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.card .list button{padding:7px 8px;font-size:11px}
+#copied{color:#4fe0b8;font-size:11px;margin-top:6px}
 </style></head><body>
-<div class="hud" id="tl"><div class="org">Intl. Rift Mech Defense<br>Hit test</div><div class="wave" id="wv">WAVE 1</div><div class="sub" id="ws"></div></div>
+<div class="hud" id="tl"><div class="org">Intl. Rift Mech Defense · combat sandbox</div><div class="wave" id="wv">M1 · W1</div><div class="sub" id="ws"></div>
+  <div class="note" id="wn"></div><div class="tm" id="tm">0:00</div></div>
 <div class="hud" id="tr"><div>Hostile dots</div><div class="v" id="cnt">0</div>
-  <div style="margin-top:6px">Wraith hull</div><div class="bar" id="hb"><i id="hull"></i></div>
-  <div>Squad</div><div class="v" id="sq">4 / 4</div>
-  <div style="margin-top:6px">Dots knocked off</div><div class="v" id="kills">0</div></div>
-<div class="hud" id="help">TAP OR HOLD ON A CREATURE TO FIRE<br>PINCH TO ZOOM</div>
+  <div>Shield</div><div class="bar sh" id="sb"><i id="shield"></i></div><div>Hull</div><div class="bar" id="hb"><i id="hull"></i></div>
+  <div>Squad</div><div class="v" id="sq">4 / 4</div><div>ANVIL barrages</div><div class="v" id="bar">4</div><div id="lock"></div></div>
 <div class="hud" id="cap"></div>
-<div id="over"><div id="overT">Wraith down</div><button id="bRestart" class="on">Restart</button></div>
+<div class="card" id="report"><h2 id="rT">Wave clear</h2><table id="rTab"></table>
+  <div class="grp">How did that feel?</div><div class="btns"><button data-v="too easy">Too easy</button><button data-v="about right" class="alt">About right</button><button data-v="too hard">Too hard</button></div>
+  <div class="btns"><button id="rRetry">Retry wave</button><button id="rCopy">Copy results</button></div><div id="copied"></div></div>
+<div class="card" id="menu"><h2>Waves · session D's chapter 1</h2><div class="grp">Difficulty</div>
+  <div class="list"><button data-d="easy">Easy</button><button data-d="medium">Medium</button><button data-d="hard">Hard</button></div>
+  <div id="mlist"></div><div class="grp">Results so far</div><div id="mlog" style="font-size:11px;color:#9fb8b2;white-space:pre-wrap;margin-top:4px">none yet</div>
+  <div class="btns"><button id="mCopy">Copy results</button><button id="mClose" class="alt on">Close</button></div><div id="copied2" style="color:#4fe0b8;font-size:11px;margin-top:6px"></div></div>
 <div id="ui">
-  <div class="row"><button id="wCannon" class="on">Cannon<small>hold</small></button><button id="wArc">Arc<small>chains</small></button><button id="wArt">Artillery<small>area</small><span class="cd" id="artCd"></span></button></div>
-  <div class="row"><button id="bSensor" class="alt on">Sensor</button><button id="bThermal" class="alt">Thermal</button><button id="bNext">Next wave ▶</button></div>
+  <div class="row"><button id="wCannon" class="on">Cannon<small>hold</small><span class="meter" id="heatM"></span></button><button id="wLance">Lance<small>hold, let go</small><span class="meter" id="lanceM"></span></button>
+    <button id="wArc">Arc<small>hold · chains</small></button><button id="wArt">Anvil<small>tap ground</small></button></div>
+  <div class="row"><button id="bSensor" class="alt on">Sensor</button><button id="bThermal" class="alt">Thermal</button><button id="bMenu">Waves<small id="dLab">medium</small></button><button id="bNext">Next ▶</button></div>
 </div>
 <!--THREE-->
+<!--DATA:docs/story/chapter1-waves.json as WAVES_DATA-->
 <!--INC:game/creatures/sensor-look.js-->
 <!--INC:game/creatures/creatures.js-->
 <script>
@@ -54,132 +69,211 @@ button.hide{display:none}
 const T=THREE,V=(x,y,z)=>new T.Vector3(x,y,z),clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 const $=id=>document.getElementById(id);
+const D=window.WAVES_DATA,RULES=D.rules;
+// ---------------------------------------------------------------- the numbers (session C's weapons, session D's rules)
+const GUN={rate:6,dots:11,heatShot:2.3,cool:30,delay:.45,resume:38,gapK:22};      // AC-4 tier I: game/mech/weapons.js
+const LANCE={charge:1.2,dots:120,fall:[1,.8,.6],cool:.35,radius:2.2};               // LN-1
+const ARC={rate:4,dots:14,jumps:4,hop:12,range:35,burn:5};                          // AR-1
+const ANVIL={flight:RULES.shellFlightS,dots:800,radius:10,burn:12};                // session D: 20 s flight, -800 dots a barrage
+const MECH={shield:60,hull:100,regenDelay:3,regen:20};
+let diffName='medium',DIFF=D.difficulty.medium;
+// ---------------------------------------------------------------- scene
 const cv=document.createElement('canvas');document.body.prepend(cv);
 const R=new T.WebGLRenderer({canvas:cv,antialias:false,powerPreference:'high-performance'});R.setPixelRatio(Math.min(devicePixelRatio||1,2));
 const view=new RMD.SensorView(R);
 const scene=new T.Scene(),cam=new T.PerspectiveCamera(45,1,.1,3000);
-const swarm=new RMD.Creatures.Swarm(scene,{max:30000,maxDebris:12000});
-const grid=RMD.SensorView.grid(70);scene.add(grid);
+const swarm=new RMD.Creatures.Swarm(scene,{max:70000,maxDebris:14000});swarm.coreK=RULES.coreDamageK;
+const grid=RMD.SensorView.grid(80);scene.add(grid);
 const ADD=RMD.SensorView.ADD;
-// the Wraith on the sensor: a bright chevron and its ring (grid channel)
+function lineObj(p,c){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c,3));
+  return new T.LineSegments(g,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));}
 (function(){const p=[0,0,2.6,1.7,0,-1.6,1.7,0,-1.6,0,0,-.6,0,0,-.6,-1.7,0,-1.6,-1.7,0,-1.6,0,0,2.6],c=[];for(let i=0;i<p.length/3;i++)c.push(0,1.6,0);
   for(let i=0;i<48;i++){const a0=i/48*6.283,a1=(i+1)/48*6.283;p.push(Math.cos(a0)*4,0,Math.sin(a0)*4,Math.cos(a1)*4,0,Math.sin(a1)*4);c.push(0,.5,0,0,.5,0);}
-  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c,3));
-  const l=new T.LineSegments(g,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));l.position.y=.05;scene.add(l);})();
-const mech={pos:V(0,0,0),kind:'mech',hull:100};
-// squad: green dots that the swarm goes for
+  for(let i=0;i<96;i++){const a0=i/96*6.283,a1=(i+1)/96*6.283,r=ARC.range;p.push(Math.cos(a0)*r,0,Math.sin(a0)*r,Math.cos(a1)*r,0,Math.sin(a1)*r);c.push(0,(i%4<2)?.22:0,0,0,(i%4<2)?.22:0,0);}
+  const l=lineObj(p,c);l.position.y=.05;l.rotation.y=Math.PI;scene.add(l);})();
+const mech={pos:V(0,0,0),kind:'mech',shield:MECH.shield,hull:MECH.hull,lastHit:-9};
+// squad: four green dots
 const SQ=4;const sqGeo=new T.BufferGeometry();const sqPos=new Float32Array(SQ*3),sqCol=new Float32Array(SQ*3),sqI=new Float32Array(SQ),sqS=new Float32Array(SQ).fill(.45),sqB=new Float32Array(SQ);
-sqGeo.setAttribute('position',new T.BufferAttribute(sqPos,3));sqGeo.setAttribute('aCol',new T.BufferAttribute(sqCol,3));sqGeo.setAttribute('aI',new T.BufferAttribute(sqI,1));
-sqGeo.setAttribute('aS',new T.BufferAttribute(sqS,1));sqGeo.setAttribute('aB',new T.BufferAttribute(sqB,1));
+for(const [k,a,n] of [['position',sqPos,3],['aCol',sqCol,3],['aI',sqI,1],['aS',sqS,1],['aB',sqB,1]])sqGeo.setAttribute(k,new T.BufferAttribute(a,n));
 const sqMat=RMD.Creatures.dotMaterial();const sqPts=new T.Points(sqGeo,sqMat);sqPts.frustumCulled=false;scene.add(sqPts);
 let squad=[];
 function resetSquad(){squad=[];for(let i=0;i<SQ;i++)squad.push({pos:V(7+i*1.3,0,5+(i%2)*1.2),home:V(7+i*1.3,0,5+(i%2)*1.2),kind:'ally',gone:false,turning:0,by:null,ph:Math.random()*6});}
-// tracers, arcs and the artillery marker: one line buffer (grid channel, bright)
-const MAXL=200;const lPos=new Float32Array(MAXL*6),lCol=new Float32Array(MAXL*6);const lGeo=new T.BufferGeometry();
+// lines: tracers, arcs, shells, rifts, wrecks
+const MAXL=400;const lPos=new Float32Array(MAXL*6),lCol=new Float32Array(MAXL*6);const lGeo=new T.BufferGeometry();
 lGeo.setAttribute('position',new T.BufferAttribute(lPos,3).setUsage(T.DynamicDrawUsage));lGeo.setAttribute('color',new T.BufferAttribute(lCol,3).setUsage(T.DynamicDrawUsage));
 const lines=new T.LineSegments(lGeo,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));lines.frustumCulled=false;scene.add(lines);
-let fx=[];  // {a,b,life,max,col:[r,g,b]}
-function seg(a,b,life,col){fx.push({a:a.clone(),b:b.clone(),life,max:life,col:col||[.6,1.6,.5]});}
+let fx=[];function seg(a,b,life,col){fx.push({a:a.clone(),b:b.clone(),life,max:life,col:col||[.6,1.6,.5]});}
 function jag(a,b,life){const n=7;let p=a.clone();for(let i=1;i<=n;i++){const q=a.clone().lerp(b,i/n);if(i<n)q.add(V((Math.random()-.5)*1.6,(Math.random()-.5)*1.6,(Math.random()-.5)*1.6));seg(p,q,life,[.9,1.9,1.2]);p=q;}}
-
-// ---------------------------------------------------------------- waves
-const WAVES=[
- {name:'KNOTS',line:'Contact. Small ones, ten dots each. Keep them off the squad.',spawn:[['knot',8]]},
- {name:'KNOTS AND SKEINS',line:'Crawlers in with them. Watch the shore.',spawn:[['knot',6],['skein',4]]},
- {name:'RUNNERS',line:'Fast movers. They go for whatever moves.',spawn:[['runner',5],['knot',6]]},
- {name:'STALKERS',line:'Upright ones. They go for people first.',spawn:[['stalker',3],['runner',4]]},
- {name:'A BRUTE',line:'That one’s bigger than you. Five hundred dots.',spawn:[['brute',1],['skein',6]]},
- {name:'A DRAG',line:'Something heavy, hauling itself up the beach.',spawn:[['drag',1],['stalker',2]]},
- {name:'A HULK',line:'Five thousand. Artillery’s yours, use it.',spawn:[['hulk',1],['runner',4]]},
- {name:'THE BEHEMOTH',line:'Ten thousand dots. It’s been eating the wrecks all night.',spawn:[['behemoth',1],['knot',8]]},
-];
-let wave=0,waveT=0,cleared=false,clearT=0,kills=0;
-function startWave(i){wave=i;const W=WAVES[i%WAVES.length];resetSquad();cleared=false;waveT=0;
-  for(const [id,n] of W.spawn)for(let k=0;k<n;k++){const big=RMD.Creatures.RIG[id].size>8;const a=Math.PI+(Math.random()-.5)*Math.PI*.55;const r=(big?58:36)+Math.random()*10;
-    swarm.spawn(id,V(Math.sin(a)*r,0,Math.cos(a)*r),a+Math.PI);}
-  $('wv').textContent='WAVE '+(i+1);$('ws').textContent=W.name;say('<b>OVERWATCH</b> '+W.line,4);}
+function ring(p,r,col,n,life){n=n||32;for(let i=0;i<n;i++){const a0=i/n*6.283,a1=(i+1)/n*6.283;seg(V(p.x+Math.cos(a0)*r,.12,p.z+Math.sin(a0)*r),V(p.x+Math.cos(a1)*r,.12,p.z+Math.sin(a1)*r),life||.02,col);}}
+// ---------------------------------------------------------------- waves from session D
+const WAVES=[];D.missions.forEach(m=>{if(!m.waves)return;m.waves.forEach((w,i)=>WAVES.push({m,w,i,key:'M'+m.id+'W'+(i+1)}));});
+let cur=0,W=null,waveT=0,cleared=false,spawnQ=[],spawnT=0,rift=null,wrecks=[],boss=null,splitDone=false,stats=null,barrages=0,shells=[];
+function riftWave(w){return !!(w.stream||w.growWhileRiftOpen);}
+function startWave(i){for(const c of swarm.list)c.dead=true;cur=(i+WAVES.length)%WAVES.length;const E=WAVES[cur];W=E.w;resetSquad();cleared=false;waveT=0;splitDone=false;boss=null;
+  mech.shield=MECH.shield;mech.hull=MECH.hull;shells=[];$('report').style.display='none';
+  barrages=RULES.barragesPerMission+RULES.barragesPerLivingSquad;
+  stats={key:E.key,name:E.m.name,diff:diffName,t:0,shieldLost:0,hullLost:0,lost:0,fired:0,landed:0,wasted:0,cores:0,stripped:0,rejoin0:swarm.rejoined,bUsed:0,bTot:barrages,verdict:''};
+  // what to spawn: groups of up to four, a few seconds apart, from the north; bosses straight away
+  spawnQ=[];const sp=W.spawn||{};let k=0;
+  for(const [id,n] of Object.entries(sp)){const key=id.toLowerCase();for(let j=0;j<n;j++){const big=RMD.Creatures.RIG[key].size>8;spawnQ.push({id:key,t:big?0:Math.floor(k/4)*3.5,big});if(!big)k++;}}
+  spawnT=0;rift=riftWave(W)?{p:V(-14,0,-52),hits:0,need:DIFF.barragesPerRift,open:true,acc:0,alt:0}:null;
+  wrecks=W.absorb?Array.from({length:W.absorb.wrecks||5},(_,j)=>({p:V(-30+j*15,0,-14-((j%2)*10)),gone:false})):[];
+  $('wv').textContent=E.key.replace('W',' · W');$('ws').textContent=E.m.name+(W.boss?' · '+W.boss:'');$('wn').textContent=W.notes||'';
+  say('<b>OVERWATCH</b> '+(W.boss?W.boss+' inbound.':'Contacts from the north.'),3);}
+function spawnOne(q){const rig=RMD.Creatures.RIG[q.id];const a=Math.PI+(Math.random()-.5)*Math.PI*.55;const r=(q.big?58:36)+Math.random()*10;
+  const at=q.from?q.from.clone():V(Math.sin(a)*r,0,Math.cos(a)*r);const c=swarm.spawn(q.id,at,Math.atan2(-at.x,-at.z),{n:Math.max(4,Math.round(rig.n*DIFF.enemyDots))});
+  if(q.big&&!boss)boss=c;return c;}
 let capT=0;function say(s,t){$('cap').innerHTML=s;capT=t||3;}
-
-// ---------------------------------------------------------------- input: tap or hold to fire, pinch to zoom
-let weapon='cannon',thermal=false,zoom=1,artReady=0,shells=[];
-const ptr=new Map();let pinch0=0,zoom0=1,fireAt=null,fireT=0;
+// ---------------------------------------------------------------- input
+let weapon='cannon',thermal=false,zoom=1;
+const ptr=new Map();let pinch0=0,zoom0=1,aim=null,holding=false;
 const ndc=new T.Vector2(),ray=new T.Raycaster();
 function rayFrom(x,y){ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(ndc,cam);return ray.ray;}
 function ground(r){const t=-r.origin.y/r.direction.y;return t>0?r.origin.clone().addScaledVector(r.direction,t):null;}
 const muzzle=V(0,4,0);
-function fire(x,y){const r=rayFrom(x,y);
-  if(weapon==='artillery'){if(simT<artReady)return;const g=ground(r);if(!g)return;artReady=simT+5;shells.push({p:g,t:1.3});say('<b>OVERWATCH</b> Shot out. Danger close.',1.6);return;}
-  const hit=swarm.pick(r.origin,r.direction);
-  if(weapon==='cannon'){if(hit){kills+=swarm.hit(hit.creature,hit.point,1.4,8);seg(muzzle,hit.point,.12);}else{const g=ground(r);if(g)seg(muzzle,g,.08,[.3,.7,.3]);}}
-  else if(weapon==='arc'){if(!hit)return;let c=hit.creature,p=hit.point;kills+=swarm.hit(c,p,1.9,12);jag(muzzle,p,.22);const done=new Set([c]);
-    for(let j=0;j<3;j++){let best=null,bd=16;for(const o of swarm.list){if(o.dead||done.has(o))continue;const d=Math.hypot(o.pos.x-c.pos.x,o.pos.z-c.pos.z);if(d<bd){bd=d;best=o;}}
-      if(!best)break;const q=swarm.center(best);kills+=swarm.hit(best,q,1.8,8);jag(p,q,.22);done.add(best);c=best;p=q;}}}
+const gun={heat:0,over:false,cd:0,cool:0};const lance={ch:0,cd:0,on:false};const arcS={cd:0};
+let inWindow=true,windows=false;
+function wasted(p){seg(muzzle,p,.08,[.35,.35,.35]);stats.wasted++;}
+function cannonShot(){const r=rayFrom(aim.x,aim.y);stats.fired++;const h=swarm.pick(r.origin,r.direction);
+  if(!h){const g=ground(r);if(g)seg(muzzle,g,.08,[.3,.7,.3]);return;}
+  if(windows&&!inWindow){wasted(h.point);return;}
+  const c=h.creature;const chance=c.count/(c.count+GUN.gapK);           // a cluster is mostly gaps: rounds pass through small ones
+  if(Math.random()>chance){seg(muzzle,h.point.clone().addScaledVector(r.direction,8),.08,[.4,.9,.4]);return;}
+  const k=swarm.hit(c,h.point,1.3,GUN.dots);stats.landed++;stats.stripped+=k;if(swarm.lastCore){stats.cores++;coreSeen();}seg(muzzle,h.point,.12);}
+function lanceShot(ch){const r=rayFrom(aim.x,aim.y);const hits=swarm.pickAll(r.origin,r.direction).slice(0,3);const end=hits.length?hits[hits.length-1].point:(ground(r)||r.origin.clone().addScaledVector(r.direction,80));
+  stats.fired++;if(windows&&!inWindow){wasted(end);return;}
+  seg(muzzle,end,.3,[1.4,1.8,2.4]);seg(muzzle.clone().add(V(.2,0,0)),end,.3,[1.4,1.8,2.4]);
+  hits.forEach((h,j)=>{const k=swarm.hit(h.creature,h.point,LANCE.radius,LANCE.dots*ch*LANCE.fall[j]);stats.stripped+=k;stats.landed++;if(swarm.lastCore){stats.cores++;coreSeen();}});}
+function arcZap(){const r=rayFrom(aim.x,aim.y);let h=swarm.pick(r.origin,r.direction);let c=h&&h.creature;
+  if(!c){const g=ground(r);if(!g)return;let bd=10;for(const o of swarm.list){if(o.dead)continue;const d=Math.hypot(o.pos.x-g.x,o.pos.z-g.z)-swarm.radius(o);if(d<bd){bd=d;c=o;}}}
+  if(!c||Math.hypot(c.pos.x,c.pos.z)-swarm.radius(c)>ARC.range){const g=ground(r);if(g)seg(muzzle,muzzle.clone().lerp(g,.25),.06,[.3,.6,.5]);return;}
+  stats.fired++;if(windows&&!inWindow){wasted(swarm.center(c));return;}
+  let p=swarm.center(c);let k=swarm.hit(c,p,2,ARC.dots,{burn:true});swarm.burn(p,ARC.burn);stats.stripped+=k;stats.landed++;if(swarm.lastCore){stats.cores++;coreSeen();}jag(muzzle,p,.16);
+  const done=new Set([c]);for(let j=0;j<ARC.jumps;j++){let best=null,bd=ARC.hop;for(const o of swarm.list){if(o.dead||done.has(o))continue;const d=Math.hypot(o.pos.x-c.pos.x,o.pos.z-c.pos.z)-swarm.radius(o)-swarm.radius(c)*.5;if(d<bd){bd=d;best=o;}}
+    if(!best)break;const q=swarm.center(best);k=swarm.hit(best,q,2,ARC.dots,{burn:true});swarm.burn(q,ARC.burn);stats.stripped+=k;jag(p,q,.16);done.add(best);c=best;p=q;}}
+function callAnvil(x,y){if(barrages<=0){say('<b>ANVIL</b> Nothing left on the rails.',2);return;}const g=ground(rayFrom(x,y));if(!g)return;barrages--;stats.bUsed++;
+  shells.push({p:g,t:ANVIL.flight});say('<b>ANVIL</b> Shot out. '+ANVIL.flight+' seconds.',2);}
+let coreT=-99;function coreSeen(){if(simT-coreT>8){say('<b>OVERWATCH</b> There. The core. Hit that and it really hurts.',2.5);}coreT=simT;}
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptr.size===2){const [a,b]=[...ptr.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);zoom0=zoom;fireAt=null;return;}
-  fireAt={x:e.clientX,y:e.clientY};fire(e.clientX,e.clientY);fireT=.1;});
+  if(ptr.size===2){const [a,b]=[...ptr.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);zoom0=zoom;holding=false;lance.on=false;lance.ch=0;return;}
+  aim={x:e.clientX,y:e.clientY};holding=true;if(weapon==='artillery')callAnvil(e.clientX,e.clientY);if(weapon==='lance'&&lance.cd<=0){lance.on=true;lance.ch=0;}});
 cv.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(!p)return;p.x=e.clientX;p.y=e.clientY;
-  if(ptr.size===2){const [a,b]=[...ptr.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)zoom=clamp(zoom0*pinch0/d,.5,2.2);}else if(fireAt){fireAt.x=e.clientX;fireAt.y=e.clientY;}});
-const up=e=>{ptr.delete(e.pointerId);pinch0=0;if(ptr.size===0)fireAt=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
-cv.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(e.deltaY*.001),.5,2.2);},{passive:false});
-function setW(w){weapon=w;['wCannon','wArc','wArt'].forEach(id=>$(id).classList.toggle('on',id==={cannon:'wCannon',arc:'wArc',artillery:'wArt'}[w]));}
-$('wCannon').onclick=()=>setW('cannon');$('wArc').onclick=()=>setW('arc');$('wArt').onclick=()=>setW('artillery');
+  if(ptr.size===2){const [a,b]=[...ptr.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)zoom=clamp(zoom0*pinch0/d,.5,2.4);}else if(aim){aim.x=e.clientX;aim.y=e.clientY;}});
+const up=e=>{ptr.delete(e.pointerId);pinch0=0;if(ptr.size===0){if(weapon==='lance'&&lance.on&&lance.ch>=.25){lanceShot(lance.ch);lance.cd=LANCE.cool;}lance.on=false;lance.ch=0;holding=false;}};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(e.deltaY*.001),.5,2.4);},{passive:false});
+function setW(w){weapon=w;['wCannon','wLance','wArc','wArt'].forEach(id=>$(id).classList.toggle('on',id==={cannon:'wCannon',lance:'wLance',arc:'wArc',artillery:'wArt'}[w]));}
+$('wCannon').onclick=()=>setW('cannon');$('wLance').onclick=()=>setW('lance');$('wArc').onclick=()=>setW('arc');$('wArt').onclick=()=>setW('artillery');
 function setTh(on){thermal=on;swarm.setThermal(on);sqMat.uniforms.uSoft.value=on?1:0;sqMat.uniforms.uSizeMul.value=on?4:1;$('bSensor').classList.toggle('on',!on);$('bThermal').classList.toggle('on',on);}
 $('bSensor').onclick=()=>setTh(false);$('bThermal').onclick=()=>setTh(true);
-$('bNext').onclick=()=>{for(const c of swarm.list)c.dead=true;startWave(wave+1);};
-$('bRestart').onclick=()=>{for(const c of swarm.list)c.dead=true;mech.hull=100;kills=0;$('over').style.display='none';startWave(0);};
-
+$('bNext').onclick=()=>startWave(cur+1);
+// menu: difficulty, every wave, the results log
+const LOG=[];
+function buildMenu(){const box=$('mlist');box.innerHTML='';let last=null;
+  for(let i=0;i<WAVES.length;i++){const E=WAVES[i];if(E.m!==last){last=E.m;const g=document.createElement('div');g.className='grp';g.textContent='Mission '+E.m.id+' · '+E.m.name;box.appendChild(g);
+      const l=document.createElement('div');l.className='list';box.appendChild(l);}
+    const b=document.createElement('button');b.textContent='W'+(E.i+1)+(E.w.boss?' '+E.w.boss:'')+(E.w.split?' (split)':'');b.onclick=()=>{$('menu').style.display='none';startWave(i);};
+    box.lastChild.appendChild(b);}
+  document.querySelectorAll('#menu [data-d]').forEach(b=>b.classList.toggle('on',b.dataset.d===diffName));}
+$('bMenu').onclick=()=>{buildMenu();$('mlog').textContent=LOG.length?LOG.join('\n'):'none yet';$('menu').style.display='block';};
+$('mClose').onclick=()=>{$('menu').style.display='none';};
+document.querySelectorAll('#menu [data-d]').forEach(b=>b.onclick=()=>{diffName=b.dataset.d;DIFF=D.difficulty[diffName];$('dLab').textContent=diffName;buildMenu();});
+async function copyLog(el){const t='Rift Mech Defense combat sandbox results\n'+LOG.join('\n');let ok=false;try{await navigator.clipboard.writeText(t);ok=true;}catch(e){}
+  $(el).textContent=ok?'Copied. Paste it to session C (balance) or here.':'Copy blocked here; the results are listed in WAVES.';}
+$('rCopy').onclick=()=>copyLog('copied');$('mCopy').onclick=()=>copyLog('copied2');
+$('rRetry').onclick=()=>startWave(cur);
+document.querySelectorAll('#report [data-v]').forEach(b=>b.onclick=()=>{stats.verdict=b.dataset.v;LOG[LOG.length-1]=line(stats);$('copied').textContent='Noted: '+b.dataset.v+'. Next wave in 2 s.';
+  setTimeout(()=>{if($('report').style.display==='block')startWave(cur+1);},2000);});
+const mmss=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+function line(s){const acc=s.fired?Math.round(s.landed/s.fired*100):0;
+  return `${s.key} ${s.name} · ${s.diff} · ${s.won?'cleared':'WRAITH DOWN'} in ${mmss(s.t)} (target ${mmss(s.target*60)}) · shield −${Math.round(s.shieldLost)} hull −${Math.round(s.hullLost)} · squad lost ${s.lost}/4 · hits ${acc}% (${s.wasted} into static) · cores ${s.cores} · dots stripped ${s.stripped}, crawled back ${s.rejoin} · ANVIL ${s.bUsed}/${s.bTot}`+(s.verdict?' · felt: '+s.verdict:'');}
+function report(won){stats.won=won;stats.t=waveT;stats.target=W.min||2;stats.rejoin=swarm.rejoined-stats.rejoin0;LOG.push(line(stats));
+  const acc=stats.fired?Math.round(stats.landed/stats.fired*100):0;
+  $('rT').textContent=(won?'Wave clear · ':'Wraith down · ')+stats.key;
+  $('rTab').innerHTML=[['Time',mmss(stats.t)+' (target '+mmss(stats.target*60)+')'],['Shield and hull taken',Math.round(stats.shieldLost)+' · '+Math.round(stats.hullLost)],
+    ['Squad lost',stats.lost+' of 4'],['Hits',acc+'%, '+stats.wasted+' into the static'],['Core hits',stats.cores],['Dots stripped · crawled back',stats.stripped+' · '+stats.rejoin],
+    ['ANVIL used',stats.bUsed+' of '+stats.bTot],['Difficulty',diffName]].map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('');
+  $('copied').textContent='';$('report').style.display='block';}
 // ---------------------------------------------------------------- loop
 function resize(){R.setSize(innerWidth,innerHeight,false);view.resize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();}
 addEventListener('resize',resize);resize();
 let simT=0,last=performance.now(),flash=0,shake=0;
 const auto=/auto/.test(location.hash);
 function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;simT+=dt;
-  // camera: high three-quarter over the Wraith; further back on a tall screen
   const port=innerWidth<innerHeight;const d=(port?74:58)*zoom;
   cam.position.set((Math.random()-.5)*shake,d*.8+(Math.random()-.5)*shake,d*.62);cam.lookAt(0,0,port?-12:-6);shake*=Math.exp(-dt*6);
   const px=view.pxScale(cam);swarm.pxScale(px);sqMat.uniforms.uScale.value=px;grid.userData.sweep.rotation.y=-simT*.9;
-  // fire held
-  if(fireAt&&weapon==='cannon'){fireT-=dt;if(fireT<=0){fire(fireAt.x,fireAt.y);fireT=.09;}}
-  if(auto&&swarm.list.length){fireT-=dt;if(fireT<=0){let best=null,bd=1e9;for(const c of swarm.list){if(c.dead)continue;const dd=c.pos.length();if(dd<bd){bd=dd;best=c;}}
-    if(best){const q=swarm.center(best).project(cam);fire((q.x+1)/2*innerWidth,(1-q.y)/2*innerHeight);}fireT=.12;}}
-  // artillery shells
-  for(const s of shells){s.t-=dt;const r=1+s.t*5;for(let i=0;i<24;i++){const a0=i/24*6.283+simT,a1=(i+1)/24*6.283+simT;seg(V(s.p.x+Math.cos(a0)*r,.1,s.p.z+Math.sin(a0)*r),V(s.p.x+Math.cos(a1)*r,.1,s.p.z+Math.sin(a1)*r),.02,[1.2,.4,.1]);}
-    if(s.t<=0){kills+=swarm.blast(s.p,7,700);flash=.5;shake=3;for(let i=0;i<30;i++){const a=Math.random()*6.283;seg(s.p,V(s.p.x+Math.cos(a)*9,Math.random()*6,s.p.z+Math.sin(a)*9),.35,[1.6,.6,.2]);}}}
+  const playing=!cleared&&mech.hull>0;
+  if(playing){waveT+=dt;
+    // spawns
+    spawnT+=dt;spawnQ=spawnQ.filter(q=>{if(spawnT>=q.t){spawnOne(q);return false;}return true;});
+    // rift: streams small ones, or feeds the boss, until sealed
+    if(rift){if(rift.open){if(W.stream){rift.acc+=dt*(W.stream.dotsPerS||4);while(rift.acc>=10){const id=(rift.alt++%3===2)?'skein':'knot';rift.acc-=id==='skein'?20:10;spawnOne({id,from:rift.p.clone().add(V((Math.random()-.5)*6,0,0)),big:false});}}
+        if(W.growWhileRiftOpen&&boss&&!boss.dead&&boss.count<W.growWhileRiftOpen.max*DIFF.enemyDots){rift.acc+=dt*W.growWhileRiftOpen.dotsPerS;const n=Math.floor(rift.acc);if(n>0){swarm.grow(boss,n);rift.acc-=n;}}}
+      else if(W.shedWhenSealed&&boss&&!boss.dead){rift.acc+=dt*W.shedWhenSealed.dotsPerS;const n=Math.floor(rift.acc);if(n>0){swarm.shed(boss,n);rift.acc-=n;}}}
+    // the TITAN splits at 35,000: four 5,000-dot tendrils go for the squad
+    if(boss&&boss.rig.id==='titan'&&!splitDone&&boss.count<35000*DIFF.enemyDots){splitDone=true;const n=Math.round(5000*DIFF.enemyDots);
+      let k=0;for(const q of boss.P){if(k>=n*4)break;if(q.alive&&Math.random()<.5){q.alive=false;k++;}}boss.count-=k;
+      for(let j=0;j<4;j++){const a=j/4*6.283;swarm.spawn('hulk',boss.pos.clone().add(V(Math.cos(a)*18,0,Math.sin(a)*18)),0,{n});}
+      say('<b>OVERWATCH</b> It split. Four of them, five thousand each, going for the squad.',3.5);}
+  }
+  // the sensor near big ones: interference, and clear windows only
+  let I=.03;for(const c of swarm.list){if(c.dead)continue;const dd=Math.hypot(c.pos.x,c.pos.z);I=Math.max(I,ss(16+c.rig.size*1.6,3+c.rig.size*.3,dd)*clamp(.2+c.count/4000,.2,.8));}
+  windows=I>.42;const win=RULES.window.baseS*DIFF.windowK,ph=simT%RULES.window.periodS;inWindow=!windows||ph<win;
+  const Ishow=clamp((windows&&inWindow?I*.3:I)+flash*.5,0,1);flash*=Math.exp(-dt*5);
+  $('lock').className=windows?(inWindow?'on':'off'):'';$('lock').textContent=windows?(inWindow?'◆ LOCK':'STATIC · WAIT'):'';
+  if(windows&&!stats.toldWait){stats.toldWait=true;say('<b>OVERWATCH</b> Don’t fire into the static. Wait for me to lock. Then fire.',3.5);}
+  // weapons
+  gun.cd-=dt;arcS.cd-=dt;lance.cd-=dt;
+  const firing=playing&&aim&&(holding||auto);
+  if(auto&&swarm.list.length){let best=null,bd=1e9;for(const c of swarm.list){if(c.dead)continue;const dd=c.pos.length();if(dd<bd){bd=dd;best=c;}}if(best){const q=swarm.center(best).project(cam);aim={x:(q.x+1)/2*innerWidth,y:(1-q.y)/2*innerHeight};}}
+  if(firing&&weapon==='cannon'&&!gun.over){while(gun.cd<=0){cannonShot();gun.cd+=1/GUN.rate;gun.heat+=GUN.heatShot;gun.cool=GUN.delay;if(gun.heat>=100){gun.heat=100;gun.over=true;say('<b>OVERWATCH</b> Gun’s cooking. Let it breathe.',1.8);break;}}}
+  else{if(gun.cd<0)gun.cd=0;gun.cool-=dt;if(gun.cool<=0)gun.heat=Math.max(0,gun.heat-GUN.cool*(gun.over?.8:1)*dt);if(gun.over&&gun.heat<=GUN.resume)gun.over=false;}
+  if(firing&&weapon==='arc'&&arcS.cd<=0){arcZap();arcS.cd=1/ARC.rate;}
+  if(lance.on){lance.ch=Math.min(1,lance.ch+dt/LANCE.charge);if(lance.ch>=1&&weapon==='lance'){lanceShot(1);lance.cd=LANCE.cool;lance.on=false;lance.ch=0;}}
+  if(auto&&weapon==='lance'&&lance.cd<=0&&!lance.on){lance.on=true;}
+  $('heatM').style.width=gun.heat+'%';$('heatM').classList.toggle('hot',gun.over);$('lanceM').style.width=(lance.ch*100)+'%';$('wArt').querySelector('small').textContent=barrages+' left · tap ground';
+  // shells
+  for(const s of shells){s.t-=dt;ring(s.p,ANVIL.radius*(.35+.65*Math.min(1,s.t/ANVIL.flight)),[1.2,.45,.1],28);
+    if(s.t<=0){const k=swarm.blast(s.p,ANVIL.radius,(W.barrageDots||ANVIL.dots));swarm.burn(s.p,ANVIL.burn);stats.stripped+=k;flash=.5;shake=3;
+      for(let i=0;i<30;i++){const a=Math.random()*6.283;seg(s.p,V(s.p.x+Math.cos(a)*10,Math.random()*6,s.p.z+Math.sin(a)*10),.35,[1.6,.6,.2]);}
+      if(rift&&rift.open&&Math.hypot(s.p.x-rift.p.x,s.p.z-rift.p.z)<ANVIL.radius+4){rift.hits++;if(rift.hits>=rift.need){rift.open=false;say('<b>ANVIL</b> Rift’s down. It’s closed.',3);}
+        else say('<b>ANVIL</b> On target. '+(rift.need-rift.hits)+' more to close it.',2.5);}}}
   shells=shells.filter(s=>s.t>0);
-  // squad: idle, and the turning
+  if(rift){const pulse=.6+.4*Math.sin(simT*3);const col=rift.open?[1.4*pulse,.5*pulse,.05]:[.25,.25,.25];
+    for(let i=0;i<6;i++){const x0=rift.p.x-7+i*2.3,x1=x0+2.3;seg(V(x0,.1,rift.p.z+Math.sin(i*1.7)*.8),V(x1,.1,rift.p.z+Math.sin((i+1)*1.7)*.8),.02,col);}
+    if(rift.open)ring(rift.p,9,[.5,.2,.03],24);}
+  for(const w of wrecks){if(w.gone)continue;const p=w.p;for(const [a,b] of [[[-1.5,-1],[1.5,-1]],[[1.5,-1],[1.5,1]],[[1.5,1],[-1.5,1]],[[-1.5,1],[-1.5,-1]]])seg(V(p.x+a[0],.1,p.z+a[1]),V(p.x+b[0],.1,p.z+b[1]),.02,[0,.5,0]);
+    for(const c of swarm.list){if(c.dead||c.n0<300)continue;if(Math.hypot(c.pos.x-p.x,c.pos.z-p.z)<swarm.radius(c)+2){w.gone=true;swarm.absorb(c,p,W.absorb.dots||40);say('<b>OVERWATCH</b> It took the wreck. It’s bigger.',2.2);break;}}}
+  // targets and the fight at close range
   const targets=[mech,...squad.filter(a=>!a.gone&&!a.turning)];
   swarm.update(dt,simT,targets);
-  for(const c of swarm.list){if(!c.mauling||!c.target)continue;const tg=c.target;
-    if(tg.kind==='mech'){mech.hull-=dt*(2+Math.sqrt(c.count)*.35)*(c.state==='maul'?1:0);shake=Math.max(shake,.4);}
+  for(const c of swarm.list){if(!c.mauling||!c.target||!playing)continue;const tg=c.target;
+    if(tg.kind==='mech'&&c.state==='maul'){let dmg=dt*DIFF.enemyDamage*(2+Math.sqrt(c.count)*.35);mech.lastHit=simT;shake=Math.max(shake,.4);
+      const s=Math.min(mech.shield,dmg);mech.shield-=s;stats.shieldLost+=s;dmg-=s;mech.hull-=dmg;stats.hullLost+=dmg;}
     else if(tg.kind==='ally'&&!tg.turning){tg.turning=simT;tg.by=c;}}
+  if(simT-mech.lastHit>MECH.regenDelay)mech.shield=Math.min(MECH.shield,mech.shield+MECH.regen*dt);
   let alive=0;squad.forEach((a,i)=>{const ph=simT*.8+a.ph;
-    if(a.turning){const f=(simT-a.turning)/1.2;if(f>=1&&!a.gone){a.gone=true;const c=a.by;const n=Math.max(1,Math.round(c.n0*.08));for(let k=0;k<n;k++)swarm.absorb(c,a.pos);say('<b>OVERWATCH</b> We lost one… their marker just turned red.',3);}}
+    if(a.turning){const f=(simT-a.turning)/1.2;if(f>=1&&!a.gone){a.gone=true;stats.lost++;swarm.absorb(a.by,a.pos,Math.round(RULES.lostSquadDots/SQ));say('<b>OVERWATCH</b> We lost one… their marker just turned red.',3);}}
     else a.pos.set(a.home.x+Math.sin(ph)*.25,0,a.home.z+Math.cos(ph*.7)*.25);
-    if(!a.gone)alive++;
-    const fl=a.turning?(Math.sin((simT-a.turning)*(8+(simT-a.turning)*30))>0):false;
+    if(!a.gone)alive++;const fl=a.turning?(Math.sin((simT-a.turning)*(8+(simT-a.turning)*30))>0):false;
     sqPos.set([a.pos.x,.9,a.pos.z],i*3);sqCol.set(a.gone?[0,0,0]:fl?[1,0,0]:[0,0,1],i*3);sqI[i]=a.gone?0:(thermal?.25:1.3);});
   sqGeo.attributes.position.needsUpdate=sqGeo.attributes.aCol.needsUpdate=sqGeo.attributes.aI.needsUpdate=true;
-  // lines
-  let n=0;for(const f of fx){f.life-=dt;if(f.life<=0||n>=MAXL)continue;const k=f.life/f.max;lPos.set([f.a.x,f.a.y,f.a.z,f.b.x,f.b.y,f.b.z],n*6);
-    const c=f.col.map(v=>v*k);lCol.set([...c,...c],n*6);n++;}
+  let n=0;for(const f of fx){f.life-=dt;if(f.life<=0||n>=MAXL)continue;const k=f.life/f.max;lPos.set([f.a.x,f.a.y,f.a.z,f.b.x,f.b.y,f.b.z],n*6);const c=f.col.map(v=>v*Math.min(1,k*1.5));lCol.set([...c,...c],n*6);n++;}
   fx=fx.filter(f=>f.life>0);lGeo.setDrawRange(0,n*2);lGeo.attributes.position.needsUpdate=lGeo.attributes.color.needsUpdate=true;
-  // waves
-  const dots=swarm.dots;
-  if(!cleared&&swarm.list.length===0&&simT>1){cleared=true;clearT=simT;say('<b>OVERWATCH</b> Wave '+(wave+1)+' clear. '+(alive===SQ?'Whole squad’s still with us.':alive+' of the squad made it.'),3);}
-  if(cleared&&simT-clearT>4)startWave(wave+1);
-  // the sensor near big ones: interference and dropped frames
-  let I=.03;for(const c of swarm.list){if(c.dead)continue;const dd=Math.hypot(c.pos.x,c.pos.z);I=Math.max(I,ss(16+c.rig.size*1.6,3+c.rig.size*.3,dd)*clamp(.2+c.n0/4000,.2,.72));}
-  I=clamp(I+flash*.5,0,1);flash*=Math.exp(-dt*5);
+  // end of wave
+  if(playing&&waveT>2&&spawnQ.length===0&&swarm.list.length===0&&!(rift&&rift.open&&W.stream)){cleared=true;report(true);}
+  if(!cleared&&mech.hull<=0){mech.hull=0;cleared=true;report(false);}
   // HUD
-  $('cnt').textContent=dots.toLocaleString('en-US');$('kills').textContent=kills.toLocaleString('en-US');$('sq').textContent=alive+' / '+SQ;
-  const h=clamp(mech.hull,0,100);$('hull').style.width=h+'%';$('hb').classList.toggle('bad',h<35);
+  $('cnt').textContent=swarm.dots.toLocaleString('en-US');$('sq').textContent=alive+' / '+SQ;$('bar').textContent=barrages;
+  $('shield').style.width=(mech.shield/MECH.shield*100)+'%';$('hull').style.width=clamp(mech.hull,0,100)+'%';$('hb').classList.toggle('bad',mech.hull<35);
+  $('tm').textContent=mmss(waveT)+' / target '+mmss((W.min||2)*60)+(rift?(rift.open?' · rift open ('+rift.hits+'/'+rift.need+')':' · rift sealed'):'');
   capT-=dt;if(capT<0)$('cap').innerHTML='';
-  if(mech.hull<=0&&$('over').style.display!=='flex'){$('over').style.display='flex';$('overT').textContent='Wraith down · wave '+(wave+1);}
-  const art=clamp((artReady-simT)/5,0,1);$('artCd').style.width=(art*100)+'%';
-  if(view.skip(now,ss(.55,1,I)*.6))return;
-  view.render(scene,cam,{thermal,interf:I,flash:flash*.5,exposure:1.3});
+  if(view.skip(now,ss(.55,1,Ishow)*.6))return;
+  view.render(scene,cam,{thermal,interf:Ishow,flash:flash*.5,exposure:1.3});
 }
 startWave(0);
-(function(){const h=location.hash;const m=h.match(/wave(\d+)/);if(m){for(const c of swarm.list)c.dead=true;startWave(+m[1]-1);}if(/thermal/.test(h))setTh(true);})();
+(function(){const h=location.hash;const m=h.match(/M(\d)W(\d)/i);if(m){const i=WAVES.findIndex(E=>E.key==='M'+m[1]+'W'+m[2]);if(i>=0)startWave(i);}
+  if(/thermal/.test(h))setTh(true);const w=h.match(/(cannon|lance|arc)/);if(w)setW(w[1]);if(/easy|hard/.test(h)){diffName=h.match(/easy|hard/)[0];DIFF=D.difficulty[diffName];$('dLab').textContent=diffName;startWave(cur);}})();
 requestAnimationFrame(loop);
 </script></body></html>

@@ -37,6 +37,9 @@ The session that built `concept/swarm-viewer.src.html` (20 Nov 2026). If this ch
   (8 waves up to the BEHEMOTH, cannon / arc / artillery, squad that can be lost, sensor/thermal; `#auto` fires by itself,
   `#wave5` starts at wave 5).
 
+- **The combat sandbox** (20 Nov, evening): the hit test became a balance sandbox on D's waves and C's numbers (see the board).
+  Cores wander inside anything of 100 dots or more; 30% of knocked-off dots crawl back unless burned (Arc, ANVIL).
+
 ## Next
 1. Christopher likes the Host as it is now and wants Claude to design freely (the ChatGPT directions were dropped). Keep pushing it:
    more forms, tentacles that reach for squads, the Host's look in each phase of the fight in the lore proposal.

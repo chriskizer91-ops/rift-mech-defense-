@@ -12,9 +12,9 @@ HULK 5,000, BEHEMOTH 10,000, TITAN 50,000, then THE SIGNAL 1,000,000 with its co
 breaks up. A link with `#host`, `#brute,aggro`, `#stalker,thermal` and so on opens a creature directly.
 
 ## Where it stands
-- **The creatures can be fought** (20 Nov): `builds/creature-hits.html` (also at https://claude.ai/artifact/QSgAwk2AEyMWQxifz8qY5D), a top-down hit test. Waves walk at the Wraith and its
-  squad; tap or hold to fire the cannon, tap for the arc or artillery. Every hit knocks dots off, so they shrink as they're hurt,
-  and a squad they reach turns red and makes them bigger. It runs on the shared module in `game/creatures/`.
+- **The combat sandbox** (20 Nov): `builds/creature-hits.html` (also at https://claude.ai/artifact/QSgAwk2AEyMWQxifz8qY5D). Session D's
+  chapter 1 waves with session C's weapon numbers: cannon, Lance, Arc and ANVIL barrages; cores, rifts, the sensor's clear windows,
+  squads that can be lost; Easy/Medium/Hard; a report after each wave with a copyable result. Runs on `game/creatures/`.
 - **Concept 1 is built: the swarm creatures** (`concept/swarm-viewer.src.html`). The Host is a placeholder: a hunched heap of
   about 2,000 brute-sized clumps. Its real design comes from one of the five open directions (`docs/art-requests/RMD_HOST_DIRECTIONS.html`).
 - The assets from Mud Lab and Ironhowl 4 are copied in (`borrowed/`, see `borrowed/INDEX.md`). Nothing is built from them yet.

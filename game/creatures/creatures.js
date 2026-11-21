@@ -7,7 +7,14 @@
    swarm.pick(rayOrigin, rayDir)    // -> {creature, point} or null
    swarm.hit(creature, point, radius, dots)   // knocks up to `dots` dots off near `point`; returns how many
    swarm.blast(point, radius, dots)           // artillery: every creature in reach
-   swarm.absorb(creature, pos)                // it takes something: one more dot (count can rise past where it started)
+   swarm.absorb(creature, pos, n)             // it takes something: n more dots (count can rise past where it started)
+   swarm.grow(creature, n) / swarm.shed(creature, n)   // a rift feeds it / it sheds (sealed rift)
+   swarm.pickAll(o, d)                        // every creature along a ray, nearest first (the Lance pierces)
+   swarm.burn(point, radius)                  // burns loose dots on the ground (Arc, barrages); returns how many
+   Cores: every creature of 100 dots or more has a core that wanders inside it. A hit on the core takes CORE_K (10) times
+   the dots (swarm.lastCore tells you it was a core hit); the core shows hot on thermal.
+   Loose dots: a share (swarm.liveK, 0.3) of knocked-off dots land alive and crawl back to the nearest creature within 25 m,
+   rejoining it, unless burned first.
    swarm.setThermal(on); swarm.pxScale(px)    // view mode; pixels per metre at distance 1 (see SensorView.pxScale)
    swarm.ground = (x,z) => y                  // the world's ground height (B's map); creatures walk on it, loose dots land on it
 
@@ -155,12 +162,12 @@ function dotMaterial(){return new T.ShaderMaterial(Object.assign({uniforms:{uSca
  void main(){vec2 d=gl_PointCoord-.5;float r=length(d)*2.;if(r>1.)discard;float core=exp(-r*r*mix(5.5,1.6,uSoft));gl_FragColor=vec4(vC*vA*core,1.);}`},ADD));}
 
 // ---------------------------------------------------------------- one creature: a rig, its dots, a little state machine
-function makeCreature(rig,pos,heading){
+function makeCreature(rig,pos,heading,opts){opts=opts||{};
   seedN=Math.floor(Math.random()*1e6)+11;
   const g0={phi:0,stride:0,low:0,stretch:0,hop:0,slam:0,ag:0};
   const kp=rig.pose(0,g0);
   const segs=rig.seg.map(([a,b,ra,rb,w])=>{const L=kp[a].distanceTo(kp[b]);return {a,b,ra,rb,w:(L*(ra+rb)*.5+ra*ra*1.6)*w};});
-  const tot=segs.reduce((s,x)=>s+x.w,0);const n=rig.n;
+  const tot=segs.reduce((s,x)=>s+x.w,0);const n=Math.max(4,Math.round(opts.n||rig.n));
   const cnt=segs.map(s=>s.w/tot*n);const flo=cnt.map(Math.floor);let left=n-flo.reduce((a,b)=>a+b,0);
   cnt.map((c,i)=>[c-flo[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,left).forEach(([,i])=>flo[i]++);
   const big=n>500;const gsz=n>=10000?60:n>=5000?40:16;const P=[];let cl=null,clLeft=0,nCl=0;
@@ -171,11 +178,12 @@ function makeCreature(rig,pos,heading){
     const sph=[gauss(),gauss(),gauss()];const sl=Math.hypot(...sph)||1;
     P.push({s:si,u,ox:Math.cos(a)*rr,oy:Math.sin(a)*rr,sx:sph[0]/sl*rr,sy:sph[1]/sl*rr,sz:sph[2]/sl*rr,cap,cr,ci,
       k:(big?40:70)+rnd()*(big?90:110),d:(big?9:11)+rnd()*7,ph:rnd()*6.283,jf:.7+rnd()*1.6,p:V(),v:V(),alive:true});}});
-  // spare slots: what it takes from the world becomes more of it (up to +30%)
-  const spare=Math.ceil(n*.3);for(let i=0;i<spare;i++){const q=P[Math.floor(rnd()*n)];P.push(Object.assign({},q,{p:V(),v:V(),alive:false,ph:rnd()*6.283}));}
+  // spare slots: what it takes from the world becomes more of it (up to +45%, or +220 dots for anything of 50 or more)
+  const spare=Math.max(Math.ceil(n*.45),n>=50?220:0);for(let i=0;i<spare;i++){const q=P[Math.floor(rnd()*n)];P.push(Object.assign({},q,{p:V(),v:V(),alive:false,ph:rnd()*6.283}));}
   return {rig,segs,P,n0:n,count:n,nCl,cw:new Float32Array(Math.max(1,nCl)*3),cph:Float32Array.from({length:Math.max(1,nCl)},()=>rnd()*6.283),
     pos:pos.clone(),heading:heading||0,scale:1,phi:Math.random()*6,state:'walk',st:0,target:null,first:true,dead:false,gone:false,fade:1,
-    id:Math.random().toString(36).slice(2,8),hp:1,mauling:false};
+    id:Math.random().toString(36).slice(2,8),hp:1,mauling:false,
+    core:n>=100?{seg:0,u:.5,to:{seg:0,u:.5},t:0,pos:V(),r:1,seen:false}:null,corePos:V()};
 }
 const _q=new T.Quaternion(),_e=new T.Euler();
 function gait(c,dt){const r=c.rig,g={phi:c.phi,stride:0,low:.1,stretch:0,hop:0,slam:0,ag:1,thrash:0};const st=c.st;
@@ -197,11 +205,11 @@ class Swarm{
     g.setAttribute('aI',new T.BufferAttribute(this.I,1).setUsage(T.DynamicDrawUsage));g.setAttribute('aS',new T.BufferAttribute(this.S,1).setUsage(T.DynamicDrawUsage));
     g.setAttribute('aB',new T.BufferAttribute(this.B,1).setUsage(T.DynamicDrawUsage));
     this.mat=dotMaterial();this.points=new T.Points(g,this.mat);this.points.frustumCulled=false;scene.add(this.points);
-    this.list=[];this.thermal=false;this.ground=(x,z)=>0;
+    this.list=[];this.thermal=false;this.ground=(x,z)=>0;this.liveK=.3;this.coreK=10;this.lastCore=false;this.dLive=new Uint8Array(opts.maxDebris||12000);this.rejoined=0;
     this.dPos=new Float32Array(this.maxDebris*3);this.dVel=new Float32Array(this.maxDebris*3);this.dLife=new Float32Array(this.maxDebris);this.dS=new Float32Array(this.maxDebris);this.dHead=0;
   }
   get dots(){return this.list.reduce((s,c)=>s+(c.dead?0:c.count),0);}
-  spawn(id,pos,heading){const rig=RIG[id];if(!rig)throw new Error('no creature '+id);const c=makeCreature(rig,pos,heading);this.list.push(c);return c;}
+  spawn(id,pos,heading,opts){const rig=RIG[id];if(!rig)throw new Error('no creature '+id);const c=makeCreature(rig,pos,heading,opts);this.list.push(c);return c;}
   setThermal(on){this.thermal=on;this.mat.uniforms.uSoft.value=on?1:0;this.mat.uniforms.uSizeMul.value=on?4.2:1;this.mat.uniforms.uMin.value=on?8:2.5;this.mat.uniforms.uMax.value=on?160:56;}
   pxScale(px){this.mat.uniforms.uScale.value=px;}
   center(c,out){return (out||V()).set(c.pos.x,c.pos.y+c.rig.size*.35*c.scale,c.pos.z);}
@@ -210,24 +218,37 @@ class Swarm{
     for(const c of this.list){if(c.dead)continue;this.center(c,cp);w.subVectors(cp,o);const t=w.dot(d);if(t<0)continue;
       const r=this.radius(c);const d2=w.lengthSq()-t*t;if(d2>r*r)continue;if(t<bt){bt=t;best={creature:c,point:o.clone().addScaledVector(d,t).lerp(cp,.35)};}}
     return best;}
-  _debris(p,from,speed,s){const i=this.dHead;this.dHead=(this.dHead+1)%this.maxDebris;
+  pickAll(o,d){const out=[];const cp=V(),w=V();
+    for(const c of this.list){if(c.dead)continue;this.center(c,cp);w.subVectors(cp,o);const t=w.dot(d);if(t<0)continue;
+      const r=this.radius(c);const d2=w.lengthSq()-t*t;if(d2>r*r)continue;out.push({creature:c,t,point:o.clone().addScaledVector(d,t).lerp(cp,.35)});}
+    return out.sort((a,b)=>a.t-b.t);}
+  burn(point,radius){let k=0;const r2=radius*radius;for(let i=0;i<this.maxDebris;i++){if(this.dLife[i]<=0||!this.dLive[i])continue;
+      const dx=this.dPos[i*3]-point.x,dz=this.dPos[i*3+2]-point.z;if(dx*dx+dz*dz<r2){this.dLive[i]=0;this.dLife[i]=Math.min(this.dLife[i],.25);k++;}}return k;}
+  _debris(p,from,speed,s,live){const i=this.dHead;this.dLive[i]=live&&Math.random()<this.liveK?1:0;this.dHead=(this.dHead+1)%this.maxDebris;
     const dx=p.x-from.x,dy=p.y-from.y,dz=p.z-from.z;const l=Math.hypot(dx,dy,dz)||1;
     this.dPos.set([p.x,p.y,p.z],i*3);this.dVel.set([dx/l*speed*(.5+Math.random()),Math.abs(dy/l)*speed*.6+speed*.4*Math.random()+2,dz/l*speed*(.5+Math.random())],i*3);
     this.dLife[i]=1;this.dS[i]=s;}
-  hit(c,point,radius,dots){if(!c||c.dead)return 0;const r2=radius*radius;let k=0;const sp=6+radius*2;
+  hit(c,point,radius,dots,opts){if(!c||c.dead)return 0;this.lastCore=false;
+    if(c.core&&point.distanceTo(c.corePos)<c.core.r*1.4+radius*.5){dots*=this.coreK;radius=Math.max(radius*2.5,c.core.r*1.6);this.lastCore=true;c.core.seen=true;}
+    const r2=radius*radius;let k=0;const sp=6+radius*2;const live=!(opts&&opts.burn);
     const near=[];for(let i=0;i<c.P.length;i++){const q=c.P[i];if(!q.alive)continue;const d2=q.p.distanceToSquared(point);if(d2<r2)near.push([d2,i]);}
     near.sort((a,b)=>a[0]-b[0]);
-    for(const [,i] of near){if(k>=dots)break;const q=c.P[i];q.alive=false;this._debris(q.p,point,sp,c.rig.dot);k++;}
+    for(const [,i] of near){if(k>=dots)break;const q=c.P[i];q.alive=false;this._debris(q.p,point,sp,c.rig.dot,live);k++;}
     // nothing close enough: the shot still tears dots off the nearest skin
     if(k===0&&dots>0){let bi=-1,bd=1e9;for(let i=0;i<c.P.length;i++){const q=c.P[i];if(!q.alive)continue;const d2=q.p.distanceToSquared(point);if(d2<bd){bd=d2;bi=i;}}
-      if(bi>=0&&bd<(radius*3)*(radius*3)){c.P[bi].alive=false;this._debris(c.P[bi].p,point,sp,c.rig.dot);k=1;}}
+      if(bi>=0&&bd<(radius*3)*(radius*3)){c.P[bi].alive=false;this._debris(c.P[bi].p,point,sp,c.rig.dot,live);k=1;}}
     c.count-=k;c.hp=c.count/c.n0;
     if(c.count<Math.max(2,c.n0*.12)){for(const q of c.P)if(q.alive){q.alive=false;this._debris(q.p,this.center(c),8+c.rig.size*.6,c.rig.dot);}c.count=0;c.dead=true;}
     return k;}
   blast(point,radius,dots){let tot=0;for(const c of this.list){if(c.dead)continue;const d=Math.hypot(c.pos.x-point.x,c.pos.z-point.z);
       if(d<radius+this.radius(c)){const share=Math.round(dots*clamp(1-d/(radius+this.radius(c)),.25,1));tot+=this.hit(c,this.center(c).lerp(point,.5),radius+c.rig.size*.4,share);}}
     return tot;}
-  absorb(c,pos){if(!c||c.dead)return false;const q=c.P.find(q=>!q.alive);if(!q)return false;q.alive=true;q.p.copy(pos);q.v.set(0,0,0);c.count++;c.hp=c.count/c.n0;return true;}
+  absorb(c,pos,n){if(!c||c.dead)return 0;n=n||1;let k=0;for(const q of c.P){if(k>=n)break;if(q.alive)continue;q.alive=true;q.p.copy(pos);q.p.x+=(Math.random()-.5)*2;q.p.z+=(Math.random()-.5)*2;q.v.set(0,0,0);k++;}
+    c.count+=k;c.hp=c.count/c.n0;return k;}
+  grow(c,n){if(!c||c.dead)return 0;let k=0;const al=c.P.filter(q=>q.alive);for(const q of c.P){if(k>=n)break;if(q.alive)continue;const src=al[Math.floor(Math.random()*al.length)];q.alive=true;q.p.copy(src?src.p:c.pos);q.v.set(0,0,0);k++;}
+    c.count+=k;c.hp=c.count/c.n0;return k;}
+  shed(c,n){if(!c||c.dead)return 0;let k=0;for(const q of c.P){if(k>=n)break;if(!q.alive)continue;if(Math.random()>.2)continue;q.alive=false;this._debris(q.p,this.center(c),4,c.rig.dot,false);k++;}
+    c.count-=k;c.hp=c.count/c.n0;return k;}
   update(dt,t,targets){
     let o=0;const P3=this.pos,C3=this.col,I=this.I,S=this.S,B=this.B;
     for(const c of this.list){if(c.gone)continue;
@@ -249,6 +270,11 @@ class Swarm{
       const F=c.segs.map(sg=>{const A=kp[sg.a].clone().multiplyScalar(s).applyQuaternion(_q).add(c.pos),Bp=kp[sg.b].clone().multiplyScalar(s).applyQuaternion(_q).add(c.pos);
         const d=Bp.clone().sub(A);const L=d.length();if(L>1e-4)d.multiplyScalar(1/L);const n1=new T.Vector3().crossVectors(Math.abs(d.y)>.9?V(1,0,0):_up,d).normalize();const n2=new T.Vector3().crossVectors(d,n1);
         return {A,d,L,n1,n2,ra:sg.ra*s,rb:sg.rb*s};});
+      if(c.core){const co=c.core;co.t-=dt;if(co.t<=0){const sg=c.segs;let tw=0;for(const x of sg)tw+=x.w;let r=Math.random()*tw,si=0;for(;si<sg.length-1;si++){r-=sg[si].w;if(r<=0)break;}
+          co.to={seg:si,u:.2+Math.random()*.6};co.t=3+Math.random()*2.5;}
+        const f=F[co.to.seg];const tx=f.A.x+f.d.x*f.L*co.to.u,ty=f.A.y+f.d.y*f.L*co.to.u,tz=f.A.z+f.d.z*f.L*co.to.u;
+        if(c.first)c.corePos.set(tx,ty,tz);else{const k=Math.min(1,dt*1.8);c.corePos.x+=(tx-c.corePos.x)*k;c.corePos.y+=(ty-c.corePos.y)*k;c.corePos.z+=(tz-c.corePos.z)*k;}
+        co.r=Math.max(.7,r.size*s*.1);}
       const big=c.n0>500;const jit=big?0:(c.state==='walk'?.1:.2)*(1+g.thrash*2.2)*Math.max(.5,r.size*s/4);
       if(big){const am=r.size*s*.035;for(let k=0;k<c.nCl;k++){const ph=c.cph[k];c.cw[k*3]=Math.sin(t*.7+ph)*am;c.cw[k*3+1]=Math.sin(t*.55+ph*1.7)*am*.7;c.cw[k*3+2]=Math.cos(t*.62+ph*2.3)*am;}}
       const sub=Math.max(1,Math.ceil(dt/(1/90)));const h=dt/sub;const gain=r.gain*(this.thermal?.07*Math.pow(Math.min(1,500/r.n),.33):1);
@@ -260,11 +286,21 @@ class Swarm{
         if(jit>0){const w=t*p.jf*(c.state==='walk'?3:5.5)+p.ph;tx+=Math.sin(w)*jit;ty+=Math.sin(w*1.31+1.7)*jit*.7;tz+=Math.cos(w*.87)*jit;}
         if(c.first){p.p.set(tx,ty,tz);}
         else for(let k=0;k<sub;k++){p.v.x+=((tx-p.p.x)*p.k-p.v.x*p.d)*h;p.v.y+=((ty-p.p.y)*p.k-p.v.y*p.d)*h;p.v.z+=((tz-p.p.z)*p.k-p.v.z*p.d)*h;p.p.x+=p.v.x*h;p.p.y+=p.v.y*h;p.p.z+=p.v.z*h;}
-        if(o>=this.max)continue;P3[o*3]=p.p.x;P3[o*3+1]=p.p.y;P3[o*3+2]=p.p.z;C3[o*3]=1;C3[o*3+1]=0;C3[o*3+2]=0;I[o]=gain;S[o]=r.dot;B[o]=big?r.size*s:0;o++;}
+        if(o>=this.max)continue;let gi=gain;if(c.core){const cr=c.core.r*1.7,dx=p.p.x-c.corePos.x,dy=p.p.y-c.corePos.y,dz=p.p.z-c.corePos.z;if(dx*dx+dy*dy+dz*dz<cr*cr)gi*=this.thermal?7:2.2;}
+        P3[o*3]=p.p.x;P3[o*3+1]=p.p.y;P3[o*3+2]=p.p.z;C3[o*3]=1;C3[o*3+1]=0;C3[o*3+2]=0;I[o]=gi;S[o]=r.dot;B[o]=big?r.size*s:0;o++;}
       c.first=false;}
-    // loose dots: fly, fall, fade
-    const dg=this.thermal?.05:1;
-    for(let i=0;i<this.maxDebris;i++){if(this.dLife[i]<=0)continue;const k=i*3;this.dVel[k+1]-=14*dt;
+    // loose dots: fly, fall, fade; live ones land and crawl back to the nearest creature
+    const dg=this.thermal?.05:1;const alive=this.list.filter(c=>!c.dead&&!c.gone).map(c=>({c,x:c.pos.x,z:c.pos.z,r:this.radius(c)}));
+    for(let i=0;i<this.maxDebris;i++){if(this.dLife[i]<=0)continue;const k=i*3;
+      if(this.dLive[i]&&this.dPos[k+1]<this.ground(this.dPos[k],this.dPos[k+2])+.4&&Math.abs(this.dVel[k+1])<3){
+        let best=null,bd=25;for(const a of alive){const d=Math.hypot(a.x-this.dPos[k],a.z-this.dPos[k+2])-a.r*.6;if(d<bd){bd=d;best=a;}}
+        if(!best){this.dLive[i]=0;}
+        else if(bd<.5){if(this.absorb(best.c,V(this.dPos[k],this.dPos[k+1],this.dPos[k+2]),1))this.rejoined++;this.dLife[i]=0;this.dLive[i]=0;continue;}
+        else{const dx=best.x-this.dPos[k],dz=best.z-this.dPos[k+2],l=Math.hypot(dx,dz)||1;this.dVel[k]=dx/l*3.2;this.dVel[k+2]=dz/l*3.2;this.dVel[k+1]=0;
+          this.dPos[k]+=this.dVel[k]*dt;this.dPos[k+2]+=this.dVel[k+2]*dt;this.dPos[k+1]=this.ground(this.dPos[k],this.dPos[k+2])+.15;this.dLife[i]-=dt*.08;
+          if(o<this.max+this.maxDebris){P3[o*3]=this.dPos[k];P3[o*3+1]=this.dPos[k+1];P3[o*3+2]=this.dPos[k+2];C3[o*3]=1;C3[o*3+1]=0;C3[o*3+2]=0;I[o]=.55*dg;S[o]=this.dS[i]*.8;B[o]=0;o++;}
+          continue;}}
+      this.dVel[k+1]-=14*dt;
       this.dPos[k]+=this.dVel[k]*dt;this.dPos[k+1]+=this.dVel[k+1]*dt;this.dPos[k+2]+=this.dVel[k+2]*dt;
       const gy=this.ground(this.dPos[k],this.dPos[k+2])+.1;if(this.dPos[k+1]<gy){this.dPos[k+1]=gy;this.dVel[k]*=.6;this.dVel[k+2]*=.6;this.dVel[k+1]*=-.25;}
       this.dLife[i]-=dt*.9;if(o>=this.max+this.maxDebris)continue;const L=Math.max(0,this.dLife[i]);

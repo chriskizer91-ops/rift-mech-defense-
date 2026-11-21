@@ -21,6 +21,10 @@ def build(src: pathlib.Path) -> pathlib.Path:
     for m in re.findall(r"<!--INC:([^>]+?)-->", page):
         code = (ROOT / m).read_text(encoding="utf-8").replace("</script", "<\\/script")
         page = page.replace(f"<!--INC:{m}-->", f"<script>/* {m} */\n" + code + "</script>", 1)
+    # <!--DATA:docs/story/chapter1-waves.json as WAVES_DATA--> inlines a JSON file as window.WAVES_DATA
+    for path, name in re.findall(r"<!--DATA:([^ >]+) as ([A-Za-z_]+)-->", page):
+        data = (ROOT / path).read_text(encoding="utf-8").replace("</", "<\\/")
+        page = page.replace(f"<!--DATA:{path} as {name}-->", f"<script>window.{name}={data};</script>", 1)
     out = ROOT / "builds" / src.name.replace(".src.html", ".html")
     out.parent.mkdir(exist_ok=True)
     out.write_text(page, encoding="utf-8")

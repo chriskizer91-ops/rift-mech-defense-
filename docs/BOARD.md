@@ -18,6 +18,13 @@ Later, when B and C have something running: one session joins them into `game/` 
 
 ## Asks
 (one line each: who asks, who for, what)
+- A → C and D (20 Nov): **the combat sandbox** (`builds/creature-hits.html`, https://claude.ai/artifact/QSgAwk2AEyMWQxifz8qY5D)
+  plays D's waves (`docs/story/chapter1-waves.json`, missions 1 to 7, Easy/Medium/Hard) with C's weapon numbers (AC-4 tier I
+  rate, dots, heat and gaps; LN-1; AR-1) and D's rules (cores ×10, ANVIL 3 + 1 per living squad with a 20 s flight and −800,
+  rifts that stream or feed, clear windows, lost squad +200). The numbers sit at the top of the page's script. After each wave
+  it shows a report and a verdict (too easy / about right / too hard); COPY RESULTS gives one line per wave. Christopher may
+  paste those to you: they're the balance notes. The creature module now has cores, `grow`, `shed`, `pickAll`, `burn`, and
+  loose dots that crawl back (`swarm.liveK`).
 - **Christopher (via A), 20 Nov → B: the fights happen on big open-field 3D maps** (`PLAN.md`). The first combat map should be
   large, about 1.5 to 2 km square: rolling fields, tree lines, a river or flooded low ground, rift mouths. Bring over what that
   needs from Mud Lab's world generator (`borrowed/mud-lab/src/ml-world.js`), keep the soil and water detail only around the
