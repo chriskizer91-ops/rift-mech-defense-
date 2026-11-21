@@ -13,56 +13,60 @@
    it (wt-soil.js, every 25 cm). Its slope (and so its light) is worked out per pixel from them, so a footprint 25 cm
    deep shows wherever it is, whatever the mesh under it.
    ===================================================================================================================== */
-const LOOK={tex:{},base:null,splat:null,u:{uT:{value:0},uRift:{value:new THREE.Vector4(MOUTH.x,MOUTH.y,1,0)},uSun:{value:new THREE.Vector3(-.42,.74,-.52).normalize()}},
+const LOOK={tex:{},base:null,splat:null,u:{uT:{value:0},uRiftP:{value:Array.from({length:4},()=>new THREE.Vector4(0,-999,0,0))},uRiftO:{value:Array.from({length:4},()=>new THREE.Vector4(0,0,0,0))},uSun:{value:new THREE.Vector3(-.42,.74,-.52).normalize()}},
   ring:Array.from({length:16},()=>new THREE.Vector4(0,0,-99,0)),ringI:0,bow:new THREE.Vector4(),bowD:new THREE.Vector4(1,0,4,0)};
-function lookTextures(){
+function lookTextures(){lookGLSL();
   const A=window.WT_ASSETS.tex,L=new THREE.TextureLoader();
   for(const k in A){const t=L.load(A[k]);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;LOOK.tex[k]=t;}
   for(const k of ['fx','smoke'])LOOK.tex[k].wrapS=LOOK.tex[k].wrapT=THREE.ClampToEdgeWrapping;
-  /* the ground as made: height, crack, wet (half floats, filtered) and what it's made of */
-  const N=MAP.N,hb=new Uint16Array(N*N*4);for(let k=0;k<N*N;k++){hb[k*4]=soilHalf(MAP.hB[k]);hb[k*4+1]=soilHalf(MAP.crk[k]);hb[k*4+2]=soilHalf(MAP.wet[k]);hb[k*4+3]=0;}
+  /* the ground as made: height, crack, wet, the water's level (half floats, filtered) and what it's made of */
+  const N=MAP.N,hb=new Uint16Array(N*N*4);for(let k=0;k<N*N;k++){hb[k*4]=soilHalf(MAP.hB[k]);hb[k*4+1]=soilHalf(MAP.crk[k]);hb[k*4+2]=soilHalf(MAP.wet[k]);hb[k*4+3]=soilHalf(MAP.wl[k]);}
   const B=LOOK.base=new THREE.DataTexture(hb,N,N,THREE.RGBAFormat,THREE.HalfFloatType);B.minFilter=B.magFilter=THREE.LinearFilter;B.needsUpdate=true;
-  const S=LOOK.splat=new THREE.DataTexture(MAP.spl,N,N,THREE.RGBAFormat);S.minFilter=S.magFilter=THREE.LinearFilter;S.needsUpdate=true;
-  Object.assign(LOOK.u,{tBase:{value:B},tSplat:{value:S},tSoil:{value:soilMakeTex()},uRing:{value:LOOK.ring},uBow:{value:LOOK.bow},uBowD:{value:LOOK.bowD}});
-  for(const k of ['sand','mud','dirt','asph','pave','rock'])LOOK.u['t_'+k]={value:LOOK.tex[k]};
+  const mk=a=>{const S=new THREE.DataTexture(a,N,N,THREE.RGBAFormat);S.minFilter=S.magFilter=THREE.LinearFilter;S.needsUpdate=true;return S;};
+  LOOK.splat=mk(MAP.spl);LOOK.splat2=mk(MAP.spl2);
+  Object.assign(LOOK.u,{tBase:{value:B},tSplat:{value:LOOK.splat},tSplat2:{value:LOOK.splat2},tSoil:{value:soilMakeTex()},uWin:{value:SOIL.win},uRing:{value:LOOK.ring},uBow:{value:LOOK.bow},uBowD:{value:LOOK.bowD}});
+  const T=MAP.def.tex;for(const k in T)LOOK.u['t_'+k]={value:LOOK.tex[T[k]]};
 }
 /* a ring through standing water (Mud Lab's mlWake): where, when, how strong. Sixteen at a time */
 function lookRing(x,z,a){const r=LOOK.ring[LOOK.ringI];r.set(x,z,LOOK.u.uT.value,a);LOOK.ringI=(LOOK.ringI+1)&15;}
 
 /* ---------- shader pieces shared by the ground and the water ---------- */
-const GLSL_HEAD=`uniform sampler2D tBase,tSoil,tSplat;uniform float uT;uniform vec4 uRift;uniform vec3 uSun;
-vec2 bUV(vec2 p){return ((p+160.)/.5+.5)/641.;}
+let GLSL_HEAD='';
+function lookGLSL(){const f=v=>v.toFixed(3);const M=MAP.def.MOUTHS[0];
+GLSL_HEAD=`uniform sampler2D tBase,tSoil,tSplat,tSplat2;uniform float uT;uniform vec4 uRiftP[4],uRiftO[4],uWin;uniform vec3 uSun;
+vec2 bUV(vec2 p){return ((p-(${f(MAP.X0)}))/${f(MAP.C)}+.5)/${MAP.N}.;}
 vec4 bAll(vec2 p){return texture(tBase,bUV(p));}
 float bH(vec2 p){return texture(tBase,bUV(p)).r;}
-vec4 sAll(vec2 p){return texture(tSoil,(p+160.)/320.);}
+vec4 sAll(vec2 p){if(p.x<uWin.x||p.x>uWin.z||p.y<uWin.y||p.y>uWin.w)return vec4(0.);return texture(tSoil,(p-(${f(MAP.X0)}))/${f(SOIL.W*64*SOIL.C)});}
 float gH(vec2 p){return bH(p)+sAll(p).r;}
 float hsh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hsh(i),hsh(i+vec2(1,0)),f.x),mix(hsh(i+vec2(0,1)),hsh(i+vec2(1,1)),f.x),f.y);}
 float soilHeat(vec4 S){return S.a*exp(-max(0.,uT-S.b)/30.);}
-/* the rift's mouth: cut out of the ground's face while it's open */
-bool inMouth(vec3 w){vec2 q=vec2((w.x-uRift.x)/${MOUTH.w.toFixed(2)},(w.y-uRift.y)/${MOUTH.h.toFixed(2)});
-  return uRift.z>.01&&w.z>${MOUTH.z0.toFixed(1)}&&w.z<${MOUTH.z1.toFixed(1)}&&q.y>-.12&&dot(q,q)<uRift.z*uRift.z;}
+/* a rift's mouth: cut out of the scarp's face while it's open (each mouth: where, its floor, which way it faces) */
+bool inMouth(vec3 w){for(int i=0;i<4;i++){vec4 P=uRiftP[i];float op=uRiftO[i].x;if(op<.01)continue;vec2 d=w.xz-P.xz;float sn=sin(P.w),cs=cos(P.w);
+  float out_=d.x*sn+d.y*cs,acr=d.x*cs-d.y*sn;vec2 q=vec2(acr/${f(M.w)},(w.y-P.y)/${f(M.h)});
+  if(out_>${f(M.s0)}&&out_<${f(M.s1)}&&q.y>-.12&&dot(q,q)<op*op)return true;}return false;}
 /* the ground's normal: its slope as made (every 50 cm) and the soil's (every 25 cm) */
-vec3 gNorm(vec2 xz,out vec3 nB){float e=.5,q=.25;
+vec3 gNorm(vec2 xz,out vec3 nB){float e=${f(Math.max(.5,MAP.C))},q=.25;
   float hL=bH(xz-vec2(e,0.)),hR=bH(xz+vec2(e,0.)),hD=bH(xz-vec2(0.,e)),hU=bH(xz+vec2(0.,e));
   float sL=sAll(xz-vec2(q,0.)).r,sR=sAll(xz+vec2(q,0.)).r,sD=sAll(xz-vec2(0.,q)).r,sU=sAll(xz+vec2(0.,q)).r;
   nB=normalize(vec3((hL-hR)/(2.*e),1.,(hD-hU)/(2.*e)));
   return normalize(vec3((hL-hR)/(2.*e)+(sL-sR)/(2.*q),1.,(hD-hU)/(2.*e)+(sD-sU)/(2.*q)));}
-`;
+`;}
 const GLSL_GRID=`float gridL(vec2 p,float s,float w){vec2 f=abs(fract(p/s-.5)-.5)*s,fw=max(fwidth(p),vec2(1e-4));vec2 l=1.-smoothstep(fw*w*.5,fw*w*1.5,f);return max(l.x,l.y);}
 `;
-const TERR_VERT=`vec3 transformed=vec3(position);{vec4 wq=modelMatrix*vec4(position,1.);transformed.y=gH(clamp(wq.xz,vec2(-159.8),vec2(159.8)));vWp=vec3(wq.x,transformed.y,wq.z);}`;
+const TERR_VERT=()=>`vec3 transformed=vec3(position);{vec4 wq=modelMatrix*vec4(position,1.);transformed.y=gH(clamp(wq.xz,vec2(${(MAP.X0+.2).toFixed(2)}),vec2(${(MAP.X0+MAP.S-.2).toFixed(2)})));vWp=vec3(wq.x,transformed.y,wq.z);}`;
 
 /* ---------- the ground, REAL ---------- */
 function matTerrain(){
   const m=new THREE.MeshStandardMaterial({roughness:.9,metalness:0});
   m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,LOOK.u);
-    sh.vertexShader='varying vec3 vWp;\n'+GLSL_HEAD+sh.vertexShader.replace('#include <begin_vertex>',TERR_VERT);
-    sh.fragmentShader='varying vec3 vWp;\nuniform sampler2D t_sand,t_mud,t_dirt,t_asph,t_pave,t_rock;\n'+GLSL_HEAD+sh.fragmentShader
+    sh.vertexShader='varying vec3 vWp;\n'+GLSL_HEAD+sh.vertexShader.replace('#include <begin_vertex>',TERR_VERT());
+    sh.fragmentShader='varying vec3 vWp;\nuniform sampler2D t_sand,t_mud,t_dirt,t_asph,t_pave,t_rock,t_meadow,t_plough,t_wheat;\n'+GLSL_HEAD+sh.fragmentShader
     .replace('#include <map_fragment>',`
       if(inMouth(vWp))discard;
-      vec2 xz=vWp.xz;vec3 nB;vec3 nW=gNorm(xz,nB);vec4 B=bAll(xz),S=sAll(xz);vec4 sp=texture(tSplat,bUV(xz));
-      float sand=sp.r,mud=sp.g,asph=sp.b,pave=sp.a,dirt=max(0.,1.-sand-mud-asph-pave);
+      vec2 xz=vWp.xz;vec3 nB;vec3 nW=gNorm(xz,nB);vec4 B=bAll(xz),S=sAll(xz);vec4 sp=texture(tSplat,bUV(xz)),sp2=texture(tSplat2,bUV(xz));
+      float sand=sp.r,mud=sp.g,asph=sp.b,pave=sp.a,mea=sp2.r,plo=sp2.g,whe=sp2.b,dirt=max(0.,1.-sand-mud-asph-pave-mea-plo-whe);
       float rock=smoothstep(.42,.7,1.-nB.y);
       vec3 cS=texture(t_sand,xz/5.).rgb;float dS=mix(1.,dot(cS,vec3(.33))/.24,.7)*mix(1.,dot(texture(t_sand,xz/23.).rgb,vec3(.33))/.24,.35);cS=vec3(.36,.29,.19)*dS;
       vec3 cM=texture(t_mud,xz/3.).rgb*vec3(.95,.92,.88);
@@ -70,14 +74,15 @@ function matTerrain(){
       vec3 cA=texture(t_asph,xz/7.).rgb*.85,cP=texture(t_pave,xz/5.).rgb*.9;
       vec3 an=abs(nB);vec3 cR=(texture(t_rock,vWp.zy/8.).rgb*an.x+texture(t_rock,vWp.xy/8.).rgb*an.z+texture(t_rock,xz/8.).rgb*an.y)/(an.x+an.y+an.z);
       cR*=vec3(.82,.78,.72);
-      vec3 alb=cS*sand+cM*mud+cD*dirt+cA*asph+cP*pave;alb=mix(alb,cR,rock);
-      float gh=B.r+S.r,under=smoothstep(.06,-.06,gh),wet=max(B.b,under);
+      vec3 cG=texture(t_meadow,xz/6.).rgb*mix(.75,1.1,vn(xz*.03)),cL=texture(t_plough,xz/7.).rgb*.9,cW=texture(t_wheat,xz/5.).rgb*mix(.85,1.05,vn(xz*.05+3.));
+      vec3 alb=cS*sand+cM*mud+cD*dirt+cA*asph+cP*pave+cG*mea+cL*plo+cW*whe;alb=mix(alb,cR,rock);
+      float gh=B.r+S.r,under=smoothstep(.06,-.06,gh-B.a),wet=max(B.b,under);
       /* churned: turned over, darker, muddier; pressed: a little darker; burnt where shells landed */
       float ch=S.g;alb=mix(alb,alb*.5+cM*.28,ch*.72*(1.-asph*.6));
       alb*=1.-clamp(-S.r*.8,0.,.2)*(1.-asph);
       alb*=mix(1.,.45,smoothstep(.85,1.,ch)*smoothstep(-.25,-.9,S.r));
       alb*=mix(1.,.56,wet*(1.-.5*asph));
-      alb*=mix(vec3(1.),vec3(.5,.62,.6),smoothstep(0.,4.,-gh));
+      alb*=mix(vec3(1.),vec3(.5,.62,.6),smoothstep(0.,4.,B.a-gh));
       float rough=mix(.94,.36,wet)*(1.-.15*asph);
       diffuseColor.rgb=alb;`)
     .replace('#include <roughnessmap_fragment>','float roughnessFactor=rough;')
@@ -87,12 +92,12 @@ function matTerrain(){
 /* ---------- the water, REAL: muddy at its edge, dark further out; the sky in it; rings and a bow wave (Mud Lab's look)
    and the cracks' glow coming up through it ---------- */
 function matWater(){
-  const m=new THREE.MeshStandardMaterial({roughness:.07,metalness:0,transparent:true});
+  const m=new THREE.MeshStandardMaterial({roughness:.07,metalness:0,transparent:true,envMapIntensity:.45});
   m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,LOOK.u);
-    sh.vertexShader='varying vec3 vWp;\n'+sh.vertexShader.replace('#include <begin_vertex>','vec3 transformed=vec3(position);vWp=(modelMatrix*vec4(position,1.)).xyz;');
+    sh.vertexShader='varying vec3 vWp;\n'+GLSL_HEAD+sh.vertexShader.replace('#include <begin_vertex>','vec3 transformed=vec3(position);{vec4 wq=modelMatrix*vec4(position,1.);transformed.y=bAll(wq.xz).a;vWp=vec3(wq.x,transformed.y,wq.z);}');
     sh.fragmentShader='varying vec3 vWp;\nuniform vec4 uRing[16];uniform vec4 uBow,uBowD;\n'+GLSL_HEAD+sh.fragmentShader
     .replace('#include <map_fragment>',`
-      vec2 p=vWp.xz;vec4 B=bAll(p);float gh=B.r+sAll(p).r,dep=-gh;if(dep<-.002)discard;
+      vec2 p=vWp.xz;vec4 B=bAll(p);float gh=B.r+sAll(p).r,dep=B.a-gh;if(dep<-.002)discard;
       float sh=smoothstep(0.,.2,dep),deep=smoothstep(.4,7.,dep);
       vec3 wc=mix(vec3(.26,.27,.2),vec3(.03,.075,.085),deep);
       /* slopes on the surface: a slow swell, the rings, the bow wave */
@@ -123,15 +128,15 @@ function matWater(){
 /* what the world writes into the sensor's picture: R hostile (dots only), G the grid and the world's lines,
    B allies, A the world's heat (thermal) */
 function matTerrainView(mode){
-  return new THREE.ShaderMaterial({uniforms:LOOK.u,vertexShader:'varying vec3 vWp;\n'+GLSL_HEAD+`void main(){${TERR_VERT}gl_Position=projectionMatrix*viewMatrix*vec4(vWp,1.);}`,
+  return new THREE.ShaderMaterial({uniforms:LOOK.u,vertexShader:'varying vec3 vWp;\n'+GLSL_HEAD+`void main(){${TERR_VERT()}gl_Position=projectionMatrix*viewMatrix*vec4(vWp,1.);}`,
     fragmentShader:'varying vec3 vWp;\n'+GLSL_HEAD+GLSL_GRID+(mode===1?`
       void main(){if(inMouth(vWp))discard;vec2 xz=vWp.xz;vec3 nB;vec3 n=gNorm(xz,nB);float gh=gH(xz);
         float g=.025+.035*clamp(dot(n,normalize(vec3(-.3,1.,.5))),0.,1.)+gridL(xz,10.,1.3)*.3+gridL(xz,2.5,1.)*.06;
         float cf=fwidth(gh);float c=abs(fract(gh/2.-.5)-.5)*2.;g+=(1.-smoothstep(cf*.8,cf*2.2,c))*.12;
-        if(gh<0.)g*=.5+.2*sin(vWp.z*3.+uT*2.);
+        if(gh<bAll(xz).a)g*=.5+.2*sin(vWp.z*3.+uT*2.);
         g*=1.-.6*smoothstep(60.,170.,distance(vWp,cameraPosition));
         gl_FragColor=vec4(0.,g,0.,0.);}`:`
-      void main(){if(inMouth(vWp))discard;vec2 xz=vWp.xz;vec3 nB;vec3 n=gNorm(xz,nB);vec4 B=bAll(xz),S=sAll(xz);float gh=B.r+S.r,dep=-gh;
+      void main(){if(inMouth(vWp))discard;vec2 xz=vWp.xz;vec3 nB;vec3 n=gNorm(xz,nB);vec4 B=bAll(xz),S=sAll(xz);float gh=B.r+S.r,dep=B.a-gh;
         vec4 sp=texture(tSplat,bUV(xz));float ht;
         if(dep>0.){ht=.06+.03*smoothstep(2.5,0.,dep);float hl=0.;for(int k=0;k<6;k++){float a=float(k)*1.047;hl+=bAll(xz+vec2(cos(a),sin(a))*3.).g;}
           ht+=(B.g*.95+hl/6.*.45)*exp(-dep*.08);}
@@ -139,7 +144,11 @@ function matTerrainView(mode){
         ht+=soilHeat(S)*.8+S.g*.03;
         gl_FragColor=vec4(0.,0.,0.,ht);}`)});}
 /* buildings, rocks, wrecks and the Wraith in the sensor and thermal views */
-const MESH_VERT=`varying vec3 vWp,vN;void main(){vec4 wq=modelMatrix*vec4(position,1.);vWp=wq.xyz;vN=normalize(mat3(modelMatrix)*normal);gl_Position=projectionMatrix*viewMatrix*wq;}`;
+const MESH_VERT=`varying vec3 vWp,vN;void main(){vec4 lp=vec4(position,1.);vec3 ln=normal;
+#ifdef USE_INSTANCING
+lp=instanceMatrix*lp;ln=mat3(instanceMatrix)*ln;
+#endif
+vec4 wq=modelMatrix*lp;vWp=wq.xyz;vN=normalize(mat3(modelMatrix)*ln);gl_Position=projectionMatrix*viewMatrix*wq;}`;
 function matMeshView(mode,o){o=o||{};const u={uHeat:{value:o.heat||.3},uAlly:{value:o.ally?1:0},uK:{value:o.k||1},uT:LOOK.u.uT};
   return new THREE.ShaderMaterial({uniforms:u,vertexShader:MESH_VERT,side:o.side||THREE.FrontSide,
     fragmentShader:`varying vec3 vWp,vN;uniform float uHeat,uAlly,uK,uT;

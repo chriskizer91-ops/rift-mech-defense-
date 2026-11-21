@@ -93,10 +93,8 @@ function buildMech(scene){
     M.ready=true;MECH.ready=true;return M;});
 }
 /* ---------- the player ---------- */
-function mkPlayer(){const y=hgt(SPAWN.x,SPAWN.z);return {x:SPAWN.x,z:SPAWN.z,y,yaw:SPAWN.yaw,legYaw:SPAWN.yaw,vx:0,vz:0,vy:0,air:false,hover:false,land:0,thrust:0,spd:0,
+function mkPlayer(){const SP=MAP.def.SPAWN,y=hgt(SP.x,SP.z);return {x:SP.x,z:SP.z,y,yaw:SP.yaw,legYaw:SP.yaw,vx:0,vz:0,vy:0,air:false,hover:false,land:0,thrust:0,spd:0,
   depth:0,wade:1,blocked:0,ev:[]};}
-/* water over the ground at a point (0 if dry) */
-const depthAt=(x,z)=>Math.max(0,-hgt(x,z));
 const hipDepth=()=>MECH.M&&MECH.M.hip0?MECH.M.hip0-.2:3.3;
 function bumpBuildings(x,z,r){for(const b of BUILD){const cx=clamp(x,b.x0,b.x1),cz=clamp(z,b.z0,b.z1),dx=x-cx,dz=z-cz,d=Math.hypot(dx,dz);
   if(d<r){if(d<1e-4){const L=[x-b.x0,b.x1-x,z-b.z0,b.z1-z],m=Math.min(...L),q=L.indexOf(m);if(q===0)x=b.x0-r;else if(q===1)x=b.x1+r;else if(q===2)z=b.z0-r;else z=b.z1+r;}
@@ -111,7 +109,7 @@ function updPlayer(P,c,dt){
   if(wantHover&&!P.hover){P.hover=true;P.air=true;P.vy=Math.max(P.vy,4.5);P.ev.push({t:'jet'});}
   if(!wantHover&&P.hover){P.hover=false;P.ev.push({t:'hoverout'});}
   if(P.air){
-    const floor=Math.max(hgt(P.x,P.z),0);   /* over water the jets hold it above the surface */
+    const floor=Math.max(hgt(P.x,P.z),waterL(P.x,P.z));   /* over water the jets hold it above the surface */
     if(P.hover){const tgt=floor+HOVH+Math.sin(performance.now()*.0022)*.15;P.vy+=((tgt-P.y)*3.2-P.vy)*damp(4,dt);
       const k=damp(1.8,dt);P.vx+=(wx*HOVSPD-P.vx)*k;P.vz+=(wz*HOVSPD-P.vz)*k;P.thrust+=(.62-P.thrust)*damp(8,dt);}
     else{P.vy-=22*dt;P.vx*=1-damp(.8,dt);P.vz*=1-damp(.8,dt);P.thrust+=(0-P.thrust)*damp(10,dt);}
@@ -121,11 +119,11 @@ function updPlayer(P,c,dt){
     P.vx+=(tx-P.vx)*k;P.vz+=(tz-P.vz)*k;P.thrust+=(0-P.thrust)*damp(10,dt);
   }
   /* move: out of buildings, inside the map, and on foot not on into water past the hips nor up a cliff */
-  let nx=P.x+P.vx*dt,nz=P.z+P.vz*dt;[nx,nz]=bumpBuildings(nx,nz,RAD);
+  let nx=P.x+P.vx*dt,nz=P.z+P.vz*dt;[nx,nz]=bumpBuildings(nx,nz,RAD);if(!P.air)[nx,nz]=treeBump(nx,nz,RAD);
   if(!P.air){const dN=depthAt(nx,nz),g0=hgt(P.x,P.z),g1=hgt(nx,nz),step=Math.hypot(nx-P.x,nz-P.z)||1e-4;
     const deeper=dN>hip&&dN>dHere-.01,steep=(g1-g0)/step>1.25;
     if(deeper||steep){P.blocked=deeper?1:2;nx=P.x;nz=P.z;P.vx*=.3;P.vz*=.3;}else P.blocked=Math.max(0,P.blocked-dt*2);}
-  nx=clamp(nx,-150,150);nz=clamp(nz,-150,150);
+  const lo=MAP.X0+10,hi=MAP.X0+MAP.S-10;nx=clamp(nx,lo,hi);nz=clamp(nz,lo,hi);
   P.x=nx;P.z=nz;
   const g=hgt(P.x,P.z);
   if(P.air){if(!P.hover&&P.y<=g&&P.vy<0){const k=clamp(-P.vy/16,0,1.3);P.y=g;P.air=false;P.vy=0;P.land=Math.max(P.land,.18+k*.32);P.ev.push({t:'land',k});}

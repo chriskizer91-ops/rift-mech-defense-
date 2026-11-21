@@ -69,3 +69,23 @@ whole test map instead of a window that follows a truck.
 
 Cost: it's a rewrite of the parts we use, so it looks like Mud Lab, not identical to it. Building on the engine copy
 would have been faster for this one page and a dead end for the game.
+
+### 2. Big open-field maps (session B, 20 Nov, after "the fights happen on big open-field 3D maps")
+- **Field 1 is 1,792 m square**, kept every 2 m (the ground, its water level, what it's made of). The soil's 25 cm detail is
+  kept wherever something touched it, but only the 256 m round the Wraith is on the graphics card; it follows the Wraith.
+- **Water has its own level per spot** (the river falls 2.8 m a kilometre north to south; the Sunk Meadows stand at their own
+  level), so `depthAt` works anywhere.
+- **What's on it:** a patchwork of fields 120 to 220 m across (meadow 42%, ploughed 30%, wheat 28%) with tree lines between
+  them (gaps in them), groves on the higher ground, Mill River with riffles (0.5 to 0.9 m, wade across) and pools under the cut
+  banks (3.4 to 3.9 m: deeper than the hips, hover), the flooded Sunk Meadows (to about 3 m, a crack glowing in the floor),
+  a gravel road and farm tracks, a farm in the middle, 22 wrecks, three rift mouths.
+- **Open for Christopher:** how many rifts per map (three here); whether trees should stop the Wraith (they do now, by the
+  trunk: a 6.6 m mech fits through the gaps in a tree line) or be knocked down; the hover is unlimited here (Ironhowl 4's
+  30 s tank is C's).
+
+### 3. What I'd do next
+- Swap the stand-in swarm for `game/creatures/` and `RMD.SensorView` (needs a world layer in it: see the Asks).
+- Prints read faintly from the camera's height: make them bigger and darker, or leave them for close-up.
+- The ploughed fields' rows all run one way (the picture is laid on the world); turn them per field.
+- Run both pages on the Pixel 7a and the MSI for real frame rates. Headless (software graphics, phone size) gives 1 to 8
+  frames a second: only a floor. The heaviest frame is Field 1 near the trees, about 590,000 triangles with shadows.

@@ -24,12 +24,16 @@ function vnoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx
 function fbm(x,z,o){let s=0,a=.5,f=1;for(let k=0;k<(o||4);k++){s+=a*vnoise(x*f+k*17.3,z*f-k*9.1);f*=2.03;a*=.5;}return s;}
 let RS=20261120;const rnd=()=>{RS=(Math.imul(RS,1664525)+1013904223)|0;return (RS>>>8)/16777216;};
 
-const MAP={S:320,X0:-160,C:.5,N:641,hB:null,crk:null,wet:null,spl:null};
+/* THE MAP the page shows: window.WT_MAP picks it ('coast': this file; 'fields': wt-fields.js). Each map gives:
+   S (metres a side), X0 (its west and north edge), C (metres between its points), ground0(x,z) (below), setup()
+   (buildings, wrecks), SPAWN, MOUTHS (the rift mouths), and which ground pictures it paints with. */
+const MAPS={};const MAPID=window.WT_MAP||'coast';
+const MAP={S:320,X0:-160,C:.5,N:641,hB:null,crk:null,wet:null,wl:null,spl:null,spl2:null};
 /* the waterline: z of the shore at x (wavy) */
 const coastZ=x=>-6+5*Math.sin(x*.021+.4)+2.5*Math.sin(x*.067+1.3);
 /* the rift: a cave mouth in the bluff's south face. x, the floor's height, its half width and its height; the face
    lies between z0 and z1 */
-const MOUTH={x:108,y:1.3,w:6.2,h:7.6,z0:7,z1:15.5,zf:12.5};
+const MOUTH={x:108,y:1.3,w:6.2,h:7.6,z0:7,z1:15.5,zf:12.5,z:12.5,yaw:0,s0:-5.5,s1:3,name:'Bluff'};
 /* where the Wraith starts: on the beach, facing the sea */
 const SPAWN={x:-6,z:9,yaw:0};
 /* streets (asphalt) and the seafront (paving): [x0, x1, z0, z1] */
@@ -50,7 +54,7 @@ function inRect(x,z,R,m){return x>R[0]-m&&x<R[1]+m&&z>R[2]-m&&z<R[3]+m;}
 function rectW(x,z,R,e){return smooth(R[0]-e,R[0]+e,x)*smooth(R[1]+e,R[1]-e,x)*smooth(R[2]-e,R[2]+e,z)*smooth(R[3]+e,R[3]-e,z);}
 
 /* the ground at one point, as made: height, crack glow, wetness, what it's made of */
-const G0={h:0,crk:0,wet:0,sand:0,mud:0,asph:0,pave:0};
+const G0={h:0,crk:0,wet:0,wl:0,sand:0,mud:0,asph:0,pave:0,meadow:0,plough:0,wheat:0,x4:0};
 function ground0(x,z){
   const o=G0;const zc=coastZ(x),s=zc-z;   /* s: metres out to sea from the waterline (minus: inland) */
   let h,sand=0,mud=0,asph=0,pave=0,crk=0;
@@ -82,13 +86,10 @@ function ground0(x,z){
     if(fb>0&&hb>h){const k=smooth(0,1.5,hb-h);h=hb;sand*=1-k;mud*=1-k;asph*=1-k;pave*=1-k;}
     const ap=smooth(MOUTH.w+9,MOUTH.w+2,Math.abs(x-MOUTH.x))*smooth(MOUTH.zf-1,MOUTH.zf+1.5,z)*smooth(30,22,z);
     if(ap>0){h=lerp(h,1.55+.12*(fbm(x*.2,z*.2)-.5),ap);asph*=1-ap;pave*=1-ap;sand*=1-ap;}}
-  o.h=h;o.crk=crk;o.wet=s>=0?1:smooth(.95,.06,h);o.sand=sand;o.mud=mud;o.asph=asph;o.pave=pave;
+  o.h=h;o.crk=crk;o.wet=s>=0?1:smooth(.95,.06,h);o.wl=0;o.sand=sand;o.mud=mud;o.asph=asph;o.pave=pave;o.meadow=o.plough=o.wheat=o.x4=0;
   return o;}
 
-function buildMap(){
-  const N=MAP.N,C=MAP.C,X0=MAP.X0;MAP.hB=new Float32Array(N*N);MAP.crk=new Float32Array(N*N);MAP.wet=new Float32Array(N*N);MAP.spl=new Uint8Array(N*N*4);
-  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=j*N+i,g=ground0(X0+i*C,X0+j*C);MAP.hB[k]=g.h;MAP.crk[k]=g.crk;MAP.wet[k]=g.wet;
-    const q=k*4;MAP.spl[q]=Math.round(clamp(g.sand,0,1)*255);MAP.spl[q+1]=Math.round(clamp(g.mud,0,1)*255);MAP.spl[q+2]=Math.round(clamp(g.asph,0,1)*255);MAP.spl[q+3]=Math.round(clamp(g.pave,0,1)*255);}
+function coastSetup(){
   /* buildings: each block cut into lots along its long side, a few metres between */
   RS=7;
   for(const B of BLOCKS){const along=B[1]-B[0]>=B[3]-B[2];const L=along?B[1]-B[0]:B[3]-B[2];const n=Math.max(1,Math.round(L/(16+rnd()*10)));
@@ -101,13 +102,38 @@ function buildMap(){
   /* wrecks: what a swarm leaves of a car, a truck, a crane cab (grey lumps) */
   for(const [x,z,s] of [[-22,14,1],[8,20,1.2],[-41,24,1],[-41,34,1.4],[19,60,1],[30,49,1.6],[-78,50,1.2],[-105,30,1],[-92,48,1.3],[64,36,1.1],[96,26,1.3],[118,30,1],[38,16,.9],[-60,12,1.1]])
     WRECKS.push({x,z,s,y:baseH(x,z)});
+  /* rocks along the bluff's foot */
+  RS=99;for(let i=0;i<26;i++){const x=72+rnd()*88,z=6+rnd()*8;if(Math.abs(x-MOUTH.x)<14)continue;ROCKS.push({x,z,r:1+rnd()*2.2});}
 }
-/* the ground as made, between the 50 cm points */
-function baseH(x,z){const N=MAP.N,C=MAP.C,fx=clamp((x-MAP.X0)/C,0,N-1.001),fz=clamp((z-MAP.X0)/C,0,N-1.001),i=fx|0,j=fz|0,ax=fx-i,az=fz-j,k=j*N+i,a=MAP.hB;
+MAPS.coast={S:320,X0:-160,C:.5,ground0,setup:coastSetup,SPAWN,MOUTHS:[MOUTH],name:'Coast 1',
+  tex:{sand:'sand',mud:'mud',dirt:'dirt',asph:'asph',pave:'pave',rock:'rock',meadow:'dirt',plough:'dirt',wheat:'dirt'},fog:[170,520],
+  /* the swarm's routes: out of the sea, up the beach, up a street, along the avenue, up another street */
+  route(c,rift){const S=[-105,-41,19,64],xs=S[1+Math.floor(rnd()*3)],xe=S[Math.floor(rnd()*S.length)];
+    if(rift){const M=rift;return [{x:M.x+(rnd()-.5)*4,z:M.zf-12},{x:M.x+(rnd()-.5)*6,z:M.zf+9},{x:100+(rnd()-.5)*6,z:22},{x:64+(rnd()-.5)*3,z:22},{x:64+(rnd()-.5)*3,z:49},{x:xe+(rnd()-.5)*4,z:49+(rnd()-.5)*4},{x:xe+(rnd()-.5)*4,z:120+rnd()*20}];}
+    const x0=-70+rnd()*130;return [{x:x0,z:-58-rnd()*16},{x:x0*.7+xs*.3+(rnd()-.5)*10,z:coastZ(x0)-8},{x:xs+(rnd()-.5)*12,z:coastZ(xs)+10+rnd()*6},{x:xs+(rnd()-.5)*4,z:30},{x:xs+(rnd()-.5)*4,z:49},
+      {x:xe+(rnd()-.5)*4,z:49+(rnd()-.5)*4},{x:xe+(rnd()-.5)*4,z:120+rnd()*20}];},
+  swarm:{sea:true}};
+const ROCKS=[];
+/* make the chosen map: its ground at every point (C apart), then its buildings */
+function buildMap(){
+  const D=MAPS[MAPID]||MAPS.coast;Object.assign(MAP,{S:D.S,X0:D.X0,C:D.C,N:Math.round(D.S/D.C)+1,def:D});
+  const N=MAP.N,C=MAP.C,X0=MAP.X0;MAP.hB=new Float32Array(N*N);MAP.crk=new Float32Array(N*N);MAP.wet=new Float32Array(N*N);MAP.wl=new Float32Array(N*N);
+  MAP.spl=new Uint8Array(N*N*4);MAP.spl2=new Uint8Array(N*N*4);
+  const b=v=>Math.round(clamp(v,0,1)*255);
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=j*N+i,g=D.ground0(X0+i*C,X0+j*C);MAP.hB[k]=g.h;MAP.crk[k]=g.crk;MAP.wet[k]=g.wet;MAP.wl[k]=g.wl;
+    const q=k*4;MAP.spl[q]=b(g.sand);MAP.spl[q+1]=b(g.mud);MAP.spl[q+2]=b(g.asph);MAP.spl[q+3]=b(g.pave);
+    MAP.spl2[q]=b(g.meadow);MAP.spl2[q+1]=b(g.plough);MAP.spl2[q+2]=b(g.wheat);MAP.spl2[q+3]=b(g.x4);}
+  D.setup();
+}
+/* the ground as made, between its points */
+function mapLerp(a,x,z){const N=MAP.N,C=MAP.C,fx=clamp((x-MAP.X0)/C,0,N-1.001),fz=clamp((z-MAP.X0)/C,0,N-1.001),i=fx|0,j=fz|0,ax=fx-i,az=fz-j,k=j*N+i;
   return a[k]+(a[k+1]-a[k])*ax+(a[k+N]-a[k])*az+(a[k]-a[k+1]-a[k+N]+a[k+N+1])*ax*az;}
+function baseH(x,z){return mapLerp(MAP.hB,x,z);}
+/* the water's level at a point (wherever there's no water it lies well under the ground) */
+function waterL(x,z){return mapLerp(MAP.wl,x,z);}
 /* what the ground is made of at a point (nearest 50 cm point) */
 function baseKind(x,z,o){const N=MAP.N,i=clamp(Math.round((x-MAP.X0)/MAP.C),0,N-1),j=clamp(Math.round((z-MAP.X0)/MAP.C),0,N-1),k=j*N+i,q=k*4,S=MAP.spl;
-  o.sand=S[q]/255;o.mud=S[q+1]/255;o.asph=S[q+2]/255;o.pave=S[q+3]/255;o.wet=MAP.wet[k];o.h=MAP.hB[k];
-  const gx=(baseH(x+.6,z)-baseH(x-.6,z))/1.2,gz=(baseH(x,z+.6)-baseH(x,z-.6))/1.2;o.slope=Math.hypot(gx,gz);return o;}
+  const S2=MAP.spl2;o.sand=S[q]/255;o.mud=S[q+1]/255;o.asph=S[q+2]/255;o.pave=S[q+3]/255;o.meadow=S2[q]/255;o.plough=S2[q+1]/255;o.wheat=S2[q+2]/255;o.wet=MAP.wet[k];o.h=MAP.hB[k];o.wl=MAP.wl[k];
+  const e=Math.max(.6,MAP.C),gx=(baseH(x+e,z)-baseH(x-e,z))/(2*e),gz=(baseH(x,z+e)-baseH(x,z-e))/(2*e);o.slope=Math.hypot(gx,gz);return o;}
 /* inside a building? returns the building or null (m: margin) */
 function buildingAt(x,z,m){for(const b of BUILD)if(x>b.x0-m&&x<b.x1+m&&z>b.z0-m&&z<b.z1+m)return b;return null;}

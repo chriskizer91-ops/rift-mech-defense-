@@ -1,6 +1,6 @@
 """Screenshots of the world test, many from one page load (headless Chrome, software WebGL, as tools/shoot.py).
 
-    python3 -I game/world/shots.py OUTDIR [phone|laptop] [only=name,name]
+    python3 -I game/world/shots.py OUTDIR [builds/field-1.html] [phone|laptop] [only=name,name]
 
 Each shot: a name, JS to run first (WT is the page's test hook), and seconds to let it draw. Software WebGL is far
 slower than a phone, so the frame rates printed are only a floor.
@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PAGE = ROOT / "builds/world-test.html"
 
-SHOTS = [
+SHOTS_COAST = [
     # name, js, wait
     ("real_beach", "WT.place(-6,9,0);WT.setView(0);WT.sim(.5)", 2),
     ("walk_prints", "WT.place(-34,11,0);WT.sim(5,1,0);WT.sim(1,0,0);WT.zoomTo(-22)", 2),
@@ -35,6 +35,28 @@ SHOTS = [
     ("crack_real", "WT.setView(0);WT.sim(.3)", 2),
 ]
 
+SHOTS_FIELD = [
+    ("f_spawn", "WT.setView(0);WT.sim(.5)", 2),
+    ("f_overview", "WT.zoomTo(420);scene.fog.far=2400;WT.sim(.3)", 4),
+    ("f_overview_sensor", "WT.setView(1);WT.sim(2)", 3),
+    ("f_spawn_sensor", "WT.zoomTo(20);WT.sim(1)", 3),
+    ("f_scarp", "WT.setView(0);WT.zoomTo(0);WT.place(374,-410,0);WT.sim(.5)", 2),
+    ("f_scarp_sensor", "WT.setView(1);WT.sim(3)", 3),
+    ("f_walk_plough", "WT.setView(0);WT.zoomTo(-14);WT.place(200,-120,0);WT.sim(5,1,0);WT.sim(1,0,0)", 2),
+    ("f_hedge", "WT.setView(0);WT.zoomTo(30);WT.place(120,-40,0);WT.sim(.3)", 2),
+        ("f_river", "WT.zoomTo(40);WT.place(-150,-232,0);WT.sim(.3)", 2),
+    ("f_river_wade", "WT.zoomTo(0);WT.place(-170,-232,0);WT.sim(3.5,-1,0)", 2),
+    ("f_flood", "WT.zoomTo(10);WT.place(300,345,0);WT.sim(3,1,0)", 2),
+    ("f_flood_thermal", "WT.setView(2);WT.sim(.3)", 3),
+    ("f_barrage", "WT.setView(0);WT.zoomTo(6);WT.place(370,-395,0);WT.barrage();WT.sim(3.4)", 2),
+    ("f_sealed", "WT.sim(6)", 2),
+    ("f_farm", "WT.zoomTo(30);WT.place(60,160,0);WT.sim(.3)", 2),
+]
+page = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2].endswith(".html") else None
+if page:
+    PAGE = ROOT / page
+    sys.argv.pop(2)
+SHOTS = SHOTS_FIELD if PAGE.name.startswith("field") else SHOTS_COAST
 out = pathlib.Path(sys.argv[1])
 kind = sys.argv[2] if len(sys.argv) > 2 else "phone"
 only = None

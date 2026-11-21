@@ -34,11 +34,10 @@ function swarmInit(scene){
 }
 /* a route: out of the sea (or the rift), up the beach, up a street, along the avenue, up another street */
 function swarmSpawn(c){
-  const S=SWARM.STREETS,rift=c.src==='rift'&&RIFT.state!=='sealed';let p=[];
-  const xs=S[1+Math.floor(rnd()*3)],xe=S[Math.floor(rnd()*S.length)];
-  if(rift){const M=MOUTH;p=[{x:M.x+(rnd()-.5)*4,z:M.zf-12},{x:M.x+(rnd()-.5)*6,z:M.zf+9},{x:100+(rnd()-.5)*6,z:22},{x:64+(rnd()-.5)*3,z:22},{x:64+(rnd()-.5)*3,z:49},{x:xe+(rnd()-.5)*4,z:49+(rnd()-.5)*4},{x:xe+(rnd()-.5)*4,z:120+rnd()*20}];}
-  else{const x0=-70+rnd()*130;p=[{x:x0,z:-58-rnd()*16},{x:x0*.7+xs*.3+(rnd()-.5)*10,z:coastZ(x0)-8},{x:xs+(rnd()-.5)*12,z:coastZ(xs)+10+rnd()*6},{x:xs+(rnd()-.5)*4,z:30},{x:xs+(rnd()-.5)*4,z:49},
-    {x:xe+(rnd()-.5)*4,z:49+(rnd()-.5)*4},{x:xe+(rnd()-.5)*4,z:120+rnd()*20}];}
+  /* from the sea (the coast only), else out of an open rift (the nearest to the creature's last one); none left: wait */
+  let rift=null;const open=RIFTS.filter(r=>r.state!=='sealed');
+  if(c.src==='rift'||!MAP.def.swarm.sea){if(!open.length){c.alive=false;c.wait=4;return;}rift=open[Math.floor(rnd()*open.length)].M;}
+  const p=MAP.def.route(c,rift);
   c.path=p;c.pi=0;c.x=p[0].x;c.z=p[0].z;c.y=hgt(c.x,c.z);c.alive=true;c.die=0;c.hd=Math.atan2(p[1].x-p[0].x,p[1].z-p[0].z);c.trail=0;}
 /* a shell landing: anything within r is blown apart */
 SWARM.blast=function(x,z,r){for(const c of SWARM.C)if(c.alive&&!c.die&&Math.hypot(c.x-x,c.z-z)<r){c.die=1e-3;c.wait=3+rnd()*4;}};
@@ -54,7 +53,7 @@ function swarmStep(dt,t,P){
       if(P&&dm<22){const ang=Math.atan2(c.x-P.x,c.z-P.z)+.6;tx=P.x+Math.sin(ang)*(4+T.rz*2);tz=P.z+Math.cos(ang)*(4+T.rz*2);}
       const dx=tx-c.x,dz=tz-c.z,d=Math.hypot(dx,dz);
       if(d<2.5&&!(P&&dm<22)){c.pi++;if(c.pi>=c.path.length-1){c.alive=false;c.wait=1+rnd()*5;continue;}}
-      const dep=Math.max(0,-hgt(c.x,c.z));
+      const dep=depthAt(c.x,c.z);
       const hop=c.type==='knot'?.45+.9*Math.max(0,Math.sin(t*7.5+c.ph)):1;
       const sp=T.speed*hop*(1-.55*smooth(.2,3,dep));
       const want=Math.atan2(dx,dz);c.hd+=clamp(angD(want,c.hd),-3*dt,3*dt);
@@ -62,7 +61,7 @@ function swarmStep(dt,t,P){
       let nx=c.x+c.vx*dt,nz=c.z+c.vz*dt;const b=buildingAt(nx,nz,.8);if(b){nx=c.x;nz=c.z;c.hd+=1.2*dt*8;}
       const step=Math.hypot(nx-c.x,nz-c.z);c.x=nx;c.z=nz;c.y=hgt(c.x,c.z);
       /* what it does to the ground and the water as it goes */
-      const dep2=Math.max(0,-c.y);c.trail+=step;c.ring+=step;c.puff+=step;
+      const dep2=Math.max(0,waterL(c.x,c.z)-c.y);c.trail+=step;c.ring+=step;c.puff+=step;
       if(c.trail>.6&&dep2<.6){c.trail=0;const sz=Math.sqrt(T.n/10);soilChurn(c.x,c.z,.55*sz+.35,.1*sz,.02*sz,.24);}
       if(dep2>.1&&dep2<2.2&&c.ring>1.6){c.ring=0;lookRing(c.x,c.z,.35+.25*Math.sqrt(T.n/10));}
       if(dep2<=0&&c.puff>3){c.puff=0;const k=soilParams(c.x,c.z).kind;if(k==='sand'||k==='dirt')fxDust(c.x,c.y,c.z,1,.9+.25*Math.sqrt(T.n/10),k,.22);}

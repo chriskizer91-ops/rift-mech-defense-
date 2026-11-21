@@ -5,7 +5,7 @@ Update your own line when you finish something. Pull before you edit this file.
 | Session | Job | Owns | Brief | Status |
 |---|---|---|---|---|
 | **A: Creatures** | the swarm creatures: the viewer, small-creature rigs, the Host's real model from the concept art | `concept/`, `art/`, `game/creatures/` | `sessions/A_creatures.md` | Viewer: 1 to 50,000 plus the Host (20 Nov). Host: a heap of clumps with 12 tentacles, drifting between three forms; TITAN tendrilling out. Lore/boss proposal written for D: https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3 |
-| **B: World** | Mud Lab's soil and water in a top-down test: the Wraith wading, tearing up ground, sensor/thermal toggle, a rift caved in by artillery | `game/world/` | `sessions/B_world.md` | Working (20 Nov): soil and water lifted into plain three.js (proposal in the brief) |
+| **B: World** | Mud Lab's soil and water in a top-down test: the Wraith wading, tearing up ground, sensor/thermal toggle, a rift caved in by artillery | `game/world/` | `sessions/B_world.md` | **Field 1 and the world test run (20 Nov):** `builds/field-1.html` is the first combat map, 1.8 km of rolling fields (meadow, ploughed, wheat, tree lines, groves), Mill River (riffles to wade, pools to hover over), the flooded Sunk Meadows with a magma crack, farm tracks, a farm, three rift mouths in scarps. `builds/world-test.html` is the coast. Both: Wraith walks and leaves prints, wades (bow wave, rings, too deep past its hips: HOVER), REAL / SENSOR / THERMAL, ~400 red dots crossing (ground churns where they pass), ARTILLERY caves in the nearest rift. `RMD.World.heightAt/depthAt`. Shots: `docs/shots/world/`. Not done: run on the phone; prints read faintly from the camera's height; creatures are a stand-in, not `game/creatures/` yet; trees are Ironhowl 3's low oak. Notes: `game/world/README.md` |
 | **C: Mech** | Ironhowl 4's Wraith, controls, weapons, upgrades and HUD, taken out of Ironhowl 4 and made to fight dot clusters | `game/mech/`, `game/systems/` | `sessions/C_mech.md` | **Arena works (20 Nov):** `builds/mech-arena.html` (also at https://claude.ai/artifact/YTRc5HkhgwkV1T9wnRAuo3). The Wraith walks, hops, hovers; autocannon (heat, vent), Lance, Arc, missiles, SALVO; twin-stick touch, mouse, keys, pad; top-down camera leaning ahead of the aim; A's creatures (`game/creatures/`) shrink as dots come off; squads can be lost (they become dots); scrap buys the six upgrade tracks and sets the arms; sensor / thermal, interference, dropped frames; a 170 m stand-in field. Proposals: `sessions/C_mech.md`. Next: B's map |
 | **D: Story** | chapter 1 (about an hour): missions, waves, the radio script, the ally beats, the Host fight, the lore | `docs/story/` and the design doc | `sessions/D_story.md` | Design doc (20 Nov): https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR. Christopher's answers are in `PLAN.md`. Signal reveal written as a 56 s cinematic. Voice-acting sheet for ElevenLabs (8 voices, 179 lines with file IDs): https://claude.ai/artifact/JWs89obwrg8BgbAXbLpaKU, source `docs/story/voice/`. Waves in `docs/story/waves.md` (+ JSON) |
 
@@ -50,6 +50,15 @@ Later, when B and C have something running: one session joins them into `game/` 
   dots stay hit points); (3) the trail copies and sensor lines the viewer draws, as an option.
 - C → B: the arena calls `hgt(x,z)` (in `game/systems/base.js`) for the Wraith's feet, the creatures (`swarm.ground`), shots and
   pickups. Point it at your `heightAt` and the arena moves onto your map; wading needs your water depth too.
+
+- B → C (20 Nov), answering: **Field 1's ground is ready for the arena.** Inline `game/world/wt-map.js`, `wt-fields.js` and
+  `wt-soil.js` (set `window.WT_MAP='fields'` first), call `buildMap();soilInit();`, then `hgt(x,z)` is the ground and
+  `depthAt(x,z)` the water over it (both also on `RMD.World` in B's pages). Drawing the ground, water and trees needs
+  `wt-look.js`, `wt-trees.js` and the grid in `wt-main.js` (`buildWorld`): best done by the session that joins B and C.
+  The Wraith starts at (330, -330), 110 m from the North Scarp.
+- B → A (20 Nov): B's pages still draw the swarm with their own copy of the dot shader (`wt-dots.js`, a stand-in). Next step is
+  `game/creatures/` + `RMD.SensorView`; B's sensor and thermal need the world drawn into the same picture (green lines in G, the
+  world's heat in A): if `SensorView` could take a world layer, B would use it as is.
 
 ## Waiting on Christopher
 - Session C's proposals for the mech (aiming on a phone, shots through the gaps, bites and scrap): `sessions/C_mech.md`, end.

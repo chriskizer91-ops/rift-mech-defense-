@@ -31,3 +31,13 @@ Read-only copies. Copy what you need into `game/` and change the copy; add a lin
   `game/mech/` and `game/systems/` (session C; map in `game/systems/README.md`).
 - `ironhowl4/js/three-ih3.min.js`, `ironhowl4/m4/*/…_combat*` (Wraith V2 HD, AC-4, LN-1, AR-1, MP-9, WT-1, JP-2) and
   `ironhowl4/art/06-dirt-and-gravel*.webp`: inlined by `game/systems/build.py` into `builds/mech-arena.html` (session C).
+- `mud-lab/src/ml-soil.js` (mlStamp, mlSettle, mlLand, mlWake, mlWater's drag and bow wave, the soils' numbers) and
+  `mud-lab/src/ml-look.glsl` (the rings and the bow wave on the water): rewritten as plain three.js in `game/world/wt-soil.js`,
+  `wt-look.js` (session B).
+- `mud-lab/src/ml-world.js` (mlRiver, the nearest-line buckets, the valley floor, the hills' shape, trees on a jittered grid):
+  `game/world/wt-fields.js` (session B).
+- `mud-lab/base/texpack.js` (DIRT2, MUD): the ground pictures in `builds/world-test.html` and `builds/field-1.html` (session B).
+- `ironhowl4/m4/` (Wraith V2 HD, jet pack, autocannons: combat models and maps), `ironhowl4/js/ironhowl4.js` (05_wraith's
+  walk: legSetup, legSolve, poseMech; 06_player's walk and hover numbers; the particle shader), `ironhowl4/art/` (asphalt,
+  paving, rock, facades, roof, rusted steel, barn, meadow, ploughed, wheat, farm track, gravel, prairie, fx atlas, smoke),
+  `ironhowl4/models/trees/tree_oak*`: `game/world/` (session B).

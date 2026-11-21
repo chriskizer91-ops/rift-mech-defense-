@@ -22,24 +22,34 @@ const SOILS={
   mud:{sink:.42,berm:.3,slump:1.5},     /* silt and mud: deep, and it flows back in */
   dirt:{sink:.06,berm:.15,slump:0},     /* packed dirt */
   hard:{sink:0,berm:0,slump:0},         /* asphalt, paving: a foot only scuffs it */
+  meadow:{sink:.12,berm:.25,slump:0},   /* Field 1: turf over loam (the sod holds it together) */
+  plough:{sink:.3,berm:.35,slump:.08},  /* ploughed earth: loose, deep */
+  wheat:{sink:.16,berm:.28,slump:0},
   rock:{sink:.012,berm:.04,slump:0}};
-const SOIL={C:.25,N:1280,T:64,NT:20,X0:-160,S:320,tiles:new Array(400).fill(null),up:new Set(),act:new Map(),clock:0,tex:null,src:null,half:null,
+/* (Field 1 is 1.8 km a side: the soil is kept, square by square, wherever it has been touched; the graphics card holds
+   only the 256 m round the Wraith, 16 x 16 squares, each square in the slot its place gives it (so moving on only sends
+   the squares coming into reach)) */
+const SOIL={C:.25,N:0,T:64,NT:0,X0:0,S:0,tiles:new Map(),up:new Set(),act:new Map(),clock:0,tex:null,src:null,half:null,
+  W:16,slot:new Int32Array(256).fill(-1),want:new Int32Array(256).fill(-1),ci:-99,cj:-99,win:new THREE.Vector4(0,0,0,0),
   stat:{prints:0,churn:0,craters:0,tiles:0},TAU:30};
-function soilTile(ti,tj,make){if(ti<0||tj<0||ti>=SOIL.NT||tj>=SOIL.NT)return null;const q=tj*SOIL.NT+ti;let t=SOIL.tiles[q];
-  if(!t&&make){const n=4096;t=SOIL.tiles[q]={ti,tj,r:new Float32Array(n),c:new Float32Array(n),ht:new Float32Array(n),ha:new Float32Array(n),sl:null};SOIL.stat.tiles++;}return t;}
-function soilR(i,j){if(i<0||j<0||i>=SOIL.N||j>=SOIL.N)return 0;const t=SOIL.tiles[(j>>6)*SOIL.NT+(i>>6)];return t?t.r[((j&63)<<6)|(i&63)]:0;}
+function soilInit(){SOIL.X0=MAP.X0;SOIL.S=MAP.S;SOIL.N=Math.round(MAP.S/SOIL.C);SOIL.NT=Math.ceil(SOIL.N/SOIL.T);}
+function soilTile(ti,tj,make){if(ti<0||tj<0||ti>=SOIL.NT||tj>=SOIL.NT)return null;const q=tj*SOIL.NT+ti;let t=SOIL.tiles.get(q);
+  if(!t&&make){const n=4096;t={ti,tj,r:new Float32Array(n),c:new Float32Array(n),ht:new Float32Array(n),ha:new Float32Array(n),sl:null};SOIL.tiles.set(q,t);SOIL.stat.tiles++;}return t;}
+function soilR(i,j){if(i<0||j<0||i>=SOIL.N||j>=SOIL.N)return 0;const t=SOIL.tiles.get((j>>6)*SOIL.NT+(i>>6));return t?t.r[((j&63)<<6)|(i&63)]:0;}
 /* the rut at a point, between cells */
 function soilH(x,z){const fx=(x-SOIL.X0)/SOIL.C-.5,fz=(z-SOIL.X0)/SOIL.C-.5,i=Math.floor(fx),j=Math.floor(fz),ax=fx-i,az=fz-j;
   const a=soilR(i,j),b=soilR(i+1,j),c=soilR(i,j+1),d=soilR(i+1,j+1);return a+(b-a)*ax+(c-a)*az+(a-b-c+d)*ax*az;}
 /* the ground as it is now */
 function hgt(x,z){return baseH(x,z)+soilH(x,z);}
+/* water over the ground at a point (0 where it's dry) */
+const depthAt=(x,z)=>Math.max(0,waterL(x,z)-hgt(x,z));
 function soilDirty(t){SOIL.up.add(t.tj*SOIL.NT+t.ti);}
 function soilWake(t,secs){const u=SOIL.clock+secs;if((SOIL.act.get(t)||0)<u)SOIL.act.set(t,u);}
 /* the soil's numbers at a point: each kind's, mixed by how much of each there is */
 const SK={},SP={sink:0,berm:0,slump:0,kind:'dirt'};
 function soilParams(x,z){const K=baseKind(x,z,SK),o=SP;
-  const under=K.h+soilH(x,z)<0;const rock=smooth(.9,1.6,K.slope);
-  const wet=under?1:K.wet;let w={sand:K.sand*(1-wet),wsand:K.sand*wet,mud:K.mud,hard:K.asph+K.pave};
+  const under=K.h+soilH(x,z)<K.wl;const rock=smooth(.9,1.6,K.slope);
+  const wet=under?1:K.wet;let w={sand:K.sand*(1-wet),wsand:K.sand*wet,mud:K.mud,hard:K.asph+K.pave,meadow:K.meadow,plough:K.plough,wheat:K.wheat};
   let t=w.sand+w.wsand+w.mud+w.hard;if(t>1){for(const k in w)w[k]/=t;t=1;}w.dirt=1-t;
   for(const k in w)w[k]*=1-rock;w.rock=rock;
   o.sink=o.berm=o.slump=0;let best='dirt',bw=-1;
@@ -108,15 +118,23 @@ function soilSettle(dt){
 const SOIL_F=new Float32Array(1),SOIL_U=new Uint32Array(SOIL_F.buffer);
 function soilHalf(v){SOIL_F[0]=v;const x=SOIL_U[0],s=(x>>>16)&0x8000;let e=((x>>>23)&0xff)-112;const m=x&0x7fffff;
   if(e<=0){if(e<-10)return s;return s|(((m|0x800000)>>>(13-e))+1>>>1);}if(e>=31)return s|0x7c00;const h=s|(e<<10)|(m>>>13);return (m&0x1000)?h+1:h;}
-function soilMakeTex(){const N=SOIL.N;SOIL.tex=new THREE.DataTexture(new Uint16Array(N*N*4),N,N,THREE.RGBAFormat,THREE.HalfFloatType);
-  SOIL.tex.minFilter=SOIL.tex.magFilter=THREE.LinearFilter;SOIL.tex.wrapS=SOIL.tex.wrapT=THREE.ClampToEdgeWrapping;SOIL.tex.generateMipmaps=false;SOIL.tex.needsUpdate=true;
-  SOIL.half=new Uint16Array(64*64*4);SOIL.src=new THREE.DataTexture(SOIL.half,64,64,THREE.RGBAFormat,THREE.HalfFloatType);SOIL.src.generateMipmaps=false;SOIL.src.needsUpdate=true;
+function soilMakeTex(){const N=SOIL.W*64;SOIL.tex=new THREE.DataTexture(new Uint16Array(N*N*4),N,N,THREE.RGBAFormat,THREE.HalfFloatType);
+  SOIL.tex.minFilter=SOIL.tex.magFilter=THREE.LinearFilter;SOIL.tex.wrapS=SOIL.tex.wrapT=THREE.RepeatWrapping;SOIL.tex.generateMipmaps=false;SOIL.tex.needsUpdate=true;
+  SOIL.half=new Uint16Array(64*64*4);SOIL.src=new THREE.DataTexture(SOIL.half,64,64,THREE.RGBAFormat,THREE.HalfFloatType);SOIL.src.generateMipmaps=false;
   SOIL.pos=new THREE.Vector2();return SOIL.tex;}
-let soilCap=10;
-function soilUpload(R){if(!SOIL.up.size)return 0;let n=0;
-  for(const q of SOIL.up){if(n>=soilCap)break;SOIL.up.delete(q);const T=SOIL.tiles[q],H=SOIL.half;
+/* the window follows the Wraith: which square each slot should hold */
+function soilFollow(x,z){const ti=Math.floor((x-SOIL.X0)/(SOIL.C*64)),tj=Math.floor((z-SOIL.X0)/(SOIL.C*64));if(ti===SOIL.ci&&tj===SOIL.cj)return;
+  SOIL.ci=ti;SOIL.cj=tj;const W=SOIL.W,h=W/2,m=(a,b)=>((a%b)+b)%b;
+  for(let sy=0;sy<W;sy++)for(let sx=0;sx<W;sx++){const gi=ti-h+m(sx-(ti-h),W),gj=tj-h+m(sy-(tj-h),W);SOIL.want[sy*W+sx]=gi<0||gj<0||gi>=SOIL.NT||gj>=SOIL.NT?-2:gj*SOIL.NT+gi;}
+  const tw=SOIL.C*64;SOIL.win.set(SOIL.X0+(ti-h+.5)*tw,SOIL.X0+(tj-h+.5)*tw,SOIL.X0+(ti+h-.5)*tw,SOIL.X0+(tj+h-.5)*tw);}
+let soilCap=12;
+function soilUpload(R){let n=0;const W=SOIL.W,H=SOIL.half;
+  const send=(slot,q)=>{const T=q>=0?SOIL.tiles.get(q):null;
     if(!T)H.fill(0);else for(let k=0;k<4096;k++){const o=k*4;H[o]=soilHalf(T.r[k]);H[o+1]=soilHalf(T.c[k]);H[o+2]=soilHalf(T.ht[k]);H[o+3]=soilHalf(T.ha[k]);}
-    SOIL.pos.set((q%SOIL.NT)*64,Math.floor(q/SOIL.NT)*64);R.copyTextureToTexture(SOIL.src,SOIL.tex,null,SOIL.pos);n++;}
+    SOIL.pos.set((slot%W)*64,Math.floor(slot/W)*64);R.copyTextureToTexture(SOIL.src,SOIL.tex,null,SOIL.pos);SOIL.slot[slot]=q;n++;};
+  /* squares coming into reach first, then squares that changed */
+  for(let s=0;s<W*W&&n<soilCap;s++)if(SOIL.slot[s]!==SOIL.want[s])send(s,SOIL.want[s]);
+  for(const q of SOIL.up){if(n>=soilCap)break;SOIL.up.delete(q);const ti=q%SOIL.NT,tj=Math.floor(q/SOIL.NT),s=(((tj%W)+W)%W)*W+(((ti%W)+W)%W);if(SOIL.want[s]===q)send(s,q);}
   return n;}
 /* clear everything (the R key / the test's reset) */
-function soilClear(){for(let q=0;q<SOIL.tiles.length;q++)if(SOIL.tiles[q]){SOIL.tiles[q]=null;SOIL.up.add(q);}SOIL.act.clear();SOIL.stat.tiles=0;}
+function soilClear(){for(const q of SOIL.tiles.keys())SOIL.up.add(q);SOIL.tiles.clear();SOIL.act.clear();SOIL.stat.tiles=0;}
