@@ -45,3 +45,27 @@ crossing the ground, and **a rift caved in by an artillery strike**.
 
 ## Proposals
 (write here; Christopher decides)
+
+### 1. How Mud Lab's soil and water come over (session B, 20 Nov): lift them out into plain three.js
+
+**Lifted out, not built on the engine.** `game/world/` has the soil and water as plain three.js r187 code, the same
+bundle Ironhowl 4 and the viewer use.
+
+Why:
+- **The engine is a car game.** Mud Lab's soil is wired into Salt & Sand's own renderer (raw WebGL, its own shaders, its
+  own `GAME.car`, tyres, contact patches). The Wraith, its walk and its weapons are three.js (Ironhowl 4). On the engine
+  we'd have two renderers in one page, and session C's mech could never join session B's world without a rewrite.
+- **What we need from Mud Lab is the soil's rules, not its car.** Those rules are short and they come across as they are:
+  the ground kept as a height per cell in squares made only when something touches them; a press sinks until the soil
+  bears it, and a share of what sinks is squeezed up beside it as a berm (`mlStamp`); wet soft soil slumps back into
+  its ruts (`mlSettle`); thrown clods land as soft lumps (`mlLand`); water drags by depth and speed (`mlWater`); rings
+  through standing water and a bow wave, drawn as slopes on the water's surface (`mlWake` and its shader lines).
+- **The numbers are Mud Lab's.** Each soil's sink, floor, berm and slump (`ML_SOIL`: sand, mud, loam) are copied, then
+  scaled for a 30-tonne foot instead of a tyre.
+
+What is not carried over: the car physics, the trucks, the 3 km world generator and its trails, the engine's sound.
+What changes: cells are 25 cm (Mud Lab's are 8 cm; a Wraith foot is about 1.5 m long); the soil is a texture over the
+whole test map instead of a window that follows a truck.
+
+Cost: it's a rewrite of the parts we use, so it looks like Mud Lab, not identical to it. Building on the engine copy
+would have been faster for this one page and a dead end for the game.
