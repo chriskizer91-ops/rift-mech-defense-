@@ -1,0 +1,74 @@
+{
+  "OW": {
+    "name": "OVERWATCH",
+    "role": "The IRMD's sensor AI and the voice on the radio. The only thing that can see them. Warm, lives through it with you.",
+    "prompt": "English, neutral American accent, female voice, late twenties, studio quality. A warm, quick, bright woman who is brave but a little nervous, kind and quietly funny. Mid-pitched with a soft, clear tone and a slight breathiness when she is scared. Talks fast when tense and slows right down when something matters.",
+    "preview": "Okay, Wraith, I've got you on the board. Twelve contacts coming up the beach, moving fast. You won't see them with your eyes, so you're going to have to trust mine. Ready when you are.",
+    "guidance": "30%",
+    "notes": "Most lines in the game. Keep one voice for the whole chapter. In mission 8 phase 4 and the ending her lines get more strained and broken: do those as separate takes with [strained] or [exhausted]."
+  },
+  "PILOT_F": {
+    "name": "PILOT (option A: young woman)",
+    "role": "You, call sign WRAITH. About 20. Mostly silent: 16 short phrases in the chapter.",
+    "prompt": "English, neutral American accent, female voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low-pitched for her age, slightly husky. Speaks very few words, slowly, with no drama.",
+    "preview": "I'm here. I've got them. Climb down, I've got you. We hold this line until the last boat is gone.",
+    "guidance": "30%",
+    "notes": "Pick option A or B and use that one for every pilot line."
+  },
+  "PILOT_M": {
+    "name": "PILOT (option B: young man)",
+    "role": "You, call sign WRAITH. About 20. Mostly silent: 16 short phrases in the chapter.",
+    "prompt": "English, neutral American accent, male voice, about twenty years old, studio quality. A quiet, steady young pilot who is tired, determined and gentle underneath. Low, soft and a little rough. Speaks very few words, slowly, with no drama.",
+    "preview": "I'm here. I've got them. Climb down, I've got you. We hold this line until the last boat is gone.",
+    "guidance": "30%",
+    "notes": "Pick option A or B and use that one for every pilot line."
+  },
+  "ANVIL": {
+    "name": "ANVIL",
+    "role": "The artillery chief behind the ridge. Never seen. Seals the rifts.",
+    "prompt": "English with a thick Scottish accent, male voice, late fifties, studio quality. A gruff, dry, unflappable gunnery chief who is tired and quietly protective of his young crew. Deep, gravelly and slow. Short, clipped sentences, no wasted words.",
+    "preview": "ANVIL. Six guns behind the ridge, and every one of them older than me. Give me a mark and I'll put a hole in it. Shot, over. Twenty seconds. Don't stand there.",
+    "guidance": "35%",
+    "notes": "Calm in every line, even the reveal. That calm is the point."
+  },
+  "SQ1": {
+    "name": "Squad voice 1 (Gull, Tern, Alder, Wren)",
+    "role": "Young squad leader. Bright, brave, quick.",
+    "prompt": "English, American accent, female voice, early twenties, studio quality. A brisk, bright young squad leader who is brave, focused and a little out of breath. Clear, mid-high pitch. Quick, clipped delivery.",
+    "preview": "Tern on the lip! We can see the mouth from here. Keep them off us for thirty seconds and we'll mark it for you.",
+    "guidance": "30%",
+    "notes": "Four different squads share this voice across missions. Squads are fresh each mission, so nobody will mind."
+  },
+  "SQ2": {
+    "name": "Squad voice 2 (Lantern, Birch, Miller)",
+    "role": "Young squad leader. Scared but holding it together.",
+    "prompt": "English, London accent, male voice, early twenties, studio quality. A scared young volunteer who is trying hard to sound steady, hopeful and grateful. Light, slightly cracked tenor. Talks fast when frightened, then laughs with relief.",
+    "preview": "Any IRMD unit, this is Lantern. There are six of us on the cannery roof. The water's at the second floor and there's something in it. Please. Anyone.",
+    "guidance": "30%",
+    "notes": "Lantern's relief lines can take [laughs] or [relieved]."
+  },
+  "SQ3": {
+    "name": "Squad voice 3 (Slate, Reed, Bramble)",
+    "role": "Older crew chief. Dry, calm, practical.",
+    "prompt": "English, Australian accent, female voice, mid forties, studio quality. A practical, dry-humoured crew chief who is calm, tired and steady under pressure. Warm low-mid voice with a little grit. Even, unhurried pace.",
+    "preview": "Reed, west side. We've got the civilians and we're moving them out the gate. Movement out on the pans, though. A lot of it.",
+    "guidance": "30%",
+    "notes": "Reed's last line in mission 5 is quiet and hurt, not angry."
+  },
+  "SQ4": {
+    "name": "Squad voice 4 (Pike, Cedar, Harrow)",
+    "role": "Young squad leader. Warm, cocky, brave.",
+    "prompt": "English, Nigerian accent, male voice, mid twenties, studio quality. A warm, confident young squad leader who is cocky on the surface, brave and loyal underneath. Rich, resonant baritone. Easy rhythm that tightens when things get bad.",
+    "preview": "Pike on the high street. We held it this morning and we'll hold it again. You just keep the big ones off us.",
+    "guidance": "30%",
+    "notes": ""
+  },
+  "SQ5": {
+    "name": "Squad voice 5 (Copper)",
+    "role": "Copper's leader, lost in mission 5. The chapter's saddest lines.",
+    "prompt": "English, Irish accent, female voice, early twenties, studio quality. A soft-spoken young squad leader who is frightened, resolved and kind. Gentle, clear mid-pitch voice. Calm and slow even when afraid.",
+    "preview": "Copper to Wraith. She's right, you can't get to us. It's alright. We'll hold them here. Go. Get them out.",
+    "guidance": "30%",
+    "notes": "Her last line is cut off mid-word by static: generate it whole, the game cuts it."
+  }
+}

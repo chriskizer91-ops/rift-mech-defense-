@@ -70,6 +70,22 @@ Only Christopher's decisions go here (20 Nov 2026 unless dated). Proposals live 
   - **Difficulty:** Easy, Medium and Hard.
   - **Creature names** MOTE to TITAN stay; "the Host" goes.
 
+## Chapter 1 (20 Nov, evening): answers to session D's design doc
+Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
+- **Length:** keep it as written (8 missions, about 64 minutes).
+- **Tone:** heavy and dark, but positive, with young-adult overtones. Entertainment first.
+- **The pilot:** mostly silent, with a few short phrases.
+- **The loss in mission 5 is fixed** (no choice between squads).
+- **The cost of winning carries into chapter 2** (OVERWATCH scarred, forgets the squads lost in mission 5).
+- **The sensor is there from the beginning:** its upgrades aren't opened later by the Watcher.
+- **Kit arrives with the story** (Lance, Watcher, Arc, drone, long hover), not with pilot levels.
+- **Taken squads add dots** (+200 in missions, +25,000 to the Signal): yes.
+- **Artillery limits** may vary by mission.
+- **The Signal's reveal is a fully rendered cinematic, 45 to 60 seconds.**
+- **Place names** stay as written (the Ember Coast, Port Arlen, Greywater Strand, Kessel Cut, the Saltpans, the Drowned
+  Shelf, Hollin Ridge, Arlen Bay).
+- **Radio is voiced.** Christopher makes the dialogue in ElevenLabs from a voice-acting sheet (each voice described, every line).
+
 ## Open questions (not decided)
 - Creature names. The viewer uses placeholders: MOTE, KNOT, SKEIN, RUNNER, STALKER, BRUTE, THE HOST.
 - How damage works on a cluster (proposal: shots knock dots off, so a 100-dot creature shrinks as it's hurt).

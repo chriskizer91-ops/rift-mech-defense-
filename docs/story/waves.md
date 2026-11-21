@@ -18,7 +18,7 @@ Minutes are targets. "Dots" is what spawns; streams and feeding can add more.
 | | 2 | 2–3 | 20 SKEIN, 2 STALKER | 600 | Seal the harbour rift (wade). BEHEMOTH waits offshore |
 | | 3 | 4 | BEHEMOTH | 10,000 | Rift open: +100 dots/s (max 14,000). Sealed: −20 dots/s. Barrage −800. Core ×10 |
 | 5 Night Shift | 1 | 2 | 20 KNOT, 4 RUNNER | 400 | Night; thermal is the clear view |
-| | 2 | 3 | 2 packs of 2 STALKER, one at each squad | 400 | Reach one squad; the other is lost: its pack +200 |
+| | 2 | 3 | 2 packs of 2 STALKER, one at each squad | 400 | Fixed loss: Copper (across the channel) turns red, its pack +200. Defend Reed |
 | | 3 | 3 | the grown pack, 2 STALKER | 600 | Dropped frames up close; shots only land in clear windows |
 | 6 The Shelf | 1 | 2 | 30 KNOT, 10 SKEIN, 6 RUNNER, 2 DRAG | 2,800 | The Arc's first test |
 | | 2 | 3 | 4 STALKER + streams from rifts A and B | ~1,500 | Seal A and B. Tide timer: 8 min for the mission |

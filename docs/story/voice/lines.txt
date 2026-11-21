@@ -1,0 +1,244 @@
+# Rift Mech Defense, chapter 1: every voiced line.
+# The one source for docs/story/radio.md and docs/story/voice/voice-script.html (run build.py after editing).
+# Format:
+#   ## ID | Title | where and when        a section; line ids are ID_SPEAKER_NN
+#   > text                                a stage direction (not spoken)
+#   SPEAKER: text  // note                a line. The text is pasted into ElevenLabs as it is, [tags] included.
+#                                         The note after // is direction for the person generating it.
+
+## BRIEF | Intel Brief 00 | the 75-second film before mission 1
+> Black. A hiss. Card: IRMD INTEL BRIEF 00.
+> A city at night, every window, phone and billboard showing static.
+OVERWATCH: [quietly] One night, every screen on Earth showed static for nine minutes. People call that night... the Static.  // narration, close and calm
+> The sea from high above. Cracks glowing orange under the water.
+OVERWATCH: When the pictures came back, the seafloor had cracked open. Something came up through the cracks.
+> Real view of a beach. A truck sags into grey grit. Nothing else there.
+OVERWATCH: Cameras don't see them. Eyes don't see them. You'll see what they leave behind.
+> The same beach on the sensor: red dots everywhere.
+OVERWATCH: I see them. Not well. One dot for every place they touch our world. [sighs] That's the best I can do.
+> The drone log plays as text with beeps (not voiced).
+> The sensor view of Greywater Strand at dawn, the Wraith's green marker on the sand.
+OVERWATCH: That's everything we have. It isn't much. But we can see them... and nobody else can. So we start there.  // hopeful on the last four words
+> The IRMD badge. WE SEE THEM. NOW WE FIGHT.
+
+## GEN | Any mission | lines the game plays when they happen
+OVERWATCH: New size on the board. Card's up.
+OVERWATCH: [worried] Wraith, you're hurting. Back off, let the shield come up.
+OVERWATCH: It's eating. The count's going up.
+OVERWATCH: [exhales] Board's clear. Breathe.
+OVERWATCH: [nervous] Okay. Okay. We can do this.
+OVERWATCH: [softly] I hear you.  // reply to a PING, now and then
+ANVIL: ANVIL, guns up. Give me a mark.
+ANVIL: Shot, over. Twenty seconds. Don't stand there.
+ANVIL: Splash.
+ANVIL: That's a hole in the ground now. Rift's closed.
+ANVIL: That's the last of them. You're on your own, son.  // say "lass" instead of "son" if the pilot is option A
+LANTERN: Painting it. Send it!  // squad marks a target; generate once per squad voice
+TERN: Painting it. Send it!
+PIKE: Painting it. Send it!
+REED: Painting it. Send it.
+
+## PING | The pilot's PING answers | the radio button; the game picks one
+PILOT: Copy.
+PILOT: Still here.
+PILOT: On it.
+PILOT: Moving.
+PILOT: Heard you.
+PILOT: We're okay.
+
+## M1 | First Light | Greywater Strand, dawn
+> Opens in the REAL view: a grey beach, sand churning toward the pier.
+OVERWATCH: Morning, Wraith. Gull's loading the last boats off the pier.
+OVERWATCH: Something's coming up the beach. [quietly] You won't see them with your eyes.
+OVERWATCH: Switching you to mine.
+> SENSOR view. The beach is full of red dots.
+OVERWATCH: There. Red is them. Green is us. Keep the red off the green.
+OVERWATCH: [excited] See it shrink? Ten dots, ten hits. That's the whole trick.  // first KNOT hit
+GULL: Gull to whoever's out there! Two boats left. Buy us three minutes!
+OVERWATCH: Bigger ones. Twenties. They're going for the pier.
+GULL: Last boat's off! Go, go, go!
+OVERWATCH: [relieved] Gull's away. Every boat. Good morning, Wraith.
+PILOT: Morning.  // the pilot's first word in the game; small, almost shy
+
+## M2 | High Water | Port Arlen low town, morning
+OVERWATCH: The low town flooded overnight. Someone's still in it.
+LANTERN: [scared] Any IRMD unit, this is Lantern. Six of us on the cannery roof. The water's at the second floor and there's something in it.
+OVERWATCH: Lantern, OVERWATCH. I see you. Six green. Help's coming... and it's big.  // warm, a smile on "big"
+OVERWATCH: Wraith, the street's flooded. Wade the shallow parts. The canal's too deep: jets.
+OVERWATCH: That's past your hips. Hover, or you're swimming.
+OVERWATCH: Fifties. Fast. They go for whatever's slowest.  // RUNNER card
+> The Wraith reaches the cannery.
+LANTERN: [laughs] That's a mech. That's an actual MECH.
+PILOT: Climb down. I've got you.
+OVERWATCH: Contacts closing on the cannery. Hold them while Lantern climbs down.
+LANTERN: Two down. Four. Everyone's down! Where do we go?
+OVERWATCH: High street. Stay behind the big thing.
+OVERWATCH: Stay with them. Runners go for whoever's slowest.
+LANTERN: [relieved] High street. All six of us. Wraith... whoever's in there, we owe you.
+OVERWATCH: Six green. Six. [quietly] That's the best number I've seen all day.
+LANTERN: Point us at something. We'll paint it.
+OVERWATCH: They're sending you a Lance. For the big ones. They didn't say which big ones.  // salvage screen
+
+## M3 | The Dig | Kessel Cut quarry, midday
+OVERWATCH: Kessel Cut. The quarry wall opened up last night. It's a rift.
+ANVIL: ANVIL. Six guns behind the ridge, every one older than me. Find me the hole.
+TERN: Tern on the lip! We can see the mouth. Keep them off us and we'll mark it.
+OVERWATCH: It's pouring out of there. It won't stop until the mouth caves in.
+TERN: Marked! Send it!
+ANVIL: Shot, over. Twenty seconds.
+ANVIL: Splash. That's a hole in the ground now. Rift's closed.
+OVERWATCH: Stream's stopped. Nothing else is coming out of that one.
+OVERWATCH: [uneasy] A hundred. It doesn't rush. It waits.  // STALKER card
+SLATE: Slate, quarry crew. Something's moving under the dump trucks.
+OVERWATCH: [awed] Five hundred. That's bigger than you, Wraith.
+OVERWATCH: [alarmed] It's eating the trucks. Five-forty. Six hundred.
+OVERWATCH: Kill it before it finishes the yard.
+OVERWATCH: Thermal. Look for the hot part.
+PILOT: I see it.
+OVERWATCH: There. The core. Hit that and it really hurts.
+OVERWATCH: Gone. It's just grit now.
+SLATE: [dry] Never thought I'd be glad to see a quarry full of gravel.
+
+## M4 | Landfall | Port Arlen, dusk
+OVERWATCH: Something big has been sitting off Port Arlen since dark. It's coming in.
+PIKE: Pike on the high street. We held it this morning. We'll hold it again.
+OVERWATCH: It's sending things ahead of it. Stalkers in the alleys.
+OVERWATCH: There's a rift in the harbour, out in the shallows. That's what's feeding it.
+OVERWATCH: [urgent] Ten thousand and climbing. Close that rift, Wraith.
+ANVIL: Give me a mark on the harbour and I'll fill it in.
+ANVIL: Rift's closed.
+OVERWATCH: It's stopped growing. It's losing dots. [determined] It can be killed.
+> The BEHEMOTH comes ashore through the cannery.
+OVERWATCH: [quietly] It's been eating the wrecks all night.
+PIKE: It's at the cannery. It's... the cannery's going grey.
+OVERWATCH: Thermal. The core's moving around inside it. Follow it.
+OVERWATCH: Five thousand. We're winning. [nervous laugh] I think we're winning.
+OVERWATCH: It's down. Ten thousand dots, and it's down. [shaky exhale] I need a minute.
+PILOT: Take it.
+OVERWATCH: They're fitting you a Watcher pod. Better eyes for both of us.  // salvage
+
+## M5 | Night Shift | the Saltpans, night
+OVERWATCH: The saltworks. People are still coming out. Copper's on the east side, Reed's on the west.
+OVERWATCH: It's night. Thermal will be clearer than the sensor.
+COPPER: Copper. Eight of us, bringing out the last of the night shift.
+REED: Reed. Out the west gate. Moving.
+OVERWATCH: [alarmed] Wait. Both of them. Both squads have contacts.
+COPPER: OVERWATCH, Copper. Contacts on the east pans. A lot of them.
+REED: Reed, west side. Movement here too. We've got the civilians.
+OVERWATCH: [urgent, hurting] Wraith, Reed has the civilians and Copper's across the channel. It's too wide for your jets. Go west.
+COPPER: [calm, afraid] Copper to Wraith. She's right. You can't get to us. We'll hold. Go.
+> The Wraith fights at Reed. Across the channel, Copper's eight green dots hold for about a minute.
+COPPER: [panicked] We can't see anything, it's just the ground moving, it's...  // the game cuts this into static
+OVERWATCH: Copper, come in. [beat] Their dots are changing colour. Two. Five. [voice breaking] All of them.
+OVERWATCH: They've gone red. They're part of it now. [steadying] Wraith... that pack just got bigger.
+OVERWATCH: The pack's coming for you. And my picture's breaking up.
+OVERWATCH: Don't fire into the static. Wait for me to lock. Then fire.
+OVERWATCH: Now.  // a clear window; generate 3 takes
+REED: [quiet, hurt] Reed to Wraith. Copper bought us that minute. Don't forget them.
+PILOT: I won't.
+OVERWATCH: [sad] I'm logging Copper as lost. Eight names. I'll remember them... even if nobody else does.
+OVERWATCH: They're sending an Arc. Lightning, for the crowded ones.  // salvage
+
+## M6 | The Shelf | the Drowned Shelf, before dawn
+OVERWATCH: The sea pulled back off the shelf before dawn. Three rifts, out in the open.
+BRAMBLE: Bramble, survey. The tide turns in eight minutes. Then all of this is underwater again.
+OVERWATCH: A thousand. Slow. Wide. Hit it with the Arc.  // DRAG card
+OVERWATCH: Everything, all at once. You've seen all of this before. Just not together.
+ANVIL: Two holes left. I've got the shells if you've got the marks.
+> The lull before wave 3.
+OVERWATCH: [quietly] Wraith. Do you think they built me for this?
+OVERWATCH: Not traffic. Not weather. This.
+PILOT: Maybe. [beat] I'm glad they did.
+OVERWATCH: [touched, then brisk] ...Thank you. Water's coming.
+OVERWATCH: Five thousand. It's rising out of rift C.  // HULK card
+BRAMBLE: Tide's in. Water's at our knees and climbing.
+OVERWATCH: Seal C under it. Then the core.
+OVERWATCH: Shelf's clear. Three rifts closed. The sea can have it back.
+OVERWATCH: You're getting a drone. It fixes things. [laughs softly] I asked if it could fix me. That was a joke.  // salvage
+
+## M7 | The Ridge | Hollin Ridge, grey day
+OVERWATCH: Something huge is walking up from the coast. Alder, Birch and Cedar are dug in on Hollin Ridge.
+ALDER: Alder, west end. Ready as we'll be.
+BIRCH: Birch, in the middle.
+CEDAR: Cedar, east end. Is it true it's fifty thousand?
+OVERWATCH: It's true.
+PILOT: Then we hold.
+OVERWATCH: Fifty thousand. The sensor drops frames just looking at it.  // TITAN card
+OVERWATCH: Fire when I lock. Every shot in the static is wasted.
+OVERWATCH: [confused] It's coming apart. No. [fear] It's reaching.
+OVERWATCH: [whispers] The count doesn't match its size. There's more of it than there are dots.
+OVERWATCH: Four of them. Tendrils. They're going for the squads.
+BIRCH: [shouting] Something's coming up the slope at us!
+OVERWATCH: That one's gone. It's not coming back.
+OVERWATCH: It's pulling itself back together. Thermal. Find the core.
+OVERWATCH: It's down. [beat] Wraith, I've been counting dots my whole life. That was the first time the count was wrong.
+OVERWATCH: They're giving your jets a long hover. Somebody knows what's next. [quietly] I wish they'd tell me.  // salvage
+
+## M8 | The Signal | Arlen Bay, night
+OVERWATCH: Arlen Bay. Every contact on the coast is moving that way.
+HARROW: Harrow, harbour wall.
+MILLER: Miller, slipway.
+WREN: [quietly] Wren, lighthouse. It's very quiet out there.
+
+## C1 | The reveal (cinematic, 56 s) | Arlen Bay, night
+> 0:00 Low behind the Wraith on the harbour wall. Wind, water, servos.
+OVERWATCH: New contact. Bearing zero-four-one, range two point four.
+> 0:05 Over the shoulder into the sensor feed. The count climbs.
+OVERWATCH: Count is climbing... forty thousand... two hundred thousand...  // let the numbers rise in pitch
+> 0:12 High aerial over the bay. Red pours up from four points.
+OVERWATCH: [awed] That's more than I've ever seen on one screen.
+> 0:18 The picture fails: static, tearing, held frames.
+OVERWATCH: [strained] Sensor's choking. It can't resolve them.
+> 0:25 Stutter cuts. The dots move together.
+OVERWATCH: Wait. They're not moving like a swarm.
+> 0:31 Hard cut. Everything still. One shape rises.
+OVERWATCH: [quietly] It's one mass.
+> 0:36 Three seconds perfectly clear.
+OVERWATCH: [whispers] Wraith. It's coming through clear. Nothing's ever come through clear.
+> 0:42 The ridge: ANVIL's guns, a young crew lit red.
+ANVIL: OVERWATCH, ANVIL. What am I looking at?
+> 0:47 The mass turns toward the harbour.
+OVERWATCH: [softly, certain] The Signal.
+> 0:52 It rears and slams. The camera swoops back into the game.
+PILOT: [low] Here it comes.
+
+## M8F | The Signal fight | phases 1 to 4
+OVERWATCH: Four rifts feeding it. Close them and it gets smaller.
+ANVIL: Four holes. All my shells. Mark them.
+OVERWATCH: A hundred thousand, gone.  // each sealed rift
+OVERWATCH: The last one's across the channel. Long hover.
+OVERWATCH: It's coming ashore. And it's changing.
+OVERWATCH: It's standing up. Stay low, stay out of the air.  // risen
+OVERWATCH: It's spreading out. The arms are crawling for the squads.  // spread
+OVERWATCH: Hunched. The core's in the hump. Thermal, now.  // hunched
+WREN: [scared] Something's coming up the lighthouse steps.
+OVERWATCH: [strained] It's too close. I can't hold the picture.
+OVERWATCH: [strained] I'll give you what I can. Listen for the thud.
+OVERWATCH: [strained] Now.  // a clear window; generate 3 takes, each more tired
+OVERWATCH: [exhausted] I can hold it still for you. A long one. It's going to cost me.
+OVERWATCH: Charge the Lance. Tell me when.
+PILOT: Now.
+OVERWATCH: [straining hard] Holding... holding...
+OVERWATCH: [gasping] It's pulling back. Give me twenty seconds.  // after a miss; generate 3 takes, each more broken
+
+## C2 | The ending (cinematic, about 30 s) | Arlen Bay
+> The Lance goes in. Grit pours into the bay like rain. Silence.
+> The last dots drift into one point and turn toward the sensor. One second of static on every screen.
+OVERWATCH: [whispers, shaken] Wraith. It wasn't looking at you.
+OVERWATCH: [whispers] It was looking at me.
+OVERWATCH: [small voice] ...Are you still there?
+> The player presses PING.
+PILOT: I'm here.
+OVERWATCH: [relieved, almost crying] Good. Stay.
+> Over black, a sensor log line (text only): New contacts: 6. Bearing: every direction.
+
+## HINT | Hints after a death | one per death, never the whole answer
+OVERWATCH: Kill it before it eats the yard.  // BRUTE
+OVERWATCH: The rift in the harbour is still feeding it.  // BEHEMOTH
+OVERWATCH: Wait for the lock.  // STALKERs at night
+OVERWATCH: Seal C first.  // HULK
+OVERWATCH: Cut the tendrils before they reach the squads.  // TITAN
+OVERWATCH: The rifts are still feeding it.  // Signal phase 1
+OVERWATCH: Watch the hump. It's hottest when it's hunched.  // Signal phase 2
+OVERWATCH: Wait for the thud. Then fire.  // Signal phase 3
+OVERWATCH: Start the charge before I open the window.  // Signal phase 4

@@ -8,7 +8,7 @@
   },
   "rules": {
     "coreDamageK": 10,
-    "barragesPerMission": 3, "barragesPerLivingSquad": 1, "shellFlightS": 20,
+    "barragesPerMission": 3, "barragesVaryByMission": true, "barragesPerLivingSquad": 1, "shellFlightS": 20,
     "markHoldS": 1.5, "squadMarkRangeM": 40,
     "lostSquadDots": 200, "lostSquadDotsSignal": 25000,
     "window": {"periodS": 3.5, "baseS": 1.0, "perSensorLevelS": 0.15},
@@ -37,7 +37,7 @@
     {"id": 5, "name": "Night Shift", "place": "the Saltpans", "time": "night", "min": 8, "squads": ["Copper", "Reed"], "scrap": 1200, "unlockAfter": "arc",
      "waves": [
        {"min": 2, "spawn": {"KNOT": 20, "RUNNER": 4}},
-       {"min": 3, "spawn": {"STALKER": 4}, "notes": "two packs of 2, one at each squad; the squad not reached is lost"},
+       {"min": 3, "spawn": {"STALKER": 4}, "notes": "two packs of 2, one at each squad; Copper (across the channel) is always lost, +200 to its pack; defend Reed"},
        {"min": 3, "spawn": {"STALKER": 2}, "notes": "plus the grown pack; dropped frames up close"}]},
     {"id": 6, "name": "The Shelf", "place": "the Drowned Shelf", "time": "before dawn", "min": 8, "squads": ["Bramble"], "scrap": 2000, "unlockAfter": "drone", "tideS": 480,
      "waves": [
