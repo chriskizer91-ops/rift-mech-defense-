@@ -68,6 +68,8 @@ Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.m
   the quiet loss; the dots turn red on OVERWATCH's words "Two. Five. All of them.").
   `m3` (The Dig, 2:52, boss fight: the rift streams until ANVIL caves it in, BRUTE eats the trucks, thermal finds the core,
   the Lance). Sets: `set-quarry.js` (Kessel Cut).
+  `m4` (Landfall, 2:55: BEHEMOTH fed by the harbour rift, comes ashore through the cannery; set `set-portarlen.js`),
+  `m7` (The Ridge, 3:00: TITAN, 50,000, fire only on the lock, four tendrils go for the squads; set `set-ridge.js`).
 
 ## What each session needs to give (asks on the board)
 - **A (creatures):** spawn a creature at a point with a goal or a path, and step it by a fixed time step with a seed, so a run
