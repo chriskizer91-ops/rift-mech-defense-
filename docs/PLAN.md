@@ -99,6 +99,12 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
   Wraith teams nearby. A battleship-style map of red and green dots: you aim so as not to hit your own (friendly fire).
 - **Keep the current top-down perspective.**
 
+## The film (21 Nov; Christopher to session D)
+- **Make chapter 1 into a 30-minute film.** Every piece is a scene in the game (cutscenes between levels, and battle clips), and
+  played in order they make one film that works on its own. Watched as a film, the battle clips stand in for the levels.
+- **All rendered 3D and filmed the same way as the reveal.** Battles may be staged with the real game pieces.
+- Session D coordinates it. The plan: `docs/story/film.md`.
+
 ## Open questions (not decided)
 - Creature names. The viewer uses placeholders: MOTE, KNOT, SKEIN, RUNNER, STALKER, BRUTE, THE HOST.
 - How damage works on a cluster (proposal: shots knock dots off, so a 100-dot creature shrinks as it's hurt).
