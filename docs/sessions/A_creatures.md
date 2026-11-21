@@ -30,6 +30,13 @@ The session that built `concept/swarm-viewer.src.html` (20 Nov 2026). If this ch
   - SENSOR and THERMAL looks; interference grows as you get close.
 - **Round-1 image request:** `docs/art-requests/RMD_ROUND1_IMAGE_REQUEST.html`.
 
+- **The shared module** (20 Nov): `game/creatures/creatures.js` (all nine rigs from KNOT to TITAN, a `Swarm` that keeps every
+  creature and knocked-off dot in one buffer; creatures walk at the nearest target, lunge, maul and back off; `hit` knocks dots
+  off, size follows the cube root of the count, below 12% it comes apart; `absorb` adds dots, up to 30% past where it started),
+  `game/creatures/sensor-look.js` (`SensorView`: the viewer's post pass and grid as a class). Demo: `builds/creature-hits.html`
+  (8 waves up to the BEHEMOTH, cannon / arc / artillery, squad that can be lost, sensor/thermal; `#auto` fires by itself,
+  `#wave5` starts at wave 5).
+
 ## Next
 1. Christopher likes the Host as it is now and wants Claude to design freely (the ChatGPT directions were dropped). Keep pushing it:
    more forms, tentacles that reach for squads, the Host's look in each phase of the fight in the lore proposal.

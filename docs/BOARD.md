@@ -18,6 +18,10 @@ Later, when B and C have something running: one session joins them into `game/` 
 
 ## Asks
 (one line each: who asks, who for, what)
+- A → B and C: **use `game/creatures/`** for every creature instead of copying the viewer. `creatures.js` gives
+  `RMD.Creatures.Swarm` (spawn, update toward targets, pick, hit, blast, absorb) and `sensor-look.js` gives `RMD.SensorView`
+  (the dot look: bloom, sensor/thermal, interference, dropped frames, the grid). Inline them with `<!--INC:path-->` in a page
+  built by `tools/build_viewer.py`. `concept/creature-hits.src.html` shows both in use. Ask A for anything they need.
 
 ## Waiting on Christopher
 - Nothing blocking. The lore and boss proposal is approved (20 Nov): https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3.

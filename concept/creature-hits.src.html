@@ -1,0 +1,185 @@
+<!doctype html>
+<!-- RIFT MECH DEFENSE — creature hit test (session A). The shared creature module (game/creatures/) in action:
+     waves walk at the Wraith and its squad; tap to fire; every hit knocks dots off, so they shrink as they're hurt.
+     tools/build_viewer.py concept/creature-hits.src.html → builds/creature-hits.html (one file, works offline). -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>IRMD · Hit test</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#d8e6e2;font:700 12px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.08em;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+canvas{position:fixed;inset:0;display:block;width:100%;height:100%}
+.hud{position:fixed;pointer-events:none;text-transform:uppercase}
+#tl{left:max(14px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top))}
+#tl .org{font-size:10px;color:#6fae9f;letter-spacing:.22em}
+#tl .wave{font-size:clamp(22px,6vw,36px);color:#ff3b26;letter-spacing:.12em;margin-top:3px;text-shadow:0 0 16px #ff2a1088}
+#tl .sub{font-size:11px;color:#ffb29a;margin-top:2px}
+#tr{right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));text-align:right;font-size:10px;color:#6fae9f;letter-spacing:.16em}
+#tr .v{font-size:15px;color:#d8e6e2;letter-spacing:.08em}
+.bar{width:120px;height:5px;background:#ffffff18;margin:3px 0 7px auto;overflow:hidden}.bar i{display:block;height:100%;background:#4fe0b8;width:100%}
+.bar.bad i{background:#ff4a2a}
+#cap{left:0;right:0;bottom:calc(118px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,17px);color:#e9f3f0;text-transform:none;letter-spacing:.04em;
+  text-shadow:0 0 6px #000,0 0 14px #000;padding:0 18px;min-height:1.3em}
+#cap b{color:#4fe0b8;font-weight:800;letter-spacing:.12em;font-size:.8em}
+#ui{position:fixed;left:0;right:0;bottom:0;padding:8px 8px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:7px;align-items:center;background:linear-gradient(#0000,#000c 40%)}
+.row{display:flex;gap:6px;max-width:100%;overflow-x:auto;scrollbar-width:none;padding:0 4px}.row::-webkit-scrollbar{display:none}
+button{flex:0 0 auto;font:800 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.1em;color:#bcd3cd;background:#0b1513cc;border:1px solid #2c4a43;border-radius:3px;
+  padding:9px 11px;min-width:44px;white-space:nowrap;cursor:pointer;text-transform:uppercase;position:relative;overflow:hidden}
+button small{display:block;font-size:8px;color:#6f8f88;letter-spacing:.14em;margin-top:2px}
+button.on{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 12px #ff2a1055 inset}button.on small{color:#ffb29a}
+button.alt.on{background:#0a2c24ee;border-color:#4fe0b8;box-shadow:0 0 12px #4fe0b855 inset}
+button .cd{position:absolute;left:0;bottom:0;height:3px;background:#ff4a2a;width:0}
+button.hide{display:none}
+#over{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#000a;font-size:20px;letter-spacing:.3em;color:#ff3b26;text-transform:uppercase}
+#help{right:max(14px,env(safe-area-inset-right));top:calc(150px + env(safe-area-inset-top));font-size:8px;color:#56776f;letter-spacing:.14em;text-align:right;max-width:150px}
+</style></head><body>
+<div class="hud" id="tl"><div class="org">Intl. Rift Mech Defense<br>Hit test</div><div class="wave" id="wv">WAVE 1</div><div class="sub" id="ws"></div></div>
+<div class="hud" id="tr"><div>Hostile dots</div><div class="v" id="cnt">0</div>
+  <div style="margin-top:6px">Wraith hull</div><div class="bar" id="hb"><i id="hull"></i></div>
+  <div>Squad</div><div class="v" id="sq">4 / 4</div>
+  <div style="margin-top:6px">Dots knocked off</div><div class="v" id="kills">0</div></div>
+<div class="hud" id="help">TAP OR HOLD ON A CREATURE TO FIRE<br>PINCH TO ZOOM</div>
+<div class="hud" id="cap"></div>
+<div id="over"><div id="overT">Wraith down</div><button id="bRestart" class="on">Restart</button></div>
+<div id="ui">
+  <div class="row"><button id="wCannon" class="on">Cannon<small>hold</small></button><button id="wArc">Arc<small>chains</small></button><button id="wArt">Artillery<small>area</small><span class="cd" id="artCd"></span></button></div>
+  <div class="row"><button id="bSensor" class="alt on">Sensor</button><button id="bThermal" class="alt">Thermal</button><button id="bNext">Next wave ▶</button></div>
+</div>
+<!--THREE-->
+<!--INC:game/creatures/sensor-look.js-->
+<!--INC:game/creatures/creatures.js-->
+<script>
+'use strict';
+const T=THREE,V=(x,y,z)=>new T.Vector3(x,y,z),clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const ss=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const $=id=>document.getElementById(id);
+const cv=document.createElement('canvas');document.body.prepend(cv);
+const R=new T.WebGLRenderer({canvas:cv,antialias:false,powerPreference:'high-performance'});R.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const view=new RMD.SensorView(R);
+const scene=new T.Scene(),cam=new T.PerspectiveCamera(45,1,.1,3000);
+const swarm=new RMD.Creatures.Swarm(scene,{max:30000,maxDebris:12000});
+const grid=RMD.SensorView.grid(70);scene.add(grid);
+const ADD=RMD.SensorView.ADD;
+// the Wraith on the sensor: a bright chevron and its ring (grid channel)
+(function(){const p=[0,0,2.6,1.7,0,-1.6,1.7,0,-1.6,0,0,-.6,0,0,-.6,-1.7,0,-1.6,-1.7,0,-1.6,0,0,2.6],c=[];for(let i=0;i<p.length/3;i++)c.push(0,1.6,0);
+  for(let i=0;i<48;i++){const a0=i/48*6.283,a1=(i+1)/48*6.283;p.push(Math.cos(a0)*4,0,Math.sin(a0)*4,Math.cos(a1)*4,0,Math.sin(a1)*4);c.push(0,.5,0,0,.5,0);}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c,3));
+  const l=new T.LineSegments(g,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));l.position.y=.05;scene.add(l);})();
+const mech={pos:V(0,0,0),kind:'mech',hull:100};
+// squad: green dots that the swarm goes for
+const SQ=4;const sqGeo=new T.BufferGeometry();const sqPos=new Float32Array(SQ*3),sqCol=new Float32Array(SQ*3),sqI=new Float32Array(SQ),sqS=new Float32Array(SQ).fill(.45),sqB=new Float32Array(SQ);
+sqGeo.setAttribute('position',new T.BufferAttribute(sqPos,3));sqGeo.setAttribute('aCol',new T.BufferAttribute(sqCol,3));sqGeo.setAttribute('aI',new T.BufferAttribute(sqI,1));
+sqGeo.setAttribute('aS',new T.BufferAttribute(sqS,1));sqGeo.setAttribute('aB',new T.BufferAttribute(sqB,1));
+const sqMat=RMD.Creatures.dotMaterial();const sqPts=new T.Points(sqGeo,sqMat);sqPts.frustumCulled=false;scene.add(sqPts);
+let squad=[];
+function resetSquad(){squad=[];for(let i=0;i<SQ;i++)squad.push({pos:V(7+i*1.3,0,5+(i%2)*1.2),home:V(7+i*1.3,0,5+(i%2)*1.2),kind:'ally',gone:false,turning:0,by:null,ph:Math.random()*6});}
+// tracers, arcs and the artillery marker: one line buffer (grid channel, bright)
+const MAXL=200;const lPos=new Float32Array(MAXL*6),lCol=new Float32Array(MAXL*6);const lGeo=new T.BufferGeometry();
+lGeo.setAttribute('position',new T.BufferAttribute(lPos,3).setUsage(T.DynamicDrawUsage));lGeo.setAttribute('color',new T.BufferAttribute(lCol,3).setUsage(T.DynamicDrawUsage));
+const lines=new T.LineSegments(lGeo,new T.LineBasicMaterial(Object.assign({vertexColors:true},ADD)));lines.frustumCulled=false;scene.add(lines);
+let fx=[];  // {a,b,life,max,col:[r,g,b]}
+function seg(a,b,life,col){fx.push({a:a.clone(),b:b.clone(),life,max:life,col:col||[.6,1.6,.5]});}
+function jag(a,b,life){const n=7;let p=a.clone();for(let i=1;i<=n;i++){const q=a.clone().lerp(b,i/n);if(i<n)q.add(V((Math.random()-.5)*1.6,(Math.random()-.5)*1.6,(Math.random()-.5)*1.6));seg(p,q,life,[.9,1.9,1.2]);p=q;}}
+
+// ---------------------------------------------------------------- waves
+const WAVES=[
+ {name:'KNOTS',line:'Contact. Small ones, ten dots each. Keep them off the squad.',spawn:[['knot',8]]},
+ {name:'KNOTS AND SKEINS',line:'Crawlers in with them. Watch the shore.',spawn:[['knot',6],['skein',4]]},
+ {name:'RUNNERS',line:'Fast movers. They go for whatever moves.',spawn:[['runner',5],['knot',6]]},
+ {name:'STALKERS',line:'Upright ones. They go for people first.',spawn:[['stalker',3],['runner',4]]},
+ {name:'A BRUTE',line:'That one’s bigger than you. Five hundred dots.',spawn:[['brute',1],['skein',6]]},
+ {name:'A DRAG',line:'Something heavy, hauling itself up the beach.',spawn:[['drag',1],['stalker',2]]},
+ {name:'A HULK',line:'Five thousand. Artillery’s yours, use it.',spawn:[['hulk',1],['runner',4]]},
+ {name:'THE BEHEMOTH',line:'Ten thousand dots. It’s been eating the wrecks all night.',spawn:[['behemoth',1],['knot',8]]},
+];
+let wave=0,waveT=0,cleared=false,clearT=0,kills=0;
+function startWave(i){wave=i;const W=WAVES[i%WAVES.length];resetSquad();cleared=false;waveT=0;
+  for(const [id,n] of W.spawn)for(let k=0;k<n;k++){const big=RMD.Creatures.RIG[id].size>8;const a=Math.PI+(Math.random()-.5)*Math.PI*.55;const r=(big?58:36)+Math.random()*10;
+    swarm.spawn(id,V(Math.sin(a)*r,0,Math.cos(a)*r),a+Math.PI);}
+  $('wv').textContent='WAVE '+(i+1);$('ws').textContent=W.name;say('<b>OVERWATCH</b> '+W.line,4);}
+let capT=0;function say(s,t){$('cap').innerHTML=s;capT=t||3;}
+
+// ---------------------------------------------------------------- input: tap or hold to fire, pinch to zoom
+let weapon='cannon',thermal=false,zoom=1,artReady=0,shells=[];
+const ptr=new Map();let pinch0=0,zoom0=1,fireAt=null,fireT=0;
+const ndc=new T.Vector2(),ray=new T.Raycaster();
+function rayFrom(x,y){ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(ndc,cam);return ray.ray;}
+function ground(r){const t=-r.origin.y/r.direction.y;return t>0?r.origin.clone().addScaledVector(r.direction,t):null;}
+const muzzle=V(0,4,0);
+function fire(x,y){const r=rayFrom(x,y);
+  if(weapon==='artillery'){if(simT<artReady)return;const g=ground(r);if(!g)return;artReady=simT+5;shells.push({p:g,t:1.3});say('<b>OVERWATCH</b> Shot out. Danger close.',1.6);return;}
+  const hit=swarm.pick(r.origin,r.direction);
+  if(weapon==='cannon'){if(hit){kills+=swarm.hit(hit.creature,hit.point,1.4,8);seg(muzzle,hit.point,.12);}else{const g=ground(r);if(g)seg(muzzle,g,.08,[.3,.7,.3]);}}
+  else if(weapon==='arc'){if(!hit)return;let c=hit.creature,p=hit.point;kills+=swarm.hit(c,p,1.9,12);jag(muzzle,p,.22);const done=new Set([c]);
+    for(let j=0;j<3;j++){let best=null,bd=16;for(const o of swarm.list){if(o.dead||done.has(o))continue;const d=Math.hypot(o.pos.x-c.pos.x,o.pos.z-c.pos.z);if(d<bd){bd=d;best=o;}}
+      if(!best)break;const q=swarm.center(best);kills+=swarm.hit(best,q,1.8,8);jag(p,q,.22);done.add(best);c=best;p=q;}}}
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptr.size===2){const [a,b]=[...ptr.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);zoom0=zoom;fireAt=null;return;}
+  fireAt={x:e.clientX,y:e.clientY};fire(e.clientX,e.clientY);fireT=.1;});
+cv.addEventListener('pointermove',e=>{const p=ptr.get(e.pointerId);if(!p)return;p.x=e.clientX;p.y=e.clientY;
+  if(ptr.size===2){const [a,b]=[...ptr.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)zoom=clamp(zoom0*pinch0/d,.5,2.2);}else if(fireAt){fireAt.x=e.clientX;fireAt.y=e.clientY;}});
+const up=e=>{ptr.delete(e.pointerId);pinch0=0;if(ptr.size===0)fireAt=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*Math.exp(e.deltaY*.001),.5,2.2);},{passive:false});
+function setW(w){weapon=w;['wCannon','wArc','wArt'].forEach(id=>$(id).classList.toggle('on',id==={cannon:'wCannon',arc:'wArc',artillery:'wArt'}[w]));}
+$('wCannon').onclick=()=>setW('cannon');$('wArc').onclick=()=>setW('arc');$('wArt').onclick=()=>setW('artillery');
+function setTh(on){thermal=on;swarm.setThermal(on);sqMat.uniforms.uSoft.value=on?1:0;sqMat.uniforms.uSizeMul.value=on?4:1;$('bSensor').classList.toggle('on',!on);$('bThermal').classList.toggle('on',on);}
+$('bSensor').onclick=()=>setTh(false);$('bThermal').onclick=()=>setTh(true);
+$('bNext').onclick=()=>{for(const c of swarm.list)c.dead=true;startWave(wave+1);};
+$('bRestart').onclick=()=>{for(const c of swarm.list)c.dead=true;mech.hull=100;kills=0;$('over').style.display='none';startWave(0);};
+
+// ---------------------------------------------------------------- loop
+function resize(){R.setSize(innerWidth,innerHeight,false);view.resize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();}
+addEventListener('resize',resize);resize();
+let simT=0,last=performance.now(),flash=0,shake=0;
+const auto=/auto/.test(location.hash);
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;simT+=dt;
+  // camera: high three-quarter over the Wraith; further back on a tall screen
+  const port=innerWidth<innerHeight;const d=(port?74:58)*zoom;
+  cam.position.set((Math.random()-.5)*shake,d*.8+(Math.random()-.5)*shake,d*.62);cam.lookAt(0,0,port?-12:-6);shake*=Math.exp(-dt*6);
+  const px=view.pxScale(cam);swarm.pxScale(px);sqMat.uniforms.uScale.value=px;grid.userData.sweep.rotation.y=-simT*.9;
+  // fire held
+  if(fireAt&&weapon==='cannon'){fireT-=dt;if(fireT<=0){fire(fireAt.x,fireAt.y);fireT=.09;}}
+  if(auto&&swarm.list.length){fireT-=dt;if(fireT<=0){let best=null,bd=1e9;for(const c of swarm.list){if(c.dead)continue;const dd=c.pos.length();if(dd<bd){bd=dd;best=c;}}
+    if(best){const q=swarm.center(best).project(cam);fire((q.x+1)/2*innerWidth,(1-q.y)/2*innerHeight);}fireT=.12;}}
+  // artillery shells
+  for(const s of shells){s.t-=dt;const r=1+s.t*5;for(let i=0;i<24;i++){const a0=i/24*6.283+simT,a1=(i+1)/24*6.283+simT;seg(V(s.p.x+Math.cos(a0)*r,.1,s.p.z+Math.sin(a0)*r),V(s.p.x+Math.cos(a1)*r,.1,s.p.z+Math.sin(a1)*r),.02,[1.2,.4,.1]);}
+    if(s.t<=0){kills+=swarm.blast(s.p,7,700);flash=.5;shake=3;for(let i=0;i<30;i++){const a=Math.random()*6.283;seg(s.p,V(s.p.x+Math.cos(a)*9,Math.random()*6,s.p.z+Math.sin(a)*9),.35,[1.6,.6,.2]);}}}
+  shells=shells.filter(s=>s.t>0);
+  // squad: idle, and the turning
+  const targets=[mech,...squad.filter(a=>!a.gone&&!a.turning)];
+  swarm.update(dt,simT,targets);
+  for(const c of swarm.list){if(!c.mauling||!c.target)continue;const tg=c.target;
+    if(tg.kind==='mech'){mech.hull-=dt*(2+Math.sqrt(c.count)*.35)*(c.state==='maul'?1:0);shake=Math.max(shake,.4);}
+    else if(tg.kind==='ally'&&!tg.turning){tg.turning=simT;tg.by=c;}}
+  let alive=0;squad.forEach((a,i)=>{const ph=simT*.8+a.ph;
+    if(a.turning){const f=(simT-a.turning)/1.2;if(f>=1&&!a.gone){a.gone=true;const c=a.by;const n=Math.max(1,Math.round(c.n0*.08));for(let k=0;k<n;k++)swarm.absorb(c,a.pos);say('<b>OVERWATCH</b> We lost one… their marker just turned red.',3);}}
+    else a.pos.set(a.home.x+Math.sin(ph)*.25,0,a.home.z+Math.cos(ph*.7)*.25);
+    if(!a.gone)alive++;
+    const fl=a.turning?(Math.sin((simT-a.turning)*(8+(simT-a.turning)*30))>0):false;
+    sqPos.set([a.pos.x,.9,a.pos.z],i*3);sqCol.set(a.gone?[0,0,0]:fl?[1,0,0]:[0,0,1],i*3);sqI[i]=a.gone?0:(thermal?.25:1.3);});
+  sqGeo.attributes.position.needsUpdate=sqGeo.attributes.aCol.needsUpdate=sqGeo.attributes.aI.needsUpdate=true;
+  // lines
+  let n=0;for(const f of fx){f.life-=dt;if(f.life<=0||n>=MAXL)continue;const k=f.life/f.max;lPos.set([f.a.x,f.a.y,f.a.z,f.b.x,f.b.y,f.b.z],n*6);
+    const c=f.col.map(v=>v*k);lCol.set([...c,...c],n*6);n++;}
+  fx=fx.filter(f=>f.life>0);lGeo.setDrawRange(0,n*2);lGeo.attributes.position.needsUpdate=lGeo.attributes.color.needsUpdate=true;
+  // waves
+  const dots=swarm.dots;
+  if(!cleared&&swarm.list.length===0&&simT>1){cleared=true;clearT=simT;say('<b>OVERWATCH</b> Wave '+(wave+1)+' clear. '+(alive===SQ?'Whole squad’s still with us.':alive+' of the squad made it.'),3);}
+  if(cleared&&simT-clearT>4)startWave(wave+1);
+  // the sensor near big ones: interference and dropped frames
+  let I=.03;for(const c of swarm.list){if(c.dead)continue;const dd=Math.hypot(c.pos.x,c.pos.z);I=Math.max(I,ss(16+c.rig.size*1.6,3+c.rig.size*.3,dd)*clamp(.2+c.n0/4000,.2,.72));}
+  I=clamp(I+flash*.5,0,1);flash*=Math.exp(-dt*5);
+  // HUD
+  $('cnt').textContent=dots.toLocaleString('en-US');$('kills').textContent=kills.toLocaleString('en-US');$('sq').textContent=alive+' / '+SQ;
+  const h=clamp(mech.hull,0,100);$('hull').style.width=h+'%';$('hb').classList.toggle('bad',h<35);
+  capT-=dt;if(capT<0)$('cap').innerHTML='';
+  if(mech.hull<=0&&$('over').style.display!=='flex'){$('over').style.display='flex';$('overT').textContent='Wraith down · wave '+(wave+1);}
+  const art=clamp((artReady-simT)/5,0,1);$('artCd').style.width=(art*100)+'%';
+  if(view.skip(now,ss(.55,1,I)*.6))return;
+  view.render(scene,cam,{thermal,interf:I,flash:flash*.5,exposure:1.3});
+}
+startWave(0);
+(function(){const h=location.hash;const m=h.match(/wave(\d+)/);if(m){for(const c of swarm.list)c.dead=true;startWave(+m[1]-1);}if(/thermal/.test(h))setTh(true);})();
+requestAnimationFrame(loop);
+</script></body></html>

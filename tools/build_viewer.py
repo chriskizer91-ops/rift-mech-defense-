@@ -1,9 +1,10 @@
-"""Build a concept page into one self-contained file (three.js inlined).
+"""Build a concept page into one self-contained file (three.js and any <!--INC:path--> modules inlined).
 
     python3 tools/build_viewer.py                      # concept/swarm-viewer.src.html -> builds/swarm-viewer.html
     python3 tools/build_viewer.py concept/x.src.html   # any page with a <!--THREE--> marker
 """
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -16,6 +17,10 @@ def build(src: pathlib.Path) -> pathlib.Path:
         raise SystemExit(f"{src}: no <!--THREE--> marker")
     lib = THREE.read_text(encoding="utf-8").replace("</script", "<\\/script")
     page = page.replace("<!--THREE-->", "<script>" + lib + "</script>", 1)
+    # <!--INC:game/creatures/creatures.js--> inlines a module from the repo
+    for m in re.findall(r"<!--INC:([^>]+?)-->", page):
+        code = (ROOT / m).read_text(encoding="utf-8").replace("</script", "<\\/script")
+        page = page.replace(f"<!--INC:{m}-->", f"<script>/* {m} */\n" + code + "</script>", 1)
     out = ROOT / "builds" / src.name.replace(".src.html", ".html")
     out.parent.mkdir(exist_ok=True)
     out.write_text(page, encoding="utf-8")
