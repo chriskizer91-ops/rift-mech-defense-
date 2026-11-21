@@ -81,7 +81,9 @@ def tagged(text):
 
 
 def write_html(sections, cast):
+    film = set(re.findall(r"id:'([A-Z0-9_]+)'", (STORY.parents[1] / 'game/cinematic/cin-main.js').read_text(encoding='utf-8')))
     lines = [it for s in sections for it in s['items'] if 'id' in it]
+    nfilm = sum(1 for it in lines if it['id'] in film)
     count = {}
     for it in lines:
         count[it['voice']] = count.get(it['voice'], 0) + 1
@@ -112,13 +114,15 @@ def write_html(sections, cast):
                 rows.append(f'<div class="dir">{esc(it["dir"])}</div>')
             else:
                 note = f'<div class="note">{esc(it["note"])}</div>' if it['note'] else ''
-                rows.append(f'''<div class="ln" data-voice="{it['voice']}"><div class="hd"><code>{it['id']}</code><b class="v-{it['voice']}">{esc(it['who'])}</b>
+                fm = it['id'] in film
+                rows.append(f'''<div class="ln{' film' if fm else ''}" data-voice="{it['voice']}" data-film="{1 if fm else 0}"><div class="hd"><code>{it['id']}</code><b class="v-{it['voice']}">{esc(it['who'])}</b>{'<span class="fb">FILM</span>' if fm else ''}
 <button class="cp" data-t="{esc(it['text'])}">Copy</button></div><div class="tx">{tagged(it['text'])}</div>{note}</div>''')
         rows.append('</div>')
 
     chips = ''.join(f'<button class="chip" data-f="{v}">{esc(lbl)} <span>{count.get(v, 0)}</span></button>'
                     for v, lbl in [('OW', 'OVERWATCH'), ('PILOT', 'Pilot'), ('ANVIL', 'ANVIL'), ('SQ1', 'Squad 1'),
                                    ('SQ2', 'Squad 2'), ('SQ3', 'Squad 3'), ('SQ4', 'Squad 4'), ('SQ5', 'Squad 5')])
+    chips = f'<button class="chip film" data-f="FILM">Film re-takes <span>{nfilm}</span></button>' + chips
     toc = ' · '.join(f'<a href="#{s["id"]}">{esc(s["title"])}</a>' for s in sections)
 
     page = f'''<!DOCTYPE html>
@@ -151,6 +155,8 @@ ol.steps{{padding-left:20px;margin:8px 0}}ol.steps li{{margin:6px 0}}
 .v-OW{{color:var(--green)}}.v-PILOT{{color:#8fd3ff}}.v-ANVIL{{color:var(--amber)}}
 .v-SQ1,.v-SQ2,.v-SQ3,.v-SQ4,.v-SQ5{{color:#c7e6d2}}
 .hide{{display:none}}.toc{{font-size:13px;color:var(--quiet)}}
+.fb{{font-size:10px;letter-spacing:.1em;color:#0b0f0d;background:var(--red);border-radius:4px;padding:1px 6px}}.ln.film{{border-left:3px solid var(--red);padding-left:8px}}
+.chip.film{{border-color:var(--red);color:#ffb3aa}}.panel.re{{border-color:#5a2420}}.panel.re h3{{color:var(--red)}}
 </style></head><body><main>
 <h1>Voice-acting sheet: chapter 1</h1>
 <p class="lead">Rift Mech Defense. {len(lines)} lines, 8 designed voices. Every line has an ID: name its audio file after it.</p>
@@ -167,6 +173,12 @@ ol.steps{{padding-left:20px;margin:8px 0}}ol.steps li{{margin:6px 0}}
 <li>If a tag gets spoken aloud, cut it in editing or try the take again.</li>
 <li>Squads are fresh each mission, so five squad voices cover all fourteen squads.</li></ul></div>
 
+<div class="panel re"><h3>Re-take the film's lines: calm takes don't fit a disaster</h3>
+<p>The {nfilm} lines the cinematic uses are marked <span class="fb">FILM</span>. Their tags are rewritten to be frightened, breathless and shouting (the words are the same, so captions and file names still match). Tap <b>Film re-takes</b> to see only those.</p>
+<ul class="meta"><li>Use <b>Eleven v3 or v4</b> with stability on <b>Creative</b>: the tags only bite there.</li><li>Generate 3 of each and keep the most frightened. Overwrite the old file (same name).</li>
+<li>Still record them dry. The cinematic's radio adds the speed-up, shake, stutters, dropouts and static, more for worse moments.</li>
+<li>The one calm line is C1_07 (the three clear seconds): awed and trembling, not panicked.</li></ul></div>
+
 <h2 id="cast">The voices<small>What each one sounds like</small></h2>
 {''.join(cards)}
 
@@ -180,7 +192,7 @@ document.addEventListener('click',e=>{{const b=e.target.closest('.cp');if(b){{co
  const ok=()=>{{b.classList.add('ok');b.textContent='Copied';setTimeout(()=>{{b.classList.remove('ok');b.textContent='Copy'}},1200)}};
  try{{navigator.clipboard.writeText(t).then(ok,()=>fall(t,ok))}}catch(_){{fall(t,ok)}}return}}
  const c=e.target.closest('.chip');if(c){{const f=c.dataset.f;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===c));
- document.querySelectorAll('.ln').forEach(l=>l.classList.toggle('hide',f!=='ALL'&&l.dataset.voice!==f));
+ document.querySelectorAll('.ln').forEach(l=>l.classList.toggle('hide',f==='FILM'?l.dataset.film!=='1':(f!=='ALL'&&l.dataset.voice!==f)));
  document.querySelectorAll('.dir').forEach(d=>d.classList.toggle('hide',f!=='ALL'));}}}});
 function fall(t,ok){{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{{document.execCommand('copy');ok()}}catch(_){{}}a.remove()}}
 </script></body></html>'''

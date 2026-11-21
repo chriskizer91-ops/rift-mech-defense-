@@ -28,9 +28,9 @@ OVERWATCH: It's eating. The count's going up.
 OVERWATCH: [exhales] Board's clear. Breathe.
 OVERWATCH: [nervous] Okay. Okay. We can do this.
 OVERWATCH: [softly] I hear you.  // reply to a PING, now and then
-ANVIL: ANVIL, guns up. Give me a mark.
-ANVIL: Shot, over. Twenty seconds. Don't stand there.
-ANVIL: Splash.
+ANVIL: [gruff, urgent] ANVIL, guns up. Give me a mark.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+ANVIL: [shouting] Shot, over! Twenty seconds! Don't stand there!  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+ANVIL: [fierce] Splash.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 ANVIL: That's a hole in the ground now. Rift's closed.
 ANVIL: That's the last of them. You're on your own, son.
 LANTERN: Painting it. Send it!  // squad marks a target; generate once per squad voice
@@ -39,9 +39,9 @@ PIKE: Painting it. Send it!
 REED: Painting it. Send it.
 
 ## PING | The pilot's PING answers | the radio button; the game picks one
-PILOT: Copy.
+PILOT: [tense, quiet] Copy.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 PILOT: Still here.
-PILOT: On it.
+PILOT: [urgent] On it.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 PILOT: Moving.
 PILOT: Heard you.
 PILOT: We're okay.
@@ -175,40 +175,40 @@ OVERWATCH: It's down. [beat] Wraith, I've been counting dots my whole life. That
 OVERWATCH: They're giving your jets a long hover. Somebody knows what's next. [quietly] I wish they'd tell me.  // salvage
 
 ## M8 | The Signal | Arlen Bay, night
-OVERWATCH: Arlen Bay. Every contact on the coast is moving that way.
-HARROW: Harrow, harbour wall.
-MILLER: Miller, slipway.
-WREN: [quietly] Wren, lighthouse. It's very quiet out there.
+OVERWATCH: [tense, low] Arlen Bay. [sharp breath] Every contact on the coast is moving that way.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+HARROW: [nervous, out of breath] Harrow, harbour wall.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+MILLER: [nervous, fast] Miller, slipway.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+WREN: [whispering, scared] Wren, lighthouse. [shaky breath] It's very quiet out there.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 
 ## C1 | The reveal (cinematic, 56 s) | Arlen Bay, night
 > 0:00 Low behind the Wraith on the harbour wall. Wind, water, servos.
-OVERWATCH: New contact. Bearing zero-four-one, range two point four.
+OVERWATCH: [tense, fast] New contact. Bearing zero-four-one, range two point four.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:05 Over the shoulder into the sensor feed. The count climbs.
-OVERWATCH: Count is climbing... forty thousand... two hundred thousand...  // let the numbers rise in pitch
+OVERWATCH: [rising panic, fast] Count is climbing... forty thousand... [voice cracking] two hundred thousand...  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened. let the numbers rise in pitch
 > 0:12 High aerial over the bay. Red pours up from four points.
-OVERWATCH: [awed] That's more than I've ever seen on one screen.
+OVERWATCH: [frightened, breathless] That's more than I've ever seen on one screen.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:18 The picture fails: static, tearing, held frames.
-OVERWATCH: [strained] Sensor's choking. It can't resolve them.
+OVERWATCH: [panicked, shouting over static] Sensor's choking! It can't resolve them!  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:25 Stutter cuts. The dots move together.
-OVERWATCH: Wait. They're not moving like a swarm.
+OVERWATCH: [frantic] Wait. [gasps] They're not moving like a swarm.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:31 Hard cut. Everything still. One shape rises.
-OVERWATCH: [quietly] It's one mass.
+OVERWATCH: [terrified whisper] It's one mass.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:36 Three seconds perfectly clear.
-OVERWATCH: [whispers] Wraith. It's coming through clear. Nothing's ever come through clear.
+OVERWATCH: [whispers, awed, voice trembling] Wraith. It's coming through clear. Nothing's ever come through clear.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:42 The ridge: ANVIL's guns, a young crew lit red.
-ANVIL: OVERWATCH, ANVIL. What am I looking at?
+ANVIL: [shaken, trying to stay calm] OVERWATCH, ANVIL. What am I looking at?  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:47 The mass turns toward the harbour.
-OVERWATCH: [softly, certain] The Signal.
+OVERWATCH: [barely a whisper, terrified] The Signal.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 > 0:52 It rears and slams. The camera swoops back into the game.
-PILOT: [low] Here it comes.
+PILOT: [grim, breathing hard] Here it comes.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
 
 ## M8F | The Signal fight | phases 1 to 4
-OVERWATCH: Four rifts feeding it. Close them and it gets smaller.
-ANVIL: Four holes. All my shells. Mark them.
-OVERWATCH: A hundred thousand, gone.  // each sealed rift
+OVERWATCH: [urgent, fast] Four rifts feeding it. Close them and it gets smaller.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+ANVIL: [grim, shouting over wind] Four holes. All my shells. Mark them.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+OVERWATCH: [breathless, relieved, almost laughing] A hundred thousand, gone.  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened. each sealed rift
 OVERWATCH: The last one's across the channel. Long hover.
-OVERWATCH: It's coming ashore. And it's changing.
-OVERWATCH: It's standing up. Stay low, stay out of the air.  // risen
+OVERWATCH: [panicked, fast] It's coming ashore. And it's changing!  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.
+OVERWATCH: [screaming, terrified] It's standing up! Stay low, stay out of the air!  // FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened. risen
 OVERWATCH: It's spreading out. The arms are crawling for the squads.  // spread
 OVERWATCH: Hunched. The core's in the hump. Thermal, now.  // hunched
 WREN: [scared] Something's coming up the lighthouse steps.

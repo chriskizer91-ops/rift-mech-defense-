@@ -28,26 +28,60 @@ const pan=(ctx,x,dest)=>{const p=ctx.createStereoPanner?ctx.createStereoPanner()
 const env=(g,when,a,peak,d,end)=>{g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(peak,when+a);g.gain.exponentialRampToValueAtTime(Math.max(1e-4,end||1e-4),when+a+d);};
 
 /* ---------- the radio ---------- */
+/* play(buffer, when, {strain, panic}): panic (0..1) is how bad the moment is, and the clean, calm take is pushed that far:
+     faster (and so a little higher), shaking (pitch and level wobble), a narrower, dirtier band, crackle and dropouts,
+     and stutters, where the transmission breaks and repeats a fragment before it carries on: "it can't, can't, can't..."
+   panic 0 is a clean radio (the three clear seconds). Returns how long the line now runs (s). */
 RMD.RadioVoice=function(ctx,out){const white=noiseBuf(ctx,3,false);
-  const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=320;hp.Q.value=.8;
-  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3300;lp.Q.value=1.1;
-  const pk=ctx.createBiquadFilter();pk.type='peaking';pk.frequency.value=1800;pk.gain.value=5;pk.Q.value=1;
-  const dr=drive(ctx,2.2),comp=ctx.createDynamicsCompressor();comp.threshold.value=-24;comp.ratio.value=6;comp.attack.value=.003;comp.release.value=.12;
-  const gate=ctx.createGain(),mk=ctx.createGain();mk.gain.value=1.0;hp.connect(lp);lp.connect(pk);pk.connect(dr);dr.connect(comp);comp.connect(mk);mk.connect(gate);gate.connect(out);
-  const hiss=loopNoise(ctx,white),hf=ctx.createBiquadFilter();hf.type='bandpass';hf.frequency.value=4200;hf.Q.value=.6;const hg=ctx.createGain();hg.gain.value=0;
-  hiss.connect(hf);hf.connect(hg);hg.connect(out);
+  /* static and crackle go through the same narrow band as the voice: it is all one radio */
+  const nb=ctx.createBiquadFilter();nb.type='bandpass';nb.frequency.value=2200;nb.Q.value=.9;const nl=ctx.createBiquadFilter();nl.type='lowpass';nl.frequency.value=4200;nb.connect(nl);nl.connect(out);
+  const hiss=loopNoise(ctx,white),hg=ctx.createGain();hg.gain.value=0;hiss.connect(hg);hg.connect(nb);
+  const crk=noiseBuf(ctx,1,false);
   function click(when,k){const s=ctx.createBufferSource();s.buffer=white;const g=ctx.createGain(),f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=1500;
     s.connect(f);f.connect(g);g.connect(out);g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.2*k,when+.004);g.gain.exponentialRampToValueAtTime(.001,when+.09);s.start(when,Math.random()*2,.12);
     const o=ctx.createOscillator();o.type='sine';o.frequency.value=k>.9?1350:1050;const og=ctx.createGain();o.connect(og);og.connect(out);env(og,when+.01,.004,.035*k,.07);o.start(when);o.stop(when+.12);}
-  return {input:hp,
-    play(buf,when,o){o=o||{};const st=o.strain||0,d=buf.duration;const s=ctx.createBufferSource();s.buffer=buf;s.connect(hp);
-      click(when+.35,1);click(when+d-.35,.7);
-      hg.gain.setValueAtTime(0,when+.3);hg.gain.linearRampToValueAtTime(.022+st*.05,when+.38);hg.gain.setValueAtTime(.022+st*.05,when+d-.4);hg.gain.linearRampToValueAtTime(0,when+d-.25);
-      gate.gain.setValueAtTime(1,when);
-      for(let t=when+.75;t<when+d-.6;t+=.18+Math.random()*.5){if(Math.random()>st*.55)continue;const l=.03+Math.random()*.09;
-        gate.gain.setValueAtTime(1,t);gate.gain.linearRampToValueAtTime(.12,t+.01);gate.gain.setValueAtTime(.12,t+l);gate.gain.linearRampToValueAtTime(1,t+l+.015);
-        hg.gain.setValueAtTime(.022+st*.05,t);hg.gain.linearRampToValueAtTime(.18*st,t+.01);hg.gain.linearRampToValueAtTime(.022+st*.05,t+l+.03);}
-      s.start(when);return s;}};};
+  function crackle(t0,t1,dens,k){for(let t=t0;t<t1;t+=-Math.log(1-Math.random())/dens){const s=ctx.createBufferSource();s.buffer=crk;const g=ctx.createGain();
+    s.connect(g);g.connect(nb);const l=.002+Math.random()*.006;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(k*(.3+Math.random()),t+.001);g.gain.linearRampToValueAtTime(0,t+l);s.start(t,Math.random()*.9,l+.01);}}
+  /* one chain per line, so each line can be as broken as its moment */
+  function chain(p,when,dur){const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=320+380*p;hp.Q.value=.8+.6*p;
+    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3300-1100*p;lp.Q.value=1.1+1.4*p;
+    const pk=ctx.createBiquadFilter();pk.type='peaking';pk.frequency.value=1700+300*p;pk.gain.value=5+5*p;pk.Q.value=1.2;
+    const pre=ctx.createGain();pre.gain.value=1+1.4*p;const dr=drive(ctx,2+3.5*p);
+    const comp=ctx.createDynamicsCompressor();comp.threshold.value=-26-6*p;comp.ratio.value=6+8*p;comp.attack.value=.002;comp.release.value=.08;
+    const trem=ctx.createGain();trem.gain.value=1;const gate=ctx.createGain();const mk=ctx.createGain();mk.gain.value=.75-.2*p;
+    /* drive first, then band-limit, so the distortion stays inside the radio's band */
+    const lp2=ctx.createBiquadFilter();lp2.type='lowpass';lp2.frequency.value=3400-1000*p;lp2.Q.value=.7;
+    hp.connect(pk);pk.connect(pre);pre.connect(dr);dr.connect(lp);lp.connect(lp2);lp2.connect(comp);comp.connect(trem);trem.connect(gate);gate.connect(mk);mk.connect(out);
+    /* the shake in the level: fast, uneven */
+    if(p>.05){const a=ctx.createOscillator();a.frequency.value=7.3+2*p;const ag=ctx.createGain();ag.gain.value=.22*p;a.connect(ag);ag.connect(trem.gain);
+      const b=ctx.createOscillator();b.type='triangle';b.frequency.value=11.1;const bg=ctx.createGain();bg.gain.value=.09*p;b.connect(bg);bg.connect(trem.gain);
+      a.start(when);b.start(when);a.stop(when+dur+1);b.stop(when+dur+1);}
+    return {input:hp,gate};}
+  /* the wobble in the pitch, on every piece of the take */
+  function shake(src,p,when,dur){if(p<=.05)return;const v=ctx.createOscillator();v.frequency.value=6.2+2.5*p;const vg=ctx.createGain();vg.gain.value=14+42*p;v.connect(vg);vg.connect(src.detune);
+    const w=ctx.createOscillator();w.type='triangle';w.frequency.value=1.7;const wg=ctx.createGain();wg.gain.value=25*p;w.connect(wg);wg.connect(src.detune);
+    v.start(when);w.start(when);v.stop(when+dur+.5);w.stop(when+dur+.5);}
+  return {
+    play(buf,when,o){o=o||{};const p=Math.max(0,Math.min(1,o.panic!=null?o.panic:(o.strain||0)));const st=Math.max(o.strain||0,p*.85);
+      const rate=1+.13*p;const d=buf.duration;
+      /* where the transmission breaks: up to three stutters inside the words (each take has ~0.5 s of silence at each end) */
+      const cuts=[];const nCut=p<.3?0:Math.round(p*3*Math.random()+p);
+      for(let i=0;i<nCut;i++){const at=.75+Math.random()*Math.max(.1,d-1.6);if(cuts.every(c=>Math.abs(c.at-at)>.5))cuts.push({at,len:.06+Math.random()*.07,n:2+Math.floor(Math.random()*2.2)});}
+      cuts.sort((a,b)=>a.at-b.at);
+      const extra=cuts.reduce((s,c)=>s+(c.n-1)*c.len,0),dur=(d+extra)/rate;
+      const C=chain(p,when,dur);
+      let off=0,tt=when;const piece=(from,len)=>{const s=ctx.createBufferSource();s.buffer=buf;s.playbackRate.value=rate;s.connect(C.input);shake(s,p,tt,len/rate);s.start(tt,from,len);tt+=len/rate;};
+      for(const c of cuts){piece(off,c.at-off);for(let k=0;k<c.n;k++){const g0=tt;piece(c.at,c.len);if(k<c.n-1){C.gate.gain.setValueAtTime(1,g0+c.len/rate-.004);C.gate.gain.linearRampToValueAtTime(.35,g0+c.len/rate);C.gate.gain.linearRampToValueAtTime(1,g0+c.len/rate+.01);}}
+        hg.gain.setValueAtTime(.06+.08*p,tt-.05);off=c.at+c.len;}
+      piece(off,d-off);
+      click(when+.35/rate,1);click(when+dur-.35/rate,.7);
+      const bed=.03+st*.04+p*.05;hg.gain.setValueAtTime(0,when+.3/rate);hg.gain.linearRampToValueAtTime(bed,when+.38/rate);hg.gain.setValueAtTime(bed,when+dur-.4/rate);hg.gain.linearRampToValueAtTime(0,when+dur-.25/rate);
+      C.gate.gain.setValueAtTime(1,when);
+      for(let t=when+.75;t<when+dur-.6;t+=.16+Math.random()*.45){if(Math.random()>st*.6)continue;const l=.025+Math.random()*(.06+.08*p);
+        C.gate.gain.setValueAtTime(1,t);C.gate.gain.linearRampToValueAtTime(.08,t+.008);C.gate.gain.setValueAtTime(.08,t+l);C.gate.gain.linearRampToValueAtTime(1,t+l+.012);
+        hg.gain.setValueAtTime(bed,t);hg.gain.linearRampToValueAtTime(.14+.16*st,t+.008);hg.gain.linearRampToValueAtTime(bed,t+l+.03);}
+      if(p>.1)crackle(when+.3,when+dur-.2,4+22*p,.05+.1*p);
+      return dur;}};};
 
 /* ---------- the score ---------- */
 RMD.Score=function(ctx){const S={},master=ctx.createGain();master.gain.value=.5;

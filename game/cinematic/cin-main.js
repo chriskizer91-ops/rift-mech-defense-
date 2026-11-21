@@ -59,30 +59,30 @@ const teamP=TEAM.build(scene,[]).then(tm=>{for(const M of tm.list)M.root.travers
 
 /* ---------------------------------------------------------------- the lines: file starts (each take has ~0.5 s of silence first), and how long the words run */
 const LINES=[
- {id:'M8_01_OW',t:3.6,w:3.6,who:'OVERWATCH',s:.05,tx:'Arlen Bay. Every contact on the coast is moving that way.'},
- {id:'M8_02_HARROW',t:12.2,w:1.7,who:'HARROW',s:.1,tx:'Harrow, harbour wall.'},
- {id:'M8_03_MILLER',t:15.6,w:1.4,who:'MILLER',s:.1,tx:'Miller, slipway.'},
- {id:'M8_04_WREN',t:20.2,w:3.5,who:'WREN',s:.1,tx:'Wren, lighthouse. It’s very quiet out there.'},
- {id:'GEN_07_ANVIL',t:25.2,w:2.4,who:'ANVIL',s:.05,tx:'ANVIL, guns up. Give me a mark.'},
- {id:'PING_01_PILOT',t:28.4,w:.6,who:'WRAITH',s:0,tx:'Copy.'},
- {id:'C1_01_OW',t:38.4,w:4.3,who:'OVERWATCH',s:.1,tx:'New contact. Bearing zero-four-one, range two point four.'},
- {id:'C1_02_OW',t:44.8,w:4.4,who:'OVERWATCH',s:.15,tx:'Count is climbing… forty thousand… two hundred thousand…'},
- {id:'C1_03_OW',t:53.4,w:2.9,who:'OVERWATCH',s:.25,tx:'That’s more than I’ve ever seen on one screen.'},
- {id:'C1_04_OW',t:60.3,w:3.1,who:'OVERWATCH',s:.55,tx:'Sensor’s choking. It can’t resolve them.'},
- {id:'C1_05_OW',t:68.3,w:2.6,who:'OVERWATCH',s:.7,tx:'Wait. They’re not moving like a swarm.'},
- {id:'C1_06_OW',t:75.6,w:1.1,who:'OVERWATCH',s:.15,tx:'It’s one mass.'},
- {id:'C1_07_OW',t:80.9,w:4.5,who:'OVERWATCH',s:0,tx:'Wraith. It’s coming through clear. Nothing’s ever come through clear.'},
- {id:'C1_08_ANVIL',t:88.1,w:3.1,who:'ANVIL',s:.15,tx:'OVERWATCH, ANVIL. What am I looking at?'},
- {id:'C1_09_OW',t:94.9,w:.8,who:'OVERWATCH',s:.05,tx:'The Signal.'},
- {id:'M8F_01_OW',t:100.1,w:3.6,who:'OVERWATCH',s:.15,tx:'Four rifts feeding it. Close them and it gets smaller.'},
- {id:'M8F_02_ANVIL',t:106.9,w:3.1,who:'ANVIL',s:.05,tx:'Four holes. All my shells. Mark them.'},
- {id:'PING_03_PILOT',t:110.3,w:.6,who:'WRAITH',s:0,tx:'On it.'},
- {id:'GEN_08_ANVIL',t:111.8,w:2.6,who:'ANVIL',s:.05,tx:'Shot, over. Twenty seconds. Don’t stand there.'},
- {id:'GEN_09_ANVIL',t:121.6,w:.8,who:'ANVIL',s:.05,tx:'Splash.'},
- {id:'M8F_03_OW',t:123.6,w:2.3,who:'OVERWATCH',s:.1,tx:'A hundred thousand, gone.'},
- {id:'M8F_05_OW',t:130.0,w:2.8,who:'OVERWATCH',s:.3,tx:'It’s coming ashore. And it’s changing.'},
- {id:'M8F_06_OW',t:134.3,w:3.4,who:'OVERWATCH',s:.35,tx:'It’s standing up. Stay low, stay out of the air.'},
- {id:'C1_10_PILOT',t:144.0,w:1.1,who:'WRAITH',s:.1,tx:'Here it comes.'}];
+ {id:'M8_01_OW',t:3.6,w:3.6,who:'OVERWATCH',s:.05,p:0.15,tx:'Arlen Bay. Every contact on the coast is moving that way.'},
+ {id:'M8_02_HARROW',t:12.2,w:1.7,who:'HARROW',s:.1,p:0.2,tx:'Harrow, harbour wall.'},
+ {id:'M8_03_MILLER',t:15.6,w:1.4,who:'MILLER',s:.1,p:0.2,tx:'Miller, slipway.'},
+ {id:'M8_04_WREN',t:20.2,w:3.5,who:'WREN',s:.1,p:0.3,tx:'Wren, lighthouse. It’s very quiet out there.'},
+ {id:'GEN_07_ANVIL',t:25.2,w:2.4,who:'ANVIL',s:.05,p:0.15,tx:'ANVIL, guns up. Give me a mark.'},
+ {id:'PING_01_PILOT',t:28.4,w:.6,who:'WRAITH',s:0,p:0.15,tx:'Copy.'},
+ {id:'C1_01_OW',t:38.4,w:4.3,who:'OVERWATCH',s:.1,p:0.3,tx:'New contact. Bearing zero-four-one, range two point four.'},
+ {id:'C1_02_OW',t:44.8,w:4.4,who:'OVERWATCH',s:.15,p:0.55,tx:'Count is climbing… forty thousand… two hundred thousand…'},
+ {id:'C1_03_OW',t:53.4,w:2.9,who:'OVERWATCH',s:.25,p:0.65,tx:'That’s more than I’ve ever seen on one screen.'},
+ {id:'C1_04_OW',t:60.3,w:3.1,who:'OVERWATCH',s:.55,p:0.9,tx:'Sensor’s choking. It can’t resolve them.'},
+ {id:'C1_05_OW',t:68.3,w:2.6,who:'OVERWATCH',s:.7,p:0.95,tx:'Wait. They’re not moving like a swarm.'},
+ {id:'C1_06_OW',t:75.6,w:1.1,who:'OVERWATCH',s:.15,p:0.35,tx:'It’s one mass.'},
+ {id:'C1_07_OW',t:80.9,w:4.5,who:'OVERWATCH',s:0,p:0,tx:'Wraith. It’s coming through clear. Nothing’s ever come through clear.'},
+ {id:'C1_08_ANVIL',t:88.1,w:3.1,who:'ANVIL',s:.15,p:0.45,tx:'OVERWATCH, ANVIL. What am I looking at?'},
+ {id:'C1_09_OW',t:94.9,w:.8,who:'OVERWATCH',s:.05,p:0.25,tx:'The Signal.'},
+ {id:'M8F_01_OW',t:100.1,w:3.6,who:'OVERWATCH',s:.15,p:0.6,tx:'Four rifts feeding it. Close them and it gets smaller.'},
+ {id:'M8F_02_ANVIL',t:106.9,w:3.1,who:'ANVIL',s:.05,p:0.45,tx:'Four holes. All my shells. Mark them.'},
+ {id:'PING_03_PILOT',t:110.3,w:.6,who:'WRAITH',s:0,p:0.4,tx:'On it.'},
+ {id:'GEN_08_ANVIL',t:111.8,w:2.6,who:'ANVIL',s:.05,p:0.55,tx:'Shot, over. Twenty seconds. Don’t stand there.'},
+ {id:'GEN_09_ANVIL',t:121.6,w:.8,who:'ANVIL',s:.05,p:0.5,tx:'Splash.'},
+ {id:'M8F_03_OW',t:123.6,w:2.3,who:'OVERWATCH',s:.1,p:0.45,tx:'A hundred thousand, gone.'},
+ {id:'M8F_05_OW',t:130.0,w:2.8,who:'OVERWATCH',s:.3,p:0.85,tx:'It’s coming ashore. And it’s changing.'},
+ {id:'M8F_06_OW',t:134.3,w:3.4,who:'OVERWATCH',s:.35,p:1,tx:'It’s standing up. Stay low, stay out of the air.'},
+ {id:'C1_10_PILOT',t:144.0,w:1.1,who:'WRAITH',s:.1,p:0.75,tx:'Here it comes.'}];
 
 /* ---------------------------------------------------------------- the team's walk along the wall (act 1) */
 const WALK0=8.5,WALKD=52,WALKT=22;
@@ -244,8 +244,8 @@ function cue(){const A=t=>t0+t,P=score.params,S=score;
     if(q===0&&b>=8)S.stab(A(tb),.35+.1*bar);}
   S.riser(A(138.2),4.9);S.roar(A(142.3),4.2);S.hit(A(143.2),1.2);S.note(A(143.2),6.2);
   /* the radio: every line, the music dipping under it */
-  const ps=[],c=ctx,rd=radio;for(const L of LINES){S.duck(A(L.t+.4),A(L.t+.5+L.w),.55);const b=VOICE[L.id];if(!b)continue;
-    ps.push(Promise.resolve(b).then(b64buf).then(a=>c.decodeAudioData(a)).then(buf=>rd.play(buf,A(L.t),{strain:L.s})).catch(e=>console.warn('voice',L.id,e)));}
+  const ps=[],c=ctx,rd=radio;for(const L of LINES){S.duck(A(L.t+.4),A(L.t+.5+L.w),.55-.3*(L.p||0));const b=VOICE[L.id];if(!b)continue;
+    ps.push(Promise.resolve(b).then(b64buf).then(a=>c.decodeAudioData(a)).then(buf=>rd.play(buf,A(L.t),{strain:L.s,panic:L.p})).catch(e=>console.warn('voice',L.id,e)));}
   return ps;}
 /* render the whole soundtrack offline (for checking the mix, and for a preview file) */
 window.CIN_AUDIO=async function(){const off=new OfflineAudioContext(2,Math.ceil(44100*DUR),44100);const sv=[ctx,score,radio,t0];

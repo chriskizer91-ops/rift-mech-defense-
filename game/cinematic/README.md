@@ -35,10 +35,17 @@ file starts with about 0.5 s of silence). The build inlines the ones `LINES` nam
 Three buses (music, effects, voices) into a glue compressor, a brick-wall limiter and a soft clip. The music and effects
 duck under every line. Checked offline: no clipping, peaks at 0.85, quiet arrival and reveal, loudest in the drums before the slam.
 
-## The radio (static on the voices, decided)
-`RMD.RadioVoice(ctx, out)` in `cin-audio.js` puts a clean take on the radio: 300 Hz to 3.3 kHz, a little drive, squelch
-clicks, a hiss bed, and with `strain` (0 to 1) dropouts and bursts of static. `radio.play(buffer, when, {strain})`. The game
-can use the same chain for every radio line.
+## The radio (static on the voices, decided): distress, not calm
+`RMD.RadioVoice(ctx, out)` in `cin-audio.js` puts a clean take on a failing radio. `radio.play(buffer, when, {panic})` returns
+how long the line now runs. `panic` (0 to 1, set per line in `LINES`) is how bad the moment is:
+- faster by up to 13% (so a little higher), with the pitch and the level shaking (6 to 11 Hz)
+- driven harder, then band-limited (about 700 Hz to 2.3 kHz at full panic); static and crackle in the same band
+- dropouts, bursts of static, and stutters: the take is cut and a fragment repeats 2 or 3 times before it carries on
+- the music ducks less under panicked lines, so the voice fights the noise
+
+Panic 0 is a clean radio: C1_07, the three clear seconds. Christopher found the calm takes wrong for the film (21 Nov), so
+the 24 film lines also have frightened re-take directions on the voice sheet (filter: Film re-takes); new takes with the
+same names drop straight in.
 
 ## Files
 | File | What it does |

@@ -30,9 +30,9 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
 - `GEN_04_OW` **OVERWATCH:** "Board's clear. Breathe."
 - `GEN_05_OW` **OVERWATCH:** "Okay. Okay. We can do this."
 - `GEN_06_OW` **OVERWATCH:** "I hear you."  (reply to a PING, now and then)
-- `GEN_07_ANVIL` **ANVIL:** "ANVIL, guns up. Give me a mark."
-- `GEN_08_ANVIL` **ANVIL:** "Shot, over. Twenty seconds. Don't stand there."
-- `GEN_09_ANVIL` **ANVIL:** "Splash."
+- `GEN_07_ANVIL` **ANVIL:** "ANVIL, guns up. Give me a mark."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `GEN_08_ANVIL` **ANVIL:** "Shot, over! Twenty seconds! Don't stand there!"  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `GEN_09_ANVIL` **ANVIL:** "Splash."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - `GEN_10_ANVIL` **ANVIL:** "That's a hole in the ground now. Rift's closed."
 - `GEN_11_ANVIL` **ANVIL:** "That's the last of them. You're on your own, son."
 - `GEN_12_LANTERN` **LANTERN:** "Painting it. Send it!"  (squad marks a target; generate once per squad voice)
@@ -43,9 +43,9 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
 ## The pilot's PING answers
 *the radio button; the game picks one*
 
-- `PING_01_PILOT` **PILOT:** "Copy."
+- `PING_01_PILOT` **PILOT:** "Copy."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - `PING_02_PILOT` **PILOT:** "Still here."
-- `PING_03_PILOT` **PILOT:** "On it."
+- `PING_03_PILOT` **PILOT:** "On it."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - `PING_04_PILOT` **PILOT:** "Moving."
 - `PING_05_PILOT` **PILOT:** "Heard you."
 - `PING_06_PILOT` **PILOT:** "We're okay."
@@ -195,44 +195,44 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
 ## The Signal
 *Arlen Bay, night*
 
-- `M8_01_OW` **OVERWATCH:** "Arlen Bay. Every contact on the coast is moving that way."
-- `M8_02_HARROW` **HARROW:** "Harrow, harbour wall."
-- `M8_03_MILLER` **MILLER:** "Miller, slipway."
-- `M8_04_WREN` **WREN:** "Wren, lighthouse. It's very quiet out there."
+- `M8_01_OW` **OVERWATCH:** "Arlen Bay. Every contact on the coast is moving that way."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `M8_02_HARROW` **HARROW:** "Harrow, harbour wall."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `M8_03_MILLER` **MILLER:** "Miller, slipway."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `M8_04_WREN` **WREN:** "Wren, lighthouse. It's very quiet out there."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 
 ## The reveal (cinematic, 56 s)
 *Arlen Bay, night*
 
 - *0:00 Low behind the Wraith on the harbour wall. Wind, water, servos.*
-- `C1_01_OW` **OVERWATCH:** "New contact. Bearing zero-four-one, range two point four."
+- `C1_01_OW` **OVERWATCH:** "New contact. Bearing zero-four-one, range two point four."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:05 Over the shoulder into the sensor feed. The count climbs.*
-- `C1_02_OW` **OVERWATCH:** "Count is climbing... forty thousand... two hundred thousand..."  (let the numbers rise in pitch)
+- `C1_02_OW` **OVERWATCH:** "Count is climbing... forty thousand... two hundred thousand..."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened. let the numbers rise in pitch)
 - *0:12 High aerial over the bay. Red pours up from four points.*
-- `C1_03_OW` **OVERWATCH:** "That's more than I've ever seen on one screen."
+- `C1_03_OW` **OVERWATCH:** "That's more than I've ever seen on one screen."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:18 The picture fails: static, tearing, held frames.*
-- `C1_04_OW` **OVERWATCH:** "Sensor's choking. It can't resolve them."
+- `C1_04_OW` **OVERWATCH:** "Sensor's choking! It can't resolve them!"  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:25 Stutter cuts. The dots move together.*
-- `C1_05_OW` **OVERWATCH:** "Wait. They're not moving like a swarm."
+- `C1_05_OW` **OVERWATCH:** "Wait. They're not moving like a swarm."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:31 Hard cut. Everything still. One shape rises.*
-- `C1_06_OW` **OVERWATCH:** "It's one mass."
+- `C1_06_OW` **OVERWATCH:** "It's one mass."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:36 Three seconds perfectly clear.*
-- `C1_07_OW` **OVERWATCH:** "Wraith. It's coming through clear. Nothing's ever come through clear."
+- `C1_07_OW` **OVERWATCH:** "Wraith. It's coming through clear. Nothing's ever come through clear."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:42 The ridge: ANVIL's guns, a young crew lit red.*
-- `C1_08_ANVIL` **ANVIL:** "OVERWATCH, ANVIL. What am I looking at?"
+- `C1_08_ANVIL` **ANVIL:** "OVERWATCH, ANVIL. What am I looking at?"  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:47 The mass turns toward the harbour.*
-- `C1_09_OW` **OVERWATCH:** "The Signal."
+- `C1_09_OW` **OVERWATCH:** "The Signal."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 - *0:52 It rears and slams. The camera swoops back into the game.*
-- `C1_10_PILOT` **PILOT:** "Here it comes."
+- `C1_10_PILOT` **PILOT:** "Here it comes."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
 
 ## The Signal fight
 *phases 1 to 4*
 
-- `M8F_01_OW` **OVERWATCH:** "Four rifts feeding it. Close them and it gets smaller."
-- `M8F_02_ANVIL` **ANVIL:** "Four holes. All my shells. Mark them."
-- `M8F_03_OW` **OVERWATCH:** "A hundred thousand, gone."  (each sealed rift)
+- `M8F_01_OW` **OVERWATCH:** "Four rifts feeding it. Close them and it gets smaller."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `M8F_02_ANVIL` **ANVIL:** "Four holes. All my shells. Mark them."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `M8F_03_OW` **OVERWATCH:** "A hundred thousand, gone."  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened. each sealed rift)
 - `M8F_04_OW` **OVERWATCH:** "The last one's across the channel. Long hover."
-- `M8F_05_OW` **OVERWATCH:** "It's coming ashore. And it's changing."
-- `M8F_06_OW` **OVERWATCH:** "It's standing up. Stay low, stay out of the air."  (risen)
+- `M8F_05_OW` **OVERWATCH:** "It's coming ashore. And it's changing!"  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened.)
+- `M8F_06_OW` **OVERWATCH:** "It's standing up! Stay low, stay out of the air!"  (FILM RE-TAKE: generate 3 on Creative stability, keep the most frightened. risen)
 - `M8F_07_OW` **OVERWATCH:** "It's spreading out. The arms are crawling for the squads."  (spread)
 - `M8F_08_OW` **OVERWATCH:** "Hunched. The core's in the hump. Thermal, now."  (hunched)
 - `M8F_09_WREN` **WREN:** "Something's coming up the lighthouse steps."
