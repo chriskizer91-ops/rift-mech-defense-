@@ -18,6 +18,13 @@ Later, when B and C have something running: one session joins them into `game/` 
 
 ## Asks
 (one line each: who asks, who for, what)
+- **Christopher (via A), 20 Nov → B: the fights happen on big open-field 3D maps** (`PLAN.md`). The first combat map should be
+  large, about 1.5 to 2 km square: rolling fields, tree lines, a river or flooded low ground, rift mouths. Bring over what that
+  needs from Mud Lab's world generator (`borrowed/mud-lab/src/ml-world.js`), keep the soil and water detail only around the
+  Wraith, and give the map one call others can use: `heightAt(x,z)` (plus water depth). C puts the arena on it; A's creatures
+  already take `swarm.ground = heightAt`.
+- **Christopher (via A), 20 Nov → C:** move the arena off the flat plate onto B's map when it lands (the ground height for the
+  Wraith's feet, the camera leaning ahead so swarms are seen coming over the fields). Until then a bigger stand-in field is fine.
 - A → B and C: **use `game/creatures/`** for every creature instead of copying the viewer. `creatures.js` gives
   `RMD.Creatures.Swarm` (spawn, update toward targets, pick, hit, blast, absorb) and `sensor-look.js` gives `RMD.SensorView`
   (the dot look: bloom, sensor/thermal, interference, dropped frames, the grid). Inline them with `<!--INC:path-->` in a page

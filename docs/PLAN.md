@@ -50,6 +50,10 @@ Only Christopher's decisions go here (20 Nov 2026 unless dated). Proposals live 
   **require understanding one or more mechanics** that the game develops and presents along the way, so a player will have learned them.
 - The Wraith has to be **heavily upgraded** by the time it faces the Host.
 
+## Where the fights happen (20 Nov, evening)
+- **The combat happens on large 3D world maps: big open fields.** Not a small arena: wide, real 3D ground the swarms come
+  across, the Wraith fighting over it from the top-down camera.
+
 ## Lore direction (20 Nov)
 - **Cosmic horror:** something beyond time and space, multidimensional, geometry that isn't Euclidean. Lovecraft's own lore isn't
   needed; the concept is what matters.

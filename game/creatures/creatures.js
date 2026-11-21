@@ -9,6 +9,7 @@
    swarm.blast(point, radius, dots)           // artillery: every creature in reach
    swarm.absorb(creature, pos)                // it takes something: one more dot (count can rise past where it started)
    swarm.setThermal(on); swarm.pxScale(px)    // view mode; pixels per metre at distance 1 (see SensorView.pxScale)
+   swarm.ground = (x,z) => y                  // the world's ground height (B's map); creatures walk on it, loose dots land on it
 
    A creature's dot count is its hit points and its size: as dots come off it shrinks (size ~ cube root of the count);
    below 12% of where it started it comes apart. The rigs (pose + segments) are the same as the threat library viewer's
@@ -196,14 +197,14 @@ class Swarm{
     g.setAttribute('aI',new T.BufferAttribute(this.I,1).setUsage(T.DynamicDrawUsage));g.setAttribute('aS',new T.BufferAttribute(this.S,1).setUsage(T.DynamicDrawUsage));
     g.setAttribute('aB',new T.BufferAttribute(this.B,1).setUsage(T.DynamicDrawUsage));
     this.mat=dotMaterial();this.points=new T.Points(g,this.mat);this.points.frustumCulled=false;scene.add(this.points);
-    this.list=[];this.thermal=false;
+    this.list=[];this.thermal=false;this.ground=(x,z)=>0;
     this.dPos=new Float32Array(this.maxDebris*3);this.dVel=new Float32Array(this.maxDebris*3);this.dLife=new Float32Array(this.maxDebris);this.dS=new Float32Array(this.maxDebris);this.dHead=0;
   }
   get dots(){return this.list.reduce((s,c)=>s+(c.dead?0:c.count),0);}
   spawn(id,pos,heading){const rig=RIG[id];if(!rig)throw new Error('no creature '+id);const c=makeCreature(rig,pos,heading);this.list.push(c);return c;}
   setThermal(on){this.thermal=on;this.mat.uniforms.uSoft.value=on?1:0;this.mat.uniforms.uSizeMul.value=on?4.2:1;this.mat.uniforms.uMin.value=on?8:2.5;this.mat.uniforms.uMax.value=on?160:56;}
   pxScale(px){this.mat.uniforms.uScale.value=px;}
-  center(c,out){return (out||V()).set(c.pos.x,c.rig.size*.35*c.scale,c.pos.z);}
+  center(c,out){return (out||V()).set(c.pos.x,c.pos.y+c.rig.size*.35*c.scale,c.pos.z);}
   radius(c){return c.rig.size*.55*c.scale+1;}
   pick(o,d){let best=null,bt=1e9;const cp=V(),w=V();
     for(const c of this.list){if(c.dead)continue;this.center(c,cp);w.subVectors(cp,o);const t=w.dot(d);if(t<0)continue;
@@ -232,7 +233,7 @@ class Swarm{
     for(const c of this.list){if(c.gone)continue;
       if(c.dead){c.gone=true;continue;}
       // brain: nearest target, walk, lunge, maul, back off
-      let tg=null,td=1e9;for(const x of targets||[]){if(x.gone)continue;const d=Math.hypot(x.pos.x-c.pos.x,x.pos.z-c.pos.z);if(d<td){td=d;tg=x;}}
+      let tg=null,td=1e9;for(const x of targets||[]){if(x.gone)continue;const d=Math.hypot(x.pos.x-c.pos.x,x.pos.z-c.pos.z);if(d<td&&d<(x.notice||1e9)){td=d;tg=x;}}
       c.target=tg;c.st+=dt;const r=c.rig,reach=(r.reach||2)*c.scale+1.2;c.mauling=false;
       if(tg){const want=Math.atan2(tg.pos.x-c.pos.x,tg.pos.z-c.pos.z);let dh=want-c.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));c.heading+=dh*Math.min(1,dt*(c.state==='walk'?3:1.2));}
       const fx=Math.sin(c.heading),fz=Math.cos(c.heading);const sp=r.speed*(.6+.4*c.scale);
@@ -241,6 +242,7 @@ class Swarm{
       else if(c.state==='lunge'){const f=Math.max(0,td-reach*.6);const step=Math.min(f,sp*5*dt);c.pos.x+=fx*step;c.pos.z+=fz*step;c.phi+=dt*6;if(c.st>.4){c.state='maul';c.st=0;}}
       else if(c.state==='maul'){c.mauling=td<reach*1.6;c.phi+=dt*9;if(c.st>1.4){c.state='back';c.st=0;}}
       else if(c.state==='back'){c.pos.x-=fx*sp*.6*dt;c.pos.z-=fz*sp*.6*dt;c.phi-=dt*3.6;if(c.st>.9){c.state='walk';c.st=0;}}
+      c.pos.y=this.ground(c.pos.x,c.pos.z);
       const target=Math.cbrt(Math.max(.05,c.count/c.n0));c.scale+=(clamp(target,.4,1.25)-c.scale)*Math.min(1,dt*2.5);
       // pose → world
       const g=gait(c,dt);const kp=r.pose(t,g);const s=c.scale;_q.setFromEuler(_e.set(0,c.heading,0));
@@ -264,7 +266,7 @@ class Swarm{
     const dg=this.thermal?.05:1;
     for(let i=0;i<this.maxDebris;i++){if(this.dLife[i]<=0)continue;const k=i*3;this.dVel[k+1]-=14*dt;
       this.dPos[k]+=this.dVel[k]*dt;this.dPos[k+1]+=this.dVel[k+1]*dt;this.dPos[k+2]+=this.dVel[k+2]*dt;
-      if(this.dPos[k+1]<.1){this.dPos[k+1]=.1;this.dVel[k]*=.6;this.dVel[k+2]*=.6;this.dVel[k+1]*=-.25;}
+      const gy=this.ground(this.dPos[k],this.dPos[k+2])+.1;if(this.dPos[k+1]<gy){this.dPos[k+1]=gy;this.dVel[k]*=.6;this.dVel[k+2]*=.6;this.dVel[k+1]*=-.25;}
       this.dLife[i]-=dt*.9;if(o>=this.max+this.maxDebris)continue;const L=Math.max(0,this.dLife[i]);
       P3[o*3]=this.dPos[k];P3[o*3+1]=this.dPos[k+1];P3[o*3+2]=this.dPos[k+2];C3[o*3]=1;C3[o*3+1]=0;C3[o*3+2]=0;I[o]=L*L*1.4*dg;S[o]=this.dS[i]*(.6+.4*L);B[o]=0;o++;}
     this.list=this.list.filter(c=>!c.gone);
