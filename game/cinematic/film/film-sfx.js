@@ -63,13 +63,14 @@ X.extend=function(S){if(S._film)return S;S._film=true;const ctx=S.ctx;
   /* a round into the sand */
   S.thud=function(when,p,k){const s=ctx.createBufferSource();s.buffer=pink;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=500;const g=ctx.createGain();s.connect(lp);lp.connect(g);g.connect(pan(p,sfx));env(g,when,.003,.3*(k||1),.22);s.start(when,Math.random()*3,.3);};
   /* dots knocked off: the sensor's sound for a hit, a dry digital crackle */
-  S.fizz=function(when,p,k){k=k||1;const dest=pan(p,sfx);const n=3+Math.floor(Math.random()*3);for(let i=0;i<n;i++){const t=when+Math.random()*.12;
-      const s=ctx.createBufferSource();s.buffer=white;const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=3000+Math.random()*4000;bp.Q.value=6;const g=ctx.createGain();s.connect(bp);bp.connect(g);g.connect(dest);
-      env(g,t,.0008,.28*k,.012+Math.random()*.02);s.start(t,Math.random()*2,.05);}};
+  S.fizz=function(when,p,k){k=k||1;const dest=pan(p,sfx);const s=ctx.createBufferSource();s.buffer=pink;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.Q.value=.7;
+      lp.frequency.setValueAtTime(1400,when);lp.frequency.exponentialRampToValueAtTime(300,when+.22);const g=ctx.createGain();s.connect(lp);lp.connect(g);g.connect(dest);
+      g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.22*k,when+.02);g.gain.exponentialRampToValueAtTime(.001,when+.26);s.start(when,Math.random()*3,.3);};
   /* a creature coming apart: a falling digital chirp and a burst of crackle */
-  S.burstC=function(when,p,k){k=k||1;const dest=pan(p,sfx);const o=ctx.createOscillator();o.type='square';o.frequency.setValueAtTime(2400,when);o.frequency.exponentialRampToValueAtTime(180,when+.35);
-    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3500;const g=ctx.createGain();o.connect(lp);lp.connect(g);g.connect(dest);g.connect(sverb);env(g,when,.002,.07*k,.35);o.start(when);o.stop(when+.45);
-    S.fizz(when,p,k);S.fizz(when+.09,p,k*.8);};
+  S.burstC=function(when,p,k){k=k||1;const dest=pan(p,sfx);const o=ctx.createOscillator();o.type='sine';o.frequency.setValueAtTime(900,when);o.frequency.exponentialRampToValueAtTime(90,when+.45);
+    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1600;const g=ctx.createGain();o.connect(lp);lp.connect(g);g.connect(dest);g.connect(sverb);
+    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.09*k,when+.02);g.gain.exponentialRampToValueAtTime(.0008,when+.5);o.start(when);o.stop(when+.55);
+    S.fizz(when,p,k*1.2);S.fizz(when+.1,p,k*.8);};
   /* the Lance: a rising charge and the crack of it going */
   S.lance=function(when,p,k,charge){k=k||1;charge=charge||1.2;const dest=pan(p,sfx);const o=ctx.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(90,when);o.frequency.exponentialRampToValueAtTime(1600,when+charge);
     const bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=4;bp.frequency.setValueAtTime(300,when);bp.frequency.exponentialRampToValueAtTime(5000,when+charge);const g=ctx.createGain();o.connect(bp);bp.connect(g);g.connect(dest);
