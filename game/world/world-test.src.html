@@ -1,0 +1,73 @@
+<!doctype html>
+<!-- RIFT MECH DEFENSE — world test (session B): Mud Lab's soil and water under a top-down camera, the Wraith wading,
+     REAL / SENSOR / THERMAL, a swarm crossing, a rift caved in by artillery.
+     Source page. game/world/build.py inlines three.js, the assets and game/world/wt-*.js into builds/world-test.html. -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>IRMD · World test</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#d8e6e2;font:700 12px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.08em;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+canvas{position:fixed;inset:0;display:block;width:100%;height:100%}
+.hud{position:fixed;pointer-events:none;text-transform:uppercase;text-shadow:0 0 6px #000,0 0 2px #000}
+#tl{left:max(12px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));max-width:calc(100vw - 160px)}
+#tl .org{font-size:9px;color:#8fd0c0;letter-spacing:.22em}
+#tl .name{font-size:clamp(18px,5vw,30px);color:#ff3b26;letter-spacing:.12em;line-height:1.05;margin-top:3px;text-shadow:0 0 14px #ff2a1088,0 0 4px #000}
+#tl .cls{font-size:11px;color:#ffd0bf;margin-top:2px}
+#tr{right:max(12px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));text-align:right;font-size:9px;color:#8fd0c0;letter-spacing:.16em}
+#tr .v{font-size:14px;color:#eef6f3;letter-spacing:.08em}
+#tr .bar{width:110px;height:4px;background:#ffffff22;margin:3px 0 7px auto;overflow:hidden;position:relative}
+#tr .bar i{display:block;height:100%;background:#4fe0b8;width:0}
+#tr .bar.bad i{background:#ff4a2a}
+#tr .bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:#ffb29a}
+#cap{left:0;right:0;bottom:calc(150px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,16px);color:#f0f6f4;text-transform:none;letter-spacing:.03em;
+  text-shadow:0 0 6px #000,0 0 14px #000;padding:0 18px;min-height:1.3em;transition:opacity .4s}
+#cap b{color:#4fe0b8;font-weight:800;letter-spacing:.12em;font-size:.8em}
+#note{left:0;right:0;top:42%;text-align:center;font-size:13px;color:#ffb29a;letter-spacing:.14em}
+#ui{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.row{display:flex;gap:6px}
+button{font:800 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.1em;color:#cfe2dc;background:#0b1513cc;border:1px solid #2c4a43;border-radius:4px;
+  padding:9px 10px;min-width:44px;white-space:nowrap;cursor:pointer;text-transform:uppercase;touch-action:none}
+button small{display:block;font-size:8px;color:#7f9f98;letter-spacing:.14em;margin-top:2px}
+button.on{color:#fff;background:#0a2c24ee;border-color:#4fe0b8;box-shadow:0 0 12px #4fe0b855 inset}
+button.red{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 12px #ff2a1055 inset}
+#bHover{width:96px;height:64px;border-radius:50%;font-size:13px}
+#bHover.on{background:#3a2207ee;border-color:#ffb040;box-shadow:0 0 18px #ff9a2a77 inset}
+#bArt{width:122px}
+#stick{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid #4fe0b855;background:#4fe0b80c;pointer-events:none;display:none}
+#stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:#4fe0b844;border:2px solid #4fe0b8aa}
+#hint{left:max(14px,env(safe-area-inset-left));bottom:calc(16px + env(safe-area-inset-bottom));font-size:9px;color:#9fc8bd;letter-spacing:.16em;max-width:46vw}
+#load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#ff3b26;font-size:13px;letter-spacing:.3em;background:#000;z-index:5}
+#load small{color:#6fae9f;font-size:9px;letter-spacing:.2em}
+#err{position:fixed;left:6px;right:6px;bottom:6px;color:#ff8070;font:600 10px monospace;z-index:9;white-space:pre-wrap;pointer-events:none}
+#fps{font-size:9px;color:#7fa89e;margin-top:4px}
+</style></head><body>
+<div id="load">LINKING SENSOR…<small>WORLD TEST · COAST 1</small></div>
+<div class="hud" id="tl"><div class="org">Intl. Rift Mech Defense · World test</div>
+  <div class="name" id="nm">REAL</div><div class="cls" id="cl">Coast 1 · the Static, day 3</div></div>
+<div class="hud" id="tr">
+  <div>Water</div><div class="v" id="wd">DRY</div><div class="bar" id="wdb"><i id="wdi"></i><b id="wdh"></b></div>
+  <div>Speed</div><div class="v" id="spd">0 KM/H</div>
+  <div id="sen" style="display:none;margin-top:6px"><div>Contacts</div><div class="v" id="cnt">0</div>
+    <div style="margin-top:4px">Sensor confidence</div><div class="bar" id="confb"><i id="conf"></i></div></div>
+  <div id="fps"></div></div>
+<div class="hud" id="cap"></div>
+<div class="hud" id="note"></div>
+<div class="hud" id="hint">Left thumb: walk · hold HOVER to fly · keys: WASD, Space, 1 2 3, B</div>
+<div id="stick"><i></i></div>
+<div id="ui">
+  <div class="row"><button id="v0" class="on">Real</button><button id="v1">Sensor</button><button id="v2">Thermal</button></div>
+  <div class="row"><button id="bArt" class="red">Artillery<small>on the rift</small></button><button id="bHover">Hover</button></div>
+</div>
+<div id="err"></div>
+<!--THREE-->
+<!--ASSETS-->
+<!--JS:wt-map.js-->
+<!--JS:wt-soil.js-->
+<!--JS:wt-look.js-->
+<!--JS:wt-mech.js-->
+<!--JS:wt-fx.js-->
+<!--JS:wt-dots.js-->
+<!--JS:wt-main.js-->
+</body></html>
