@@ -12,7 +12,7 @@
    ===================================================================================================================== */
 const WORLD=(function(){
 const T=THREE;
-const W={occluders:[],u:{uT:{value:0},uGlow:{value:1},uBeam:{value:0},uRift:{value:Array.from({length:4},()=>new T.Vector4())},uExpo:{value:1}},lamps:[]};
+const W={barrels:[],occluders:[],u:{uT:{value:0},uGlow:{value:1},uBeam:{value:0},uRift:{value:Array.from({length:4},()=>new T.Vector4())},uExpo:{value:1}},lamps:[]};
 const GLOWDIR=new T.Vector3(-.1,0,-1).normalize();
 const NOISE=`float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1,0)),f.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x),f.y);}
@@ -20,7 +20,7 @@ float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*vn(p);p=p*2.03+vec2(
 /* the sky, used by the dome and by the water's reflection */
 const SKY=`uniform float uT,uGlow;uniform vec4 uRift[4];
 vec3 sky(vec3 d){float y=max(d.y,0.);vec3 c=mix(vec3(.009,.011,.017),vec3(.0016,.002,.0035),pow(y,.45));
-  vec2 q=d.xz/(y+.12);float cl=fbm(q*1.6+vec2(uT*.012,uT*.004));float cov=smoothstep(.4,.75,cl);
+  vec2 q=d.xz/(y+.12);float cl=fbm(q*1.6+vec2(uT*.012,uT*.004));float cov=smoothstep(.4,.75,cl)*smoothstep(.015,.14,y);
   float north=pow(max(0.,dot(normalize(vec3(d.x,0.,d.z)+1e-5),normalize(vec3(-.1,0.,-1.)))),4.);
   float low=exp(-y*9.);vec3 red=vec3(1.,.24,.07)*(north*.95+.04)*low*uGlow;
   c+=cov*(vec3(.006,.007,.009)+red*.32);c+=red*.07;
@@ -47,11 +47,11 @@ function water(scene){const m=new T.ShaderMaterial({uniforms:Object.assign({uCam
    float near=0.;for(int i=0;i<4;i++){float d=length(p-uRift[i].xz);near+=exp(-d/(260.+uRift[i].w*260.))*uRift[i].w;}
    float vein=abs(fbm(p*.0042+3.1)-.5);vein=exp(-vein*vein*900.)*.9+exp(-abs(fbm(p*.011+7.)-.5)*40.)*.35;
    float pulse=.75+.25*sin(uT*1.3+fbm(p*.002)*9.);
-   vec3 mag=vec3(1.,.28,.05)*(vein*(.08+near*1.6)+near*.35)*pulse*uGlow;
-   col+=mag*(1.-fr)*.55;
+   vec3 mag=vec3(1.,.28,.05)*(vein*(.03+near*.9)+near*.22)*pulse*uGlow;
+   col+=mag*(1.-fr)*.4*smoothstep(4000.,600.,dist+0.)*mix(.35,1.,smoothstep(400.,60.,uCam.y));
    /* the lighthouse beam sweeping across the swell */
    vec2 lh=vec2(250.,-20.);vec2 bd=vec2(cos(uBeam),sin(uBeam));vec2 to=p-lh;float al=dot(to,bd);
-   float bw=exp(-pow(abs(to.x*bd.y-to.y*bd.x)/(6.+al*.09),2.))*step(0.,al)*exp(-al/700.);col+=vec3(1.,.93,.8)*bw*fr*2.2;
+   float bw=exp(-pow(abs(to.x*bd.y-to.y*bd.x)/(4.+al*.05),2.))*step(0.,al)*exp(-al/500.);col+=vec3(1.,.93,.8)*bw*fr*.35;
    float fog=1.-exp(-dist*.00042);col=mix(col,vec3(.006,.007,.01)+vec3(.022,.005,.002)*uGlow,fog*.85);
    gl_FragColor=vec4(col,1.);}`});
   const g=new T.PlaneGeometry(16000,16000,1,1);g.rotateX(-Math.PI/2);const w=new T.Mesh(g,m);w.frustumCulled=false;scene.add(w);
@@ -105,8 +105,8 @@ function lighthouse(scene){const g=new T.Group();g.position.set(250,5.5,-20);sce
   /* the beam: a long soft cone, turning */
   const bg=new T.ConeGeometry(70,900,32,1,true);bg.translate(0,-450,0);bg.rotateX(-Math.PI/2);
   const bm=new T.ShaderMaterial({transparent:true,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide,fog:false,
-    vertexShader:`varying float vZ;varying vec3 vN,vV;void main(){vZ=position.z/900.;vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*mv;}`,
-    fragmentShader:`varying float vZ;varying vec3 vN,vV;void main(){float e=pow(abs(dot(vN,vV)),2.);gl_FragColor=vec4(vec3(1.,.9,.75)*e*.07*(1.-vZ)*smoothstep(0.,.02,vZ),1.);}`});
+    vertexShader:`varying float vZ,vD;varying vec3 vN,vV;void main(){vZ=position.z/900.;vec4 mv=modelViewMatrix*vec4(position,1.);vD=-mv.z;vV=normalize(-mv.xyz);vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`varying float vZ,vD;varying vec3 vN,vV;void main(){float e=pow(abs(dot(vN,vV)),2.);gl_FragColor=vec4(vec3(1.,.9,.75)*e*.03*(1.-vZ)*smoothstep(0.,.02,vZ)*smoothstep(120.,420.,vD),1.);}`});
   const beam=new T.Mesh(bg,bm);beam.position.set(0,38.4,0);g.add(beam);W.beam=beam;}
 /* ---------- the ridge to the west, and ANVIL's battery on it ---------- */
 function ridge(scene){
@@ -120,7 +120,7 @@ function ridge(scene){
     for(const s of [-1,1]){const tr=occ(new T.Mesh(new T.BoxGeometry(.5,.5,7.5),gm));tr.position.set(s*1.4,-.3,5.2);tr.rotation.y=s*.25;gun.add(tr);
       const wh=new T.Mesh(new T.CylinderGeometry(1,1,.5,16),gm);wh.rotation.z=Math.PI/2;wh.position.set(s*2,-.1,-.6);gun.add(wh);}
     const sh=occ(new T.Mesh(new T.BoxGeometry(3.8,2.6,.25),gm));sh.position.set(0,1.6,-2.1);gun.add(sh);
-    const br=occ(new T.Mesh(new T.CylinderGeometry(.18,.28,9,10),gm));br.geometry.translate(0,4.5,0);br.position.set(0,1.4,-1.4);br.rotation.x=-1.0;gun.add(br);}
+    const br=occ(new T.Mesh(new T.CylinderGeometry(.18,.28,9,10),gm));br.geometry.translate(0,4.5,0);br.position.set(0,1.4,-1.4);br.rotation.x=-1.0;gun.add(br);W.barrels.push(br);}
   /* the crew: young, round a tablet that lights their faces red */
   const cm=new T.MeshStandardMaterial({color:0x26282a,roughness:.9});
   W.crew=[];for(const [x,z,r] of [[8,-6,0],[10.2,-5.2,-1.2],[9.3,-7.6,2.3],[6.4,-7.4,.9]]){const p=new T.Group();

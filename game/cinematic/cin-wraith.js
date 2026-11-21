@@ -48,15 +48,24 @@ TM.build=function(scene,occluders){
     /* a small cold light at the visor, so each one reads in the dark */
     const eye=new T.PointLight(0x7fd6ff,3,5,2);eye.position.set(0,.3,1.2);(J.head||J.torso).add(eye);
     TM.list[i]=M;return M;}))).then(()=>{TM.ready=true;return TM;});};
-/* per frame: each Wraith stands, breathes, and turns its head as told. look: {pitch, yaw} per Wraith (radians) */
-TM.pose=function(t,look){for(const M of TM.list){if(!M)continue;const k=TM.list.indexOf(M),L=look[k]||{pitch:0,yaw:0,torso:0};
-  M.root.position.copy(M.spot);M.root.rotation.y=M.yaw;
-  const br=Math.sin(t*1.1+M.phase)*.035;const hipY=M.hip0-.08+br;
+/* per frame. look[k]: {pitch, yaw, torso, aim} (radians); mv[k]: {x, z, yaw, dist, spd}: where the Wraith is, which way it
+   faces, how far it has walked (the gait's phase comes from that, so it never drifts) and how fast it walks now (m/s).
+   Ironhowl 4's gait (wt-mech.js poseMech): each foot stays planted while the body passes over it, then swings. */
+const lerp=(a,b,t)=>a+(b-a)*t,sm=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+TM.pose=function(t,look,mv){for(let k=0;k<TM.list.length;k++){const M=TM.list[k];if(!M)continue;const L=look[k]||{pitch:0,yaw:0,torso:0},m=mv&&mv[k];
+  const x=m?m.x:M.spot.x,z=m?m.z:M.spot.z,yaw=m?m.yaw:0,sp=m?m.spd:0,dist=m?m.dist:0;
+  M.root.position.set(x,M.spot.y,z);M.root.rotation.y=yaw;
+  const sf=clamp(sp/7.5,0,1),w=sm(.15,1.4,sp),S_=lerp(1.3,3.2,sf);const phase=dist/(2*S_)+M.phase;
+  const bob=Math.abs(Math.sin(phase*Math.PI*2))*.1*w;const br=Math.sin(t*1.1+M.phase)*.035*(1-w);
+  const hipY=M.hip0-.08+br-bob-.05*w;
   M.hips.position.y=hipY;M.torso.position.y=hipY+(M.tor0-M.hip0);
   M.headPitch+=(L.pitch-M.headPitch)*.06;M.headYaw+=(L.yaw-M.headYaw)*.06;M.torsoYaw+=((L.torso||0)-M.torsoYaw)*.04;
-  M.torso.rotation.set(-.04-M.headPitch*.25,M.torsoYaw,0);if(M.head)M.head.rotation.set(-M.headPitch*.75,M.headYaw,0);
-  for(const l of M.legs){const D={y:(l.Ay)-(hipY+l.Hy),z:l.Az-l.Hz};const r=legSolve(l,D,l.sign);
-    l.thigh.rotation.x=r.a;l.knee.rotation.x=r.b-r.a;l.hock.rotation.x=r.a-r.b;l.ankle.rotation.x=-r.a;}
-  for(const A of M.arms)A.rotation.x=-.12-M.headPitch*.3+Math.sin(t*.9+M.phase)*.02;}};
+  const roll=Math.sin(phase*Math.PI*2)*.025*w;
+  M.torso.rotation.set(-.04-M.headPitch*.25-.05*sf,M.torsoYaw,roll);M.hips.rotation.z=roll*.6;if(M.head)M.head.rotation.set(-M.headPitch*.75,M.headYaw,0);
+  for(const l of M.legs){let tz=0,lift=0,pitch=0;let u=(phase+(l.sd>0?.5:0))%1;if(u<0)u+=1;
+    if(u<.5)tz=lerp(-S_/2,S_/2,u/.5);else{const q=(u-.5)/.5;tz=lerp(S_/2,-S_/2,q*q*(3-2*q));lift=Math.sin(Math.PI*q)*.5*w;pitch=-.3*Math.sin(Math.PI*q)*w;}
+    tz*=w;const D={y:(l.Ay+lift)-(hipY+l.Hy),z:(l.Az+tz)-l.Hz};const r=legSolve(l,D,l.sign);
+    l.thigh.rotation.x=r.a;l.knee.rotation.x=r.b-r.a;l.hock.rotation.x=r.a-r.b;l.ankle.rotation.x=-r.a+pitch;}
+  M.arms.forEach((A,j)=>{A.rotation.x=-.12-M.headPitch*.3+(L.aim||0)+Math.sin(phase*Math.PI*2+(j?Math.PI:0))*.04*w+Math.sin(t*.9+M.phase)*.02*(1-w);});}};
 return TM;
 })();

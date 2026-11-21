@@ -26,7 +26,7 @@ Minutes are targets. "Dots" is what spawns; streams and feeding can add more.
 | 7 The Ridge | 1 | 2 | 10 RUNNER, 5 STALKER, 1 DRAG | 2,000 | Squads Alder, Birch, Cedar on the crest |
 | | 2 | 3 | TITAN | 50,000 | Dropped frames near it; fire on the lock |
 | | 3 | 4 | (TITAN splits at 35,000) 4 tendrils of 5,000 | — | Tendrils go for squads first; destroyed tendrils are gone. It reforms; core; Lance |
-| 8 The Signal | P1 | ~4 | THE SIGNAL + a shed wave every 30 s (RUNNER/STALKER, 1 DRAG a minute) | 1,000,000 | 4 rifts, each sealed −100,000. Gate: 600,000 |
+| 8 The Signal | P1 | ~4 | THE SIGNAL + a shed wave every 30 s (RUNNER/STALKER, 1 DRAG a minute) | 900,000 | 3 rifts left (the reveal sealed rift 4), each sealed −100,000. Gate: 600,000 |
 | | P2 | ~3 | forms every ~40 s; tentacle tips are 5,000-dot clusters | — | Risen: hovering gets hit. Spread: tips crawl at squads. Hunched: core on thermal. Squad taken +25,000. Gate: 300,000 |
 | | P3 | ~3 | | — | Clear window 1.0 s every ~3.5 s (+0.15 s per SENSOR level). Gate: 50,000 |
 | | P4 | 1–2 | | — | Core bare; OVERWATCH holds a 4 s window; full Lance charge ends it. Miss: back to 80,000, retry after 20 s |

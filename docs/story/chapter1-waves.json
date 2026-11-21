@@ -1,59 +1,370 @@
 {
-  "note": "Chapter 1 wave plan, session D proposal (20 Nov 2026). Medium counts. Mirrors docs/story/waves.md; that file wins if they disagree.",
-  "dots": {"KNOT": 10, "SKEIN": 20, "RUNNER": 50, "STALKER": 100, "BRUTE": 500, "DRAG": 1000, "HULK": 5000, "BEHEMOTH": 10000, "TITAN": 50000, "SIGNAL": 1000000},
-  "difficulty": {
-    "easy":   {"enemyDamage": 0.55, "enemyDots": 0.75, "barragesPerRift": 1, "windowK": 1.4},
-    "medium": {"enemyDamage": 1.0,  "enemyDots": 1.0,  "barragesPerRift": 2, "windowK": 1.0},
-    "hard":   {"enemyDamage": 1.4,  "enemyDots": 1.3,  "barragesPerRift": 3, "windowK": 0.8}
+ "note": "Chapter 1 wave plan, session D proposal (20 Nov 2026). Medium counts. Mirrors docs/story/waves.md; that file wins if they disagree.",
+ "dots": {
+  "KNOT": 10,
+  "SKEIN": 20,
+  "RUNNER": 50,
+  "STALKER": 100,
+  "BRUTE": 500,
+  "DRAG": 1000,
+  "HULK": 5000,
+  "BEHEMOTH": 10000,
+  "TITAN": 50000,
+  "SIGNAL": 1000000
+ },
+ "difficulty": {
+  "easy": {
+   "enemyDamage": 0.55,
+   "enemyDots": 0.75,
+   "barragesPerRift": 1,
+   "windowK": 1.4
   },
-  "rules": {
-    "coreDamageK": 10,
-    "barragesPerMission": 3, "barragesVaryByMission": true, "barragesPerLivingSquad": 1, "shellFlightS": 20,
-    "markHoldS": 1.5, "squadMarkRangeM": 40,
-    "lostSquadDots": 200, "lostSquadDotsSignal": 25000,
-    "window": {"periodS": 3.5, "baseS": 1.0, "perSensorLevelS": 0.15},
-    "squadSavedScrap": 150
+  "medium": {
+   "enemyDamage": 1.0,
+   "enemyDots": 1.0,
+   "barragesPerRift": 2,
+   "windowK": 1.0
   },
-  "missions": [
-    {"id": 1, "name": "First Light", "place": "Greywater Strand", "time": "dawn", "min": 5, "squads": ["Gull"], "scrap": 300,
-     "waves": [
-       {"min": 2, "spawn": {"KNOT": 12}, "notes": "groups of 4 from the surf; opens in REAL view"},
-       {"min": 3, "spawn": {"KNOT": 16, "SKEIN": 6}, "notes": "SKEINs target the pier"}]},
-    {"id": 2, "name": "High Water", "place": "Port Arlen low town", "time": "morning", "min": 7, "squads": ["Lantern"], "scrap": 600, "unlockAfter": "lance",
-     "waves": [
-       {"min": 2, "spawn": {"KNOT": 20, "RUNNER": 2}, "notes": "wade; the canal needs the hover"},
-       {"min": 3, "spawn": {"RUNNER": 4, "SKEIN": 10}, "notes": "hold the cannery roof"},
-       {"min": 2, "spawn": {"RUNNER": 6}, "notes": "escort; RUNNERs target the slowest green dot"}]},
-    {"id": 3, "name": "The Dig", "place": "Kessel Cut", "time": "midday", "min": 7, "squads": ["Tern", "Slate"], "scrap": 1000, "unlockAfter": "anvil",
-     "waves": [
-       {"min": 2, "stream": {"from": "rift", "dotsPerS": 4, "kinds": ["KNOT", "SKEIN"], "untilSealed": true}},
-       {"min": 2, "spawn": {"RUNNER": 8, "STALKER": 1}, "card": "STALKER"},
-       {"min": 3, "spawn": {"BRUTE": 1, "KNOT": 10}, "boss": "BRUTE", "absorb": {"wreckDots": 40, "wrecks": 5}}]},
-    {"id": 4, "name": "Landfall", "place": "Port Arlen", "time": "dusk", "min": 8, "squads": ["Pike"], "scrap": 2500, "unlockAfter": "watcher",
-     "waves": [
-       {"min": 2, "spawn": {"STALKER": 3, "RUNNER": 4}},
-       {"min": 2.5, "spawn": {"SKEIN": 20, "STALKER": 2}, "notes": "seal the harbour rift"},
-       {"min": 4, "spawn": {"BEHEMOTH": 1}, "boss": "BEHEMOTH", "growWhileRiftOpen": {"dotsPerS": 100, "max": 14000}, "shedWhenSealed": {"dotsPerS": 20}, "barrageDots": 800}]},
-    {"id": 5, "name": "Night Shift", "place": "the Saltpans", "time": "night", "min": 8, "squads": ["Copper", "Reed"], "scrap": 1200, "unlockAfter": "arc",
-     "waves": [
-       {"min": 2, "spawn": {"KNOT": 20, "RUNNER": 4}},
-       {"min": 3, "spawn": {"STALKER": 4}, "notes": "two packs of 2, one at each squad; Copper (across the channel) is always lost, +200 to its pack; defend Reed"},
-       {"min": 3, "spawn": {"STALKER": 2}, "notes": "plus the grown pack; dropped frames up close"}]},
-    {"id": 6, "name": "The Shelf", "place": "the Drowned Shelf", "time": "before dawn", "min": 8, "squads": ["Bramble"], "scrap": 2000, "unlockAfter": "drone", "tideS": 480,
-     "waves": [
-       {"min": 2, "spawn": {"KNOT": 30, "SKEIN": 10, "RUNNER": 6, "DRAG": 2}},
-       {"min": 3, "spawn": {"STALKER": 4}, "notes": "seal rifts A and B (streams)"},
-       {"min": 3, "spawn": {"HULK": 1, "RUNNER": 5, "STALKER": 2}, "notes": "HULK from rift C; tide returns"}]},
-    {"id": 7, "name": "The Ridge", "place": "Hollin Ridge", "time": "grey day", "min": 9, "squads": ["Alder", "Birch", "Cedar"], "scrap": 3500, "unlockAfter": "longHover",
-     "waves": [
-       {"min": 2, "spawn": {"RUNNER": 10, "STALKER": 5, "DRAG": 1}},
-       {"min": 3, "spawn": {"TITAN": 1}, "boss": "TITAN"},
-       {"min": 4, "split": {"atDots": 35000, "tendrils": 4, "tendrilDots": 5000, "targets": "squads first"}}]},
-    {"id": 8, "name": "The Signal", "place": "Arlen Bay", "time": "night", "min": 12, "squads": ["Harrow", "Miller", "Wren"],
-     "phases": [
-       {"name": "It arrives", "min": 4, "fromDots": 1000000, "toDots": 600000, "rifts": 4, "riftDots": 100000, "shedEveryS": 30},
-       {"name": "It changes shape", "min": 3, "toDots": 300000, "formEveryS": 40, "tentacleTipDots": 5000},
-       {"name": "The sensor fails", "min": 3, "toDots": 50000},
-       {"name": "The core", "min": 1.5, "toDots": 0, "heldWindowS": 4, "missResetDots": 80000, "retryS": 20}]}
-  ]
+  "hard": {
+   "enemyDamage": 1.4,
+   "enemyDots": 1.3,
+   "barragesPerRift": 3,
+   "windowK": 0.8
+  }
+ },
+ "rules": {
+  "coreDamageK": 10,
+  "barragesPerMission": 3,
+  "barragesVaryByMission": true,
+  "barragesPerLivingSquad": 1,
+  "shellFlightS": 20,
+  "markHoldS": 1.5,
+  "squadMarkRangeM": 40,
+  "lostSquadDots": 200,
+  "lostSquadDotsSignal": 25000,
+  "window": {
+   "periodS": 3.5,
+   "baseS": 1.0,
+   "perSensorLevelS": 0.15
+  },
+  "squadSavedScrap": 150
+ },
+ "missions": [
+  {
+   "id": 1,
+   "name": "First Light",
+   "place": "Greywater Strand",
+   "time": "dawn",
+   "min": 5,
+   "squads": [
+    "Gull"
+   ],
+   "scrap": 300,
+   "waves": [
+    {
+     "min": 2,
+     "spawn": {
+      "KNOT": 12
+     },
+     "notes": "groups of 4 from the surf; opens in REAL view"
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "KNOT": 16,
+      "SKEIN": 6
+     },
+     "notes": "SKEINs target the pier"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "High Water",
+   "place": "Port Arlen low town",
+   "time": "morning",
+   "min": 7,
+   "squads": [
+    "Lantern"
+   ],
+   "scrap": 600,
+   "unlockAfter": "lance",
+   "waves": [
+    {
+     "min": 2,
+     "spawn": {
+      "KNOT": 20,
+      "RUNNER": 2
+     },
+     "notes": "wade; the canal needs the hover"
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "RUNNER": 4,
+      "SKEIN": 10
+     },
+     "notes": "hold the cannery roof"
+    },
+    {
+     "min": 2,
+     "spawn": {
+      "RUNNER": 6
+     },
+     "notes": "escort; RUNNERs target the slowest green dot"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "name": "The Dig",
+   "place": "Kessel Cut",
+   "time": "midday",
+   "min": 7,
+   "squads": [
+    "Tern",
+    "Slate"
+   ],
+   "scrap": 1000,
+   "unlockAfter": "anvil",
+   "waves": [
+    {
+     "min": 2,
+     "stream": {
+      "from": "rift",
+      "dotsPerS": 4,
+      "kinds": [
+       "KNOT",
+       "SKEIN"
+      ],
+      "untilSealed": true
+     }
+    },
+    {
+     "min": 2,
+     "spawn": {
+      "RUNNER": 8,
+      "STALKER": 1
+     },
+     "card": "STALKER"
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "BRUTE": 1,
+      "KNOT": 10
+     },
+     "boss": "BRUTE",
+     "absorb": {
+      "wreckDots": 40,
+      "wrecks": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "Landfall",
+   "place": "Port Arlen",
+   "time": "dusk",
+   "min": 8,
+   "squads": [
+    "Pike"
+   ],
+   "scrap": 2500,
+   "unlockAfter": "watcher",
+   "waves": [
+    {
+     "min": 2,
+     "spawn": {
+      "STALKER": 3,
+      "RUNNER": 4
+     }
+    },
+    {
+     "min": 2.5,
+     "spawn": {
+      "SKEIN": 20,
+      "STALKER": 2
+     },
+     "notes": "seal the harbour rift"
+    },
+    {
+     "min": 4,
+     "spawn": {
+      "BEHEMOTH": 1
+     },
+     "boss": "BEHEMOTH",
+     "growWhileRiftOpen": {
+      "dotsPerS": 100,
+      "max": 14000
+     },
+     "shedWhenSealed": {
+      "dotsPerS": 20
+     },
+     "barrageDots": 800
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "name": "Night Shift",
+   "place": "the Saltpans",
+   "time": "night",
+   "min": 8,
+   "squads": [
+    "Copper",
+    "Reed"
+   ],
+   "scrap": 1200,
+   "unlockAfter": "arc",
+   "waves": [
+    {
+     "min": 2,
+     "spawn": {
+      "KNOT": 20,
+      "RUNNER": 4
+     }
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "STALKER": 4
+     },
+     "notes": "two packs of 2, one at each squad; Copper (across the channel) is always lost, +200 to its pack; defend Reed"
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "STALKER": 2
+     },
+     "notes": "plus the grown pack; dropped frames up close"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "name": "The Shelf",
+   "place": "the Drowned Shelf",
+   "time": "before dawn",
+   "min": 8,
+   "squads": [
+    "Bramble"
+   ],
+   "scrap": 2000,
+   "unlockAfter": "drone",
+   "tideS": 480,
+   "waves": [
+    {
+     "min": 2,
+     "spawn": {
+      "KNOT": 30,
+      "SKEIN": 10,
+      "RUNNER": 6,
+      "DRAG": 2
+     }
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "STALKER": 4
+     },
+     "notes": "seal rifts A and B (streams)"
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "HULK": 1,
+      "RUNNER": 5,
+      "STALKER": 2
+     },
+     "notes": "HULK from rift C; tide returns"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "name": "The Ridge",
+   "place": "Hollin Ridge",
+   "time": "grey day",
+   "min": 9,
+   "squads": [
+    "Alder",
+    "Birch",
+    "Cedar"
+   ],
+   "scrap": 3500,
+   "unlockAfter": "longHover",
+   "waves": [
+    {
+     "min": 2,
+     "spawn": {
+      "RUNNER": 10,
+      "STALKER": 5,
+      "DRAG": 1
+     }
+    },
+    {
+     "min": 3,
+     "spawn": {
+      "TITAN": 1
+     },
+     "boss": "TITAN"
+    },
+    {
+     "min": 4,
+     "split": {
+      "atDots": 35000,
+      "tendrils": 4,
+      "tendrilDots": 5000,
+      "targets": "squads first"
+     }
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "name": "The Signal",
+   "place": "Arlen Bay",
+   "time": "night",
+   "min": 12,
+   "squads": [
+    "Harrow",
+    "Miller",
+    "Wren"
+   ],
+   "phases": [
+    {
+     "name": "It arrives",
+     "min": 4,
+     "fromDots": 900000,
+     "toDots": 600000,
+     "rifts": 3,
+     "riftDots": 100000,
+     "shedEveryS": 30,
+     "notes": "rift 4 is sealed in the reveal cinematic (game/cinematic)"
+    },
+    {
+     "name": "It changes shape",
+     "min": 3,
+     "toDots": 300000,
+     "formEveryS": 40,
+     "tentacleTipDots": 5000
+    },
+    {
+     "name": "The sensor fails",
+     "min": 3,
+     "toDots": 50000
+    },
+    {
+     "name": "The core",
+     "min": 1.5,
+     "toDots": 0,
+     "heldWindowS": 4,
+     "missResetDots": 80000,
+     "retryS": 20
+    }
+   ]
+  }
+ ]
 }

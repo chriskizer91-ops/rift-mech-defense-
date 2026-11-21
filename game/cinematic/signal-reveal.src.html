@@ -30,6 +30,10 @@ body.thermal #cap b{color:#ffd27a}
 .c3{left:1%;bottom:2%;border-right:0;border-top:0}.c4{right:1%;bottom:2%;border-left:0;border-top:0}
 .tag{position:absolute;transform:translate(-50%,-100%);font-size:clamp(7px,1vw,10px);color:#7dffb0;letter-spacing:.2em;display:none;text-shadow:0 0 6px #0a3}
 .tag:after{content:"";display:block;width:1px;height:10px;background:#7dffb066;margin:2px auto 0}
+.tag.amber{color:#ffc56a;text-shadow:0 0 6px #a60}.tag.amber:after{background:#ffc56a66}
+.tag.red{color:#ff6a4e;text-shadow:0 0 6px #a10}.tag.red:after{background:#ff6a4e66}
+.tag.green{color:#7dffb0}
+.tag.mark{padding:3px 7px;border:1px solid currentColor;animation:bl 1s steps(2) infinite}
 #stamp{left:0;right:0;top:36%;text-align:center;opacity:0;transition:opacity .25s}
 #stamp.on{opacity:1;animation:jit .16s steps(2) 5}
 #stamp .d{font-size:clamp(8px,1.2vw,12px);color:#ffb29a;letter-spacing:.5em}
@@ -60,8 +64,7 @@ button:disabled{opacity:.5}
   <div class="hud" id="tr"><div>Dot count</div><div class="v" id="cnt">0</div>
     <div style="margin-top:5px">Sensor confidence</div><div class="bar" id="confb"><i id="conf"></i></div>
     <div>Range</div><div class="v" id="rng">2.4 KM</div></div>
-  <div class="hud tag">KESTREL</div><div class="hud tag">WRAITH</div><div class="hud tag">VESPER</div><div class="hud tag">HALE</div>
-  <div class="hud" id="lock"></div>
+    <div class="hud" id="lock"></div>
   <div class="hud" id="stamp"><div class="d">Designation assigned</div><div class="n">THE SIGNAL</div><div class="s">Contact class: none · Count 1,000,000 · OVERWATCH</div></div>
   <div class="hud" id="cap"></div>
   <div class="hud" id="tc">23:52:14:00</div>
@@ -69,7 +72,7 @@ button:disabled{opacity:.5}
 <div class="card on" id="start">
   <div class="org">International Rift Mech Defense · Mission 8</div>
   <div class="t">Arlen Bay</div>
-  <div class="sub">23:52 · Incoming feed from OVERWATCH<br>Sound on</div>
+  <div class="sub">23:48 · Incoming feed from OVERWATCH · 2 min 30<br>Sound on, headphones if you have them</div>
   <button id="go" disabled>▶ Open the feed</button>
   <div id="load">Linking sensor…</div>
   <div id="rot">Turn your phone sideways</div>
@@ -88,6 +91,7 @@ button:disabled{opacity:.5}
 <!--INC:cin-audio.js-->
 <!--INC:cin-signal.js-->
 <!--INC:cin-world.js-->
+<!--INC:cin-fx.js-->
 <!--INC:cin-wraith.js-->
 <!--INC:cin-look.js-->
 <!--INC:cin-main.js-->

@@ -4,8 +4,7 @@
 
 Inlines three.js r187 (Ironhowl 4's bundle), the Wraith with its jet pack and autocannons (Ironhowl 4's combat models,
 as session B's world does), a few of Ironhowl 4's pictures, the code in game/cinematic/, and the voices if they are there:
-audio/voice/c1_01_ow.mp3 ... c1_10_pilot.mp3 (named by the ids on the voice-acting sheet, lower case). Without them the
-film plays with captions only.
+audio/voice/<id>.mp3, lower case, for every line the film uses (cin-main.js LINES). Without them the film plays with captions.
 """
 import base64
 import json
@@ -24,7 +23,8 @@ GLB = {"wraith": ("wraith-v2-hd", "wraith_v2", "wraith_v2_combat_orm"),
        "jetpack": ("jetpack", "jetpack", "jetpack_combat_orm"),
        "acL": ("autocannon", "ac_L", "ac_combat_orm"),
        "acR": ("autocannon", "ac_R", "ac_combat_orm")}
-LINES = ["C1_01_OW", "C1_02_OW", "C1_03_OW", "C1_04_OW", "C1_05_OW", "C1_06_OW", "C1_07_OW", "C1_08_ANVIL", "C1_09_OW", "C1_10_PILOT"]
+# the lines the film plays: every id in cin-main.js's LINES
+LINES = re.findall(r"id:'([A-Z0-9_]+)'", (HERE / "cin-main.js").read_text(encoding="utf-8"))
 
 
 def data_url(p: pathlib.Path, mime="image/webp") -> str:

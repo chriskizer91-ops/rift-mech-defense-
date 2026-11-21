@@ -131,20 +131,20 @@ function pose(t,s,sPrev){const U=hostMat.uniforms;poseOne(t,U.uPart.value,s);pos
 
 /* ---------- the other rifts: columns of dots pouring up out of the bay, leaning in toward the Signal as they rise ---------- */
 const riftMat=new T.ShaderMaterial(Object.assign({uniforms:{uT:{value:0},uSize:{value:1.6},uScale:{value:1},uMin:{value:1.2},uMax:{value:7},uSoft:{value:0},uGain:{value:.05},
-  uTo:{value:new T.Vector3()},uHgt:{value:420},uFeed:{value:1},uQ:{value:0}},
- vertexShader:`attribute vec4 aSeed;attribute vec3 aBase;uniform float uT,uSize,uScale,uMin,uMax,uGain,uHgt,uFeed,uQ;uniform vec3 uTo;varying vec3 vC;varying float vA;${HASH}
- void main(){float sp=.035+.05*aSeed.y;float f=fract(aSeed.x+uT*sp);
+  uTo:{value:new T.Vector3()},uHgt:{value:420},uFeed:{value:1},uQ:{value:0},uK:{value:new T.Vector3(1,1,1)}},
+ vertexShader:`attribute vec4 aSeed;attribute vec3 aBase;attribute float aK;uniform float uT,uSize,uScale,uMin,uMax,uGain,uHgt,uFeed,uQ;uniform vec3 uTo,uK;varying vec3 vC;varying float vA;${HASH}
+ void main(){float sp=.035+.05*aSeed.y;float f=fract(aSeed.x+uT*sp);float kk=aK<.5?uK.x:aK<1.5?uK.y:uK.z;f*=mix(.35,1.,kk);
   float rad=mix(46.,10.,pow(f,.6))*(.2+.8*aSeed.z);float ang=aSeed.w*6.2832+uT*(.25+.4*aSeed.y)+f*7.;
   vec3 col=aBase+vec3(cos(ang)*rad,f*uHgt*.55,sin(ang)*rad);
   vec3 lean=mix(aBase+vec3(0.,uHgt*.55,0.),uTo,.9);col=mix(col,lean+vec3(cos(ang),.3*sin(ang*2.),sin(ang))*rad*.6,smoothstep(.35,1.,f)*uFeed);
   float st=floor(uT*9.+aSeed.x*5.);col+=(vec3(hs(st+aSeed.y*91.7),hs(st*1.3+aSeed.z*57.1),hs(st*.7+aSeed.w*33.3))-.5)*uQ*12.;
   vec4 mv=modelViewMatrix*vec4(col,1.);gl_Position=projectionMatrix*mv;
   float px=uSize*uScale/max(.001,-mv.z);float cl=clamp(px,uMin,uMax);
-  vA=uGain*(1.+1.5*(1.-f))*smoothstep(0.,.05,f)*smoothstep(1.,.85,f)*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);}`,
+  vA=uGain*kk*(1.+1.5*(1.-f))*smoothstep(0.,.05,f)*smoothstep(1.,.85,f)*min(1.,px*px/(cl*cl)+.35);gl_PointSize=cl;vC=vec3(1.,0.,0.);}`,
  fragmentShader:DOT_FRAG},ADD));
-function makeRifts(bases,per){const n=bases.length*per,s=new Float32Array(n*4),b=new Float32Array(n*3),p=new Float32Array(n*3);
-  for(let i=0;i<n;i++){const k=Math.floor(i/per);s.set([rnd(),rnd(),Math.pow(rnd(),.5),rnd()],i*4);b.set([bases[k].x,0,bases[k].z],i*3);}
-  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(p,3));g.setAttribute('aSeed',new T.BufferAttribute(s,4));g.setAttribute('aBase',new T.BufferAttribute(b,3));
+function makeRifts(bases,per){const n=bases.length*per,s=new Float32Array(n*4),b=new Float32Array(n*3),p=new Float32Array(n*3),kA=new Float32Array(n);
+  for(let i=0;i<n;i++){const k=Math.floor(i/per);s.set([rnd(),rnd(),Math.pow(rnd(),.5),rnd()],i*4);b.set([bases[k].x,0,bases[k].z],i*3);kA[i]=k;}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(p,3));g.setAttribute('aSeed',new T.BufferAttribute(s,4));g.setAttribute('aBase',new T.BufferAttribute(b,3));g.setAttribute('aK',new T.BufferAttribute(kA,1));
   const pts=new T.Points(g,riftMat);pts.frustumCulled=false;return pts;}
 
 /* ---------- allies: a small knot of blue-channel dots on each Wraith (drawn green on the sensor) ---------- */

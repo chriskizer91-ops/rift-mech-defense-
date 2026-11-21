@@ -1,11 +1,21 @@
 # game/cinematic: the Signal's reveal (session D)
 
-The one cinematic of chapter 1 (decided 20 Nov, night): 56 seconds, ten shots, rendered live in three.js and timed exactly.
+The one cinematic of chapter 1 (decided 20 Nov, night): 2 min 30, three acts, twenty shots, rendered live in three.js and
+timed exactly, with Christopher's ElevenLabs takes on the radio.
+
+| Act | Time | What happens |
+|---|---|---|
+| Arrival | 0:00–0:38 | down through the rain onto Arlen Bay; the team walks the harbour wall; Harrow, Miller, Wren and ANVIL check in on the tactical map; "Copy." |
+| The reveal | 0:38–1:39 | the count climbs, the sensor chokes, "It's one mass", three clear seconds, ANVIL, "The Signal." |
+| First contact | 1:39–2:30 | four rifts feed it; ANVIL's barrage seals rift 4 (−100,000); it rises, comes ashore, slams the water; "Here it comes." |
+
+The fight that follows starts at **900,000 dots with three rifts left**.
 It is its own page. The game cuts to it and gets control back at the end.
 
 ```
 python3 game/cinematic/build.py                          # -> builds/signal-reveal.html (one file, works offline)
-python3 -I game/cinematic/shots.py OUTDIR 2.5 33.5 38.5  # stills at those seconds (headless)
+python3 -I game/cinematic/shots.py OUTDIR 24 83 121.5   # stills at those seconds (headless)
+python3 -I game/cinematic/sound.py OUT.wav               # the whole soundtrack, rendered offline (to check the mix)
 ```
 
 ## The hand-off (for whoever builds mission 8)
@@ -18,9 +28,12 @@ location.href = 'signal-reveal.html?back=' + encodeURIComponent(location.pathnam
 On GitHub Pages both pages sit in `builds/`, so `back` can be a plain relative path. Without `?back=` the end card offers REPLAY.
 
 ## The voices
-Put the ElevenLabs takes in `audio/voice/`, named by the ids on the voice-acting sheet, lower case:
-`c1_01_ow.mp3` … `c1_10_pilot.mp3` (the reveal's ten lines). Run the build; it inlines whatever it finds and plays each one
-through the radio chain at its time. Without them the film plays with captions.
+All 189 takes are in `audio/voice/` (20 Nov). The film uses 24 of them (`LINES` in `cin-main.js`, timed to each take: every
+file starts with about 0.5 s of silence). The build inlines the ones `LINES` names and plays each through the radio.
+
+## The mix
+Three buses (music, effects, voices) into a glue compressor, a brick-wall limiter and a soft clip. The music and effects
+duck under every line. Checked offline: no clipping, peaks at 0.85, quiet arrival and reveal, loudest in the drums before the slam.
 
 ## The radio (static on the voices, decided)
 `RMD.RadioVoice(ctx, out)` in `cin-audio.js` puts a clean take on the radio: 300 Hz to 3.3 kHz, a little drive, squelch
@@ -32,6 +45,7 @@ can use the same chain for every radio line.
 |---|---|
 | `cin-main.js` | the film: shots, the tracks every number comes from, HUD and captions, held frames, sound cues, the hand-off, `?rec=` |
 | `cin-signal.js` | the million-dot Signal (session A's viewer, copied and made scriptable), the rift columns, the team's green dots |
+| `cin-fx.js` | ANVIL's muzzle flashes and smoke, the shells' tracers, blasts and spray on the water, the slam's shock ring |
 | `cin-world.js` | Arlen Bay at night: sky, water with magma under it, harbour wall, lamps, cranes, lighthouse, the ridge and ANVIL's guns, drizzle |
 | `cin-wraith.js` | the four Wraiths (Ironhowl 4's model and kit; legs from session B's `wt-mech.js`) |
 | `cin-look.js` | the feed: world + threat overlay, bloom, sensor/thermal, interference, the clear three seconds |
@@ -40,4 +54,4 @@ can use the same chain for every radio line.
 
 ## Recording to video (next step, not done)
 `?rec=1920x960` renders without a clock; `window.CIN.frame(i, 30)` draws frame i at 30 fps (held frames report `'held'`).
-A recorder can step through 1,680 frames and encode them with ffmpeg if a video file is ever wanted.
+A recorder can step through 4,500 frames and encode them with ffmpeg if a video file is ever wanted.
