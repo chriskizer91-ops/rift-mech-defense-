@@ -104,6 +104,8 @@ Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR
   played in order they make one film that works on its own. Watched as a film, the battle clips stand in for the levels.
 - **All rendered 3D and filmed the same way as the reveal.** Battles may be staged with the real game pieces.
 - Session D coordinates it. The plan: `docs/story/film.md`.
+- **No AI-generated video (21 Nov).** Christopher tried a Gemini clip and dropped it: it clashes with the art style. Every
+  shot of the film is rendered by the scene kit, the way the reveal and the four test scenes are.
 
 ## Open questions (not decided)
 - Creature names. The viewer uses placeholders: MOTE, KNOT, SKEIN, RUNNER, STALKER, BRUTE, THE HOST.
