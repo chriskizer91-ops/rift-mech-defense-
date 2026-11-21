@@ -42,7 +42,7 @@ TM.build=function(scene,occluders){
     onMount(J.bk,jp);const hL=onMount(J.fa_L,aL),hR=onMount(J.fa_R,aR);
     for(const h of [hL,hR])h.traverse(o=>{const m=/^t(\d)_/.exec(o.name||'');if(m)o.visible=+m[1]===1;});
     const M={root,J,hips:J.hips,torso:J.torso,head:J.head,hip0:J.hips.position.y,tor0:J.torso.position.y,arms:[J.arm_L,J.arm_R].filter(Boolean),
-      name:NAMES[i],spot:p,phase:i*1.7,yaw:0,headPitch:0,headYaw:0,torsoYaw:0};
+      guns:[hL,hR],name:NAMES[i],spot:p,phase:i*1.7,yaw:0,headPitch:0,headYaw:0,torsoYaw:0};
     root.updateMatrixWorld(true);M.legs=[-1,1].map(sd=>legSetup(J,sd<0?'L':'R',sd,M.hip0));
     root.traverse(o=>{if(o.isMesh)occluders.push(o);});
     /* a small cold light at the visor, so each one reads in the dark */
@@ -54,7 +54,7 @@ TM.build=function(scene,occluders){
 const lerp=(a,b,t)=>a+(b-a)*t,sm=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 TM.pose=function(t,look,mv){for(let k=0;k<TM.list.length;k++){const M=TM.list[k];if(!M)continue;const L=look[k]||{pitch:0,yaw:0,torso:0},m=mv&&mv[k];
   const x=m?m.x:M.spot.x,z=m?m.z:M.spot.z,yaw=m?m.yaw:0,sp=m?m.spd:0,dist=m?m.dist:0;
-  M.root.position.set(x,M.spot.y,z);M.root.rotation.y=yaw;
+  M.root.position.set(x,m&&m.y!=null?m.y:M.spot.y,z);M.root.rotation.y=yaw;
   const sf=clamp(sp/7.5,0,1),w=sm(.15,1.4,sp),S_=lerp(1.3,3.2,sf);const phase=dist/(2*S_)+M.phase;
   const bob=Math.abs(Math.sin(phase*Math.PI*2))*.1*w;const br=Math.sin(t*1.1+M.phase)*.035*(1-w);
   const hipY=M.hip0-.08+br-bob-.05*w;

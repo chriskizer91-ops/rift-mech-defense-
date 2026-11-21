@@ -1,0 +1,100 @@
+<!doctype html>
+<!-- RIFT MECH DEFENSE · THE FILM: one scene's page (session D). game/cinematic/film/build_film.py fills in the scene's
+     code, three.js, the Wraith, the textures and the voices, and writes builds/film-<scene>.html: one file, works offline.
+     The game opens it with ?back=<its url> and gets control back at the end. -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>IRMD · OVERWATCH feed</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;color:#d8e6e2;font:700 12px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.08em;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+#stage{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;background:#000}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;pointer-events:none;text-transform:uppercase;z-index:2}
+#tl{left:2.2%;top:4%;font-size:clamp(8px,1.25vw,12px);color:#6fae9f;letter-spacing:.22em;line-height:1.5}
+#tl .live{color:#ff4a2a}#tl .live:before{content:"● ";animation:bl 1.2s steps(2) infinite}
+@keyframes bl{50%{opacity:.2}}
+#tr{right:2.2%;top:4%;text-align:right;font-size:clamp(8px,1.1vw,11px);color:#6fae9f;letter-spacing:.16em}
+#tr .v{font-size:clamp(11px,1.7vw,17px);color:#d8e6e2;letter-spacing:.08em}
+#tr .bar{width:clamp(70px,10vw,120px);height:4px;background:#ffffff18;margin:3px 0 6px auto;overflow:hidden}
+#tr .bar i{display:block;height:100%;background:#4fe0b8;width:50%}
+#tr .bar.bad i{background:#ff4a2a}
+#cap{left:0;right:0;bottom:7%;text-align:center;font-size:clamp(12px,2.1vw,20px);color:#eef6f3;text-transform:none;letter-spacing:.03em;font-weight:600;
+  text-shadow:0 0 6px #000,0 0 16px #000,0 0 2px #000;padding:0 10%;min-height:1.3em}
+#cap b{color:#4fe0b8;font-weight:800;letter-spacing:.16em;font-size:.72em;margin-right:.5em}
+body.thermal #cap b{color:#ffd27a}
+#tc{left:2.2%;bottom:4%;font-size:clamp(7px,1vw,10px);color:#56776f;letter-spacing:.2em}
+.corner{position:absolute;width:3.2%;height:6.4%;border:2px solid #4fe0b833;pointer-events:none;z-index:2}
+.c1{left:1%;top:2%;border-right:0;border-bottom:0}.c2{right:1%;top:2%;border-left:0;border-bottom:0}
+.c3{left:1%;bottom:2%;border-right:0;border-top:0}.c4{right:1%;bottom:2%;border-left:0;border-top:0}
+.tag{position:absolute;transform:translate(-50%,-100%);font-size:clamp(7px,1vw,10px);color:#7dffb0;letter-spacing:.2em;display:none;text-shadow:0 0 6px #0a3}
+.tag:after{content:"";display:block;width:1px;height:10px;background:#7dffb066;margin:2px auto 0}
+.tag.amber{color:#ffc56a;text-shadow:0 0 6px #a60}.tag.amber:after{background:#ffc56a66}
+.tag.red{color:#ff6a4e;text-shadow:0 0 6px #a10}.tag.red:after{background:#ff6a4e66}
+.tag.green{color:#7dffb0}
+.tag.mark{padding:3px 7px;border:1px solid currentColor;animation:bl 1s steps(2) infinite}
+#stamp{left:0;right:0;top:36%;text-align:center;opacity:0;transition:opacity .25s}
+#stamp.on{opacity:1;animation:jit .16s steps(2) 5}
+#stamp .d{font-size:clamp(8px,1.2vw,12px);color:#ffb29a;letter-spacing:.5em}
+#stamp .n{font-size:clamp(30px,8vw,92px);color:#ff3b26;letter-spacing:.32em;line-height:1.05;text-shadow:0 0 24px #ff2a10aa,0 0 4px #ff2a10;margin:.15em 0 .1em .32em}
+#stamp .s{font-size:clamp(7px,1vw,10px);color:#ffb29a99;letter-spacing:.3em}
+@keyframes jit{0%{transform:translateX(-6px)}100%{transform:translateX(5px)}}
+#title{left:0;right:0;top:34%;text-align:center;opacity:0}
+#title .d{font-size:clamp(8px,1.2vw,12px);color:#9fd8c8;letter-spacing:.5em}
+#title .n{font-size:clamp(24px,6vw,70px);color:#e9f4f0;letter-spacing:.3em;line-height:1.1;text-shadow:0 0 18px #4fe0b855;margin:.2em 0 .15em .3em}
+#title .s{font-size:clamp(7px,1vw,10px);color:#9fd8c899;letter-spacing:.3em}
+body.nohud #tl,body.nohud #tr,body.nohud #tc,body.nohud .corner{opacity:0}
+#log{left:22%;right:22%;top:24%;font:600 clamp(9px,1.5vw,15px)/1.65 ui-monospace,Menlo,Consolas,monospace;color:#9fe8cf;letter-spacing:.06em;text-transform:none;white-space:pre;text-shadow:0 0 8px #4fe0b866}
+#log .r{color:#ff6a4e;text-shadow:0 0 8px #ff2a1066}
+#lock{left:50%;top:50%;width:18%;height:36%;transform:translate(-50%,-50%);border:1px solid #4fe0b800;opacity:0;transition:opacity .3s}
+#lock.on{opacity:1;border-color:#4fe0b8aa;box-shadow:0 0 0 1px #4fe0b822 inset}
+#lock:before{content:"LOCK · RESOLVED";position:absolute;left:0;top:-1.6em;font-size:clamp(7px,1vw,10px);color:#4fe0b8;letter-spacing:.24em}
+.card{position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#000c;text-align:center;text-transform:uppercase}
+.card.on{display:flex}
+.card .org{font-size:10px;color:#6fae9f;letter-spacing:.3em}
+.card .t{font-size:clamp(18px,4.5vw,34px);color:#ff3b26;letter-spacing:.22em;text-shadow:0 0 18px #ff2a1088}
+.card .sub{font-size:11px;color:#9fb8b2;letter-spacing:.16em;max-width:80vw;line-height:1.6}
+button{font:800 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.18em;color:#bcd3cd;background:#0b1513cc;border:1px solid #2c4a43;border-radius:3px;
+  padding:12px 18px;cursor:pointer;text-transform:uppercase}
+button.ready{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 16px #ff2a1055 inset}
+button:disabled{opacity:.5}
+#load{font-size:10px;color:#ff3b26;letter-spacing:.3em;min-height:1.2em}
+#rot{display:none;font-size:10px;color:#6f8f88;letter-spacing:.2em}
+@media (orientation:portrait){#rot{display:block}}
+#skip{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:4;padding:8px 12px;font-size:10px;opacity:0;pointer-events:none;transition:opacity .4s}
+#skip.on{opacity:.55;pointer-events:auto}
+</style></head><body>
+<div id="stage">
+  <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+  <div class="hud" id="tl"><span class="live">Live</span> · IRMD · OVERWATCH feed<br><span id="place">Arlen Bay</span> · <span id="camn">WRAITH · OPTICAL</span></div>
+  <div class="hud" id="tr"><div>Dot count</div><div class="v" id="cnt">0</div>
+    <div style="margin-top:5px">Sensor confidence</div><div class="bar" id="confb"><i id="conf"></i></div>
+    <div>Range</div><div class="v" id="rng">2.4 KM</div></div>
+    <div class="hud" id="title"></div>
+  <div class="hud" id="log"></div>
+  <div class="hud" id="cap"></div>
+  <div class="hud" id="tc">23:52:14:00</div>
+</div>
+<div class="card on" id="start">
+  <div class="org" id="s_org">International Rift Mech Defense</div>
+  <div class="t" id="s_t">OVERWATCH</div>
+  <div class="sub" id="s_sub">Incoming feed<br>Sound on, headphones if you have them</div>
+  <button id="go" disabled>▶ Open the feed</button>
+  <div id="load">Linking sensor…</div>
+  <div id="rot">Turn your phone sideways</div>
+</div>
+<div class="card" id="end">
+  <div class="org" id="e_org">Feed ends</div>
+  <div class="t" id="e_t">IRMD</div>
+  <div class="sub" id="e_sub">Returning to the game…</div>
+  <div style="display:flex;gap:10px"><button id="replay">↺ Replay</button><button id="back" class="ready">Back to the game ▸</button></div>
+</div>
+<button id="skip">Skip ›</button>
+<!--THREE-->
+<!--ASSETS-->
+<!--VOICE-->
+<script>
+<!--SCENE-INC-->
+</script>
+</body></html>

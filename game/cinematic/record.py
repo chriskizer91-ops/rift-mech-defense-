@@ -5,8 +5,10 @@
 Draws every frame with CIN.frame(i, fps) (held frames stay held, as in the live film), screenshots the stage with its
 HUD, then muxes the offline soundtrack (CIN_AUDIO, same as sound.py). FROM/TO let two processes share the work:
 a part is written as OUT.partN.mp4 with no sound; run again with no range to join the parts and add the sound.
+Other pages: PAGE=film-m1-first-light.html DUR=140 python3 -I game/cinematic/record.py OUT.mp4
 """
 import base64
+import os
 import pathlib
 import subprocess
 import sys
@@ -20,6 +22,7 @@ size = sys.argv[2] if len(sys.argv) > 2 else "1280x640"
 fps = int(sys.argv[3]) if len(sys.argv) > 3 else 24
 w, h = map(int, size.split("x"))
 rng = (int(sys.argv[4]), int(sys.argv[5])) if len(sys.argv) > 5 else None
+PAGE = os.environ.get("PAGE", "signal-reveal.html")   # any scene page in builds/ (PAGE=film-m1-first-light.html)
 ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist",
         "--autoplay-policy=no-user-gesture-required"]
 
@@ -27,7 +30,7 @@ ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshade
 def page(p):
     b = p.chromium.launch(executable_path="/usr/bin/google-chrome", headless=True, args=ARGS)
     pg = b.new_page(viewport={"width": w, "height": h})
-    pg.goto((ROOT / "builds/signal-reveal.html").as_uri() + f"?rec={size}")
+    pg.goto((ROOT / "builds" / PAGE).as_uri() + f"?rec={size}")
     pg.wait_for_function("window.CIN && window.CIN.ready", timeout=180000)
     return b, pg
 
@@ -63,8 +66,8 @@ def sound(dst):
     dst.write_bytes(base64.b64decode(data))
 
 
-DUR = 164
-N = DUR * fps
+DUR = float(os.environ.get("DUR", "164"))
+N = int(round(DUR * fps))
 if rng:
     frames(rng[0], min(rng[1], N), out.with_suffix(f".part{rng[0]}.mp4"))
     sys.exit()
