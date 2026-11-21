@@ -16,7 +16,7 @@ The session that built `concept/swarm-viewer.src.html` (20 Nov 2026). If this ch
     the dots lag and smear when the creature lunges. Faint lines join neighbouring dots: the sensor's best-fit skeleton. IDLE
     breathes and paces. AGGRO stalks, coils, lunges at a squad of green dots and mauls it; the squad's dots flicker, turn red and
     join the count.
-  - THE HOST, 1,000,000 dots, all moved on the GPU. Reworked 20 Nov after Christopher found the first body too pointy: now a hunched,
+  - THE SIGNAL (named 20 Nov; first called the Host), 1,000,000 dots, all moved on the GPU. Reworked 20 Nov after Christopher found the first body too pointy: now a hunched,
     lopsided heap of about 2,000 brute-sized clumps (220 to 740 dots each) that crawl over each other. A huge hump, the head sunk low
     in front, one arm heavier than the other, two tendrils trailing behind, a dim core, a throat that glows when the jaw opens.
     Moving parts lag (`uPartL`, the pose half a second ago) so motion smears; a few dots drip off and crawl back.

@@ -346,7 +346,7 @@ const TIERS=[
     k[s+'v0']=V(x*9,24,-10);k[s+'v1']=V(x*(20+4*Math.sin(w5)),8+3*Math.sin(w5*1.4),-22+6*Math.sin(w5*.7)+rch*20);
     k[s+'v2']=V(x*(34+8*Math.sin(w6)),2.5+2*Math.max(0,Math.sin(w6*1.2)),-34+12*Math.sin(w6*.8)+rch*58);}
    return k;}},
- {id:'host',n:1000000,name:'CONTACT 01',cls:'1,000,000 dots · end of chapter one · name to come',desc:'The first contact the sensor ever resolved into a shape, and only because it is so big and so far away. Its lower half never finishes forming: it is still pouring up out of the rift.',
+ {id:'host',n:1000000,name:'THE SIGNAL',cls:'1,000,000 dots · end of chapter one',desc:'The first thing that ever came through clear: the sensor resolves it only because it is so big and so far away. It drifts between shapes, and its lower half never finishes forming: it is still pouring up out of the rift.',
   size:170,grid:520,cam:[430,.17,70],minD:60,maxD:1400,base:.18},
  {id:'brief',n:1048576,name:'INTEL BRIEF 00',cls:'Recovered sensor log · survey drone 3',desc:'This is everything we have on what they are. The drone tried to resolve one contact up close.',
   size:2,grid:0,cam:[7,.25,0],minD:1.5,maxD:30,base:.08},
@@ -589,7 +589,7 @@ function placeCam(dt){orb.idle+=dt;if(orb.auto&&orb.idle>3.5)orb.yaw+=dt*.07;
 const $=id=>document.getElementById(id);
 let tier=null,tierIx=1;
 const tierRow=$('tiers');
-TIERS.forEach((t,i)=>{const b=document.createElement('button');b.innerHTML=(t.id==='brief'?'Brief':t.id==='host'?'1M':t.n>=1000?(t.n/1000)+'K':String(t.n))+`<small>${t.id==='brief'?'intel':t.id==='host'?'contact':t.name}</small>`;
+TIERS.forEach((t,i)=>{const b=document.createElement('button');b.innerHTML=(t.id==='brief'?'Brief':t.id==='host'?'1M':t.n>=1000?(t.n/1000)+'K':String(t.n))+`<small>${t.id==='brief'?'intel':t.id==='host'?'signal':t.name}</small>`;
   b.onclick=()=>setTier(i);t.btn=b;tierRow.appendChild(b);});
 function frame(t){orb.dist=t.cam[0];orb.pitch=t.cam[1];orb.ty=t.cam[2];orb.minD=t.minD;orb.maxD=t.maxD;orb.tz=0;orb.idle=0;orb.yaw=t.yaw!=null?t.yaw:.55;
   if(t.pose&&W<H)orb.dist*=1.12;
@@ -638,7 +638,7 @@ cv.addEventListener('pointerdown',()=>{if(contact)orb.idleUser=true;});
 
 // ---------------------------------------------------------------- the intel brief (dots unfolding on dots)
 let brief=null;
-const BRIEF_LINES=[[0,'<b>IRMD INTEL BRIEF 00</b> This is everything we have.'],[4,'Survey drone 3 tried to resolve one contact at close range.'],
+const BRIEF_LINES=[[0,'<b>IRMD INTEL BRIEF 00</b> The Static. This is everything we have.'],[4,'Survey drone 3 tried to resolve one contact at close range.'],
  [9,'Every dot it measured was made of more dots.'],[14,'The count never settled. Neither did the shape.'],[19.5,'At four metres the sensor reported more dimensions than it has axes for.'],
  [25,'Drone lost at 4.1 metres. Count at loss: 1,048,576 and rising.'],[30,'']];
 function startBrief(){brief={t0:simT};orb.auto=true;orb.idle=9;orb.dist=W<H?10.5:7;orb.pitch=.2;orb.ty=0;}

@@ -16,7 +16,7 @@ Christopher's lore and boss direction is in `docs/PLAN.md` (20 Nov). Session A w
 thing from more dimensions; why dots, why shapes change, why they take people), the AI-and-fate thread, the boss ladder
 (BRUTE 500 → BEHEMOTH 10K, light boss → TITAN 50K, mid boss → THE HOST 1M), the six mechanics the Host fight needs, the fight
 in four phases, difficulty, and the Wraith's upgrades: https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3. Christopher said yes to all of it, with answers recorded in `docs/PLAN.md` (chapter 1 at least 30 minutes, waves of 2 to 5
-minutes, squads fresh each mission, a warm OVERWATCH, the AI as the reason we stand a chance, Easy/Medium/Hard). Build the design
+minutes, squads fresh each mission, a warm OVERWATCH, the AI as the reason we stand a chance, Easy/Medium/Hard). The calamity is **the Static** and the big one is **the Signal**. Build the design
 document from it.
 
 ## Read first

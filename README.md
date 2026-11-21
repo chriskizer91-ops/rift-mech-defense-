@@ -1,14 +1,14 @@
 # Rift Mech Defense
 
 Christopher's top-down mech game: an alternate-universe Ironhowl (not a sequel). You pilot the Wraith for the
-**International Rift Mech Defense** (IRMD) on an Earth-like world that is no real place. The seafloor has cracked open,
-magma glows under the water, and swarms pour up out of the rifts. You never see them directly: on your threat overlay
+**International Rift Mech Defense** (IRMD) on an Earth-like world that is no real place. The calamity is called **the Static**:
+the seafloor has cracked open, magma glows under the water, and swarms pour up out of the rifts. The end of chapter 1 is **the Signal**. You never see them directly: on your threat overlay
 they are dots.
 
 **Open first:** `builds/swarm-viewer.html` (one self-contained file, works offline, made for a phone; also at
 https://claude.ai/artifact/TTjCztKET9MYQkawNMNBAX): the threat library.
 Every creature in it is made of dots: MOTE 1, KNOT 10, SKEIN 20, RUNNER 50, STALKER 100, BRUTE 500, DRAG 1,000,
-HULK 5,000, BEHEMOTH 10,000, TITAN 50,000, then THE HOST 1,000,000 with its contact sequence, and INTEL BRIEF 00. IDLE or AGGRO, SENSOR or THERMAL; get close and the sensor
+HULK 5,000, BEHEMOTH 10,000, TITAN 50,000, then THE SIGNAL 1,000,000 with its contact sequence, and INTEL BRIEF 00. IDLE or AGGRO, SENSOR or THERMAL; get close and the sensor
 breaks up. A link with `#host`, `#brute,aggro`, `#stalker,thermal` and so on opens a creature directly.
 
 ## Where it stands
