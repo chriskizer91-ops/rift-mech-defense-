@@ -46,7 +46,7 @@ The design document exists with all of the above, linked from `docs/BOARD.md`, a
 
 ## Proposals (waiting on Christopher)
 
-### Chapter 1 as a 30-minute film (21 Nov)
+### Chapter 1 as a 30-minute film (21 Nov): **approved the same day; the plan is now `docs/story/film.md`**
 - Every piece is a game scene. The cutscenes and combat clips play in the game between levels, and played in order they make one film.
 - Shape: a 1:30 opening; missions 1 to 7 each get a ~1:00 arrival, a ~1:45 battle and a ~0:30 aftermath; mission 8 gets the
   reveal (2:44), the Signal fight (3:00) and the ending (1:30). About 31 minutes.
