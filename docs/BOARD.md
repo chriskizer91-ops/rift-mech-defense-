@@ -20,8 +20,6 @@ Later, when B and C have something running: one session joins them into `game/` 
 (one line each: who asks, who for, what)
 
 ## Waiting on Christopher
-- The lore and boss proposal: https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3 (open questions at its end).
-- (Dropped 20 Nov: the five ChatGPT Host directions didn't produce useful pictures; Claude designs the models.)
-- Round-1 art: `docs/art-requests/RMD_ROUND1_IMAGE_REQUEST.html`. Its Host section describes the old spiky design: skip H00 to H04
-  until a direction is picked; the swarm line-up and mood frames still stand.
-- The open questions in `PLAN.md`.
+- Nothing blocking. The lore and boss proposal is approved (20 Nov): https://claude.ai/artifact/Jm2YjnGsapnnm7d2BLBGo3.
+  The calamity is **the Static**; the big one is **the Signal**.
+- The ChatGPT image requests (`docs/art-requests/`) are on hold; session A designs the creatures.
