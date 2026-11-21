@@ -3,8 +3,8 @@
     python3 game/systems/build.py          # -> builds/mech-arena.html
 
 It inlines, in order: three.js r187 (Ironhowl 4's bundle), the Wraith's combat models and pictures (from borrowed/ironhowl4/m4/,
-the models kept as they are packed there: gzip + base64), the arena's ground picture, then the arena's code (game/systems,
-game/mech, game/creatures-test), wrapped in one function.
+the models kept as they are packed there: gzip + base64), the arena's ground picture, then session A's creature module (game/creatures/creatures.js) and the
+arena's code (game/systems, game/mech), wrapped in one function.
 """
 import base64
 import json
@@ -18,12 +18,11 @@ M4 = ROOT / "borrowed/ironhowl4/m4"
 ART = ROOT / "borrowed/ironhowl4/art"
 
 CODE = [
+    "game/creatures/creatures.js",   # session A's creature module (read only here)
     "game/systems/base.js",
     "game/systems/input.js",
     "game/systems/render.js",
     "game/systems/fx.js",
-    "game/creatures-test/rigs.js",
-    "game/creatures-test/cluster.js",
     "game/mech/wraith.js",
     "game/mech/player.js",
     "game/mech/weapons.js",

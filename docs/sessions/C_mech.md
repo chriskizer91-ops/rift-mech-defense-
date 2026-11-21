@@ -42,3 +42,29 @@ that shrink as they're hit; allies can be lost; scrap buys upgrades. Your line o
 
 ## Proposals
 (write here; Christopher decides)
+
+### Session C, 20 Nov: what the arena tests (`builds/mech-arena.html`)
+Screenshots: `docs/shots/mech/`. Numbers below come from headless runs and a bot pilot, not from a person playing yet.
+
+1. **Aiming on a phone, top-down (built this way).** Twin sticks. The left thumb's stick moves (up = north on screen). The right
+   thumb's stick appears wherever that thumb lands and aims; pushed past a quarter it fires. The Lance charges while you hold and
+   fires when you let go or when full. Aim assist bends the aim onto the creature nearest the line, within 0.2 rad and 48 m (about
+   what the screen shows). JET, SALVO, MSL and VENT sit on the right edge above the aim stick; you lift the thumb to press them.
+   Mouse: the shot goes where the cursor points on the ground. Other ways, if this feels wrong: (b) fire by itself at whatever is
+   under the aim, with the right thumb only steering; (c) the Wraith picks the nearest creature and the right thumb only changes it.
+2. **Dots are hit points (tested): it reads.** A 100-dot STALKER visibly thins and shrinks, the knocked-off dots scatter and fade.
+   With Ironhowl 4's gun numbers a KNOT dies to one round (11 damage), a STALKER to about 10, a BRUTE to about 45.
+3. **New, to test: shots go through the gaps.** With 2 alone, the autocannon killed every small creature before it could bite. Now a
+   gun round that crosses a cluster hits with a chance of dots ÷ (dots + 22), never below 30 %: KNOT 31 %, STALKER 82 %, BRUTE 96 %.
+   The Lance, the Arc and blasts always hit. That gives each weapon a job: the autocannon for big dense ones, the Arc for swarms,
+   the Lance for a line of them, SALVO and missiles go to the biggest. `?solid` in the address turns it off to compare.
+4. **The arena's other rules (proposals):** a bite is 1.2 + 0.8 × √dots (KNOT 3.7, STALKER 9.2, BRUTE 19), × 0.6 / 1 / 1.4 for
+   Easy / Medium / Hard; a mauling creature hangs on to a Wraith walking away. A bitten ally flickers 1.25 s; kill the creature in
+   time and it is saved, otherwise it turns red and becomes one more dot of it. Scrap = half a creature's starting dots, plus 15 for
+   each ally alive at the end of a wave. Interference is held under 0.7 and frames start dropping at 0.3, so a fight stays playable.
+5. **What the bot found (six test waves, Medium).** Autocannon only, no upgrades: it clears them, but loses nearly every squad.
+   Autocannon + Arc and buying upgrades: keeps 2 to 14 of the 15 allies a wave. The Wraith itself is rarely hurt, because every
+   creature goes for the nearest target and the squads are nearer. Proposal: let each creature prefer a kind of target (STALKERs
+   people, BRUTEs the Wraith, KNOTs the Wraith in swarms). Asked of session A on the board.
+6. **Left for later:** the DR-1 drone, the full-detail modification bay, pilot levels. The missile pod still has to be fitted for
+   missiles (Ironhowl 4's rule).

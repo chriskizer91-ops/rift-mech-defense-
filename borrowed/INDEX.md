@@ -27,3 +27,7 @@ Read-only copies. Copy what you need into `game/` and change the copy; add a lin
 ## Used by
 (one line each: what, copied to where, by which session)
 - `ironhowl4/js/three-ih3.min.js`: inlined by `tools/build_viewer.py` (session A).
+- `ironhowl4/js/ironhowl4.js`: the Wraith, input, weapons, kit, pickups, upgrades, particles, sounds and HUD, copied and changed into
+  `game/mech/` and `game/systems/` (session C; map in `game/systems/README.md`).
+- `ironhowl4/js/three-ih3.min.js`, `ironhowl4/m4/*/…_combat*` (Wraith V2 HD, AC-4, LN-1, AR-1, MP-9, WT-1, JP-2) and
+  `ironhowl4/art/06-dirt-and-gravel*.webp`: inlined by `game/systems/build.py` into `builds/mech-arena.html` (session C).

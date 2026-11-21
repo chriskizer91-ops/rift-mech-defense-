@@ -1,6 +1,7 @@
 /* systems/render.js — the picture.
    1. The world (ground, rocks, rifts, the Wraith, shots, smoke) is drawn lit, into a target.
-   2. The dot creatures, the allies and the knocked-off dots are drawn as additive points into a second target (the viewer's dots),
+   2. The dot creatures (session A's module, game/creatures/), the allies and the knocked-off dots are drawn as additive points
+      into a second target (the viewer's dots),
       then blurred twice for the bloom (the viewer's bloom).
    3. One last pass lays the dots over the world in the sensor look (red hostile, green allies) or the thermal look (iron palette,
       the world dimmed to its heat), then adds the interference: tearing bands, block shifts, colour split, snow and dropouts.
@@ -137,14 +138,6 @@ DOTS.line=function(a,b,k){const n=this.nl;if(n>=this.maxL)return;const o=n*6;thi
 DOTS.end=function(){const g=this.geo;g.setDrawRange(0,this.n);
   for(const [k,w] of [['position',3],['aCol',3],['aI',1],['aS',1]]){const a=g.attributes[k];a.clearUpdateRanges();if(this.n)a.addUpdateRange(0,this.n*w);a.needsUpdate=true;}
   const lg=this.lgeo;lg.setDrawRange(0,this.nl*2);for(const k of ['position','color']){const a=lg.attributes[k];a.clearUpdateRanges();if(this.nl)a.addUpdateRange(0,this.nl*6);a.needsUpdate=true;}};
-/* knocked-off dots: they fly away from the hit, fall and fade */
-const DEBRIS=[];
-function debris(x,y,z,vx,vy,vz,col){if(DEBRIS.length>2500)DEBRIS.shift();DEBRIS.push({x,y,z,vx,vy,vz,t:0,life:.7+Math.random()*.9,col});}
-function drawDebris(dt,thermal){let w=0;for(let i=0;i<DEBRIS.length;i++){const d=DEBRIS[i];d.t+=dt;if(d.t>=d.life)continue;DEBRIS[w++]=d;
-    d.vy-=14*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;d.z+=d.vz*dt;if(d.y<.05){d.y=.05;d.vy*=-.3;d.vx*=.6;d.vz*=.6;}
-    const f=1-d.t/d.life,fl=Math.random()<.85?1:.2;DOTS.put(d.x,d.y,d.z,d.col[0],d.col[1],d.col[2],f*f*fl*(thermal?.06:1.1),thermal?1.2:.3);}
-  DEBRIS.length=w;}
-
 /* ---------------- post: bloom + sensor / thermal look + interference (from the viewer) ---------------- */
 const FS_V=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
 const downMat=new THREE.ShaderMaterial({uniforms:{tA:{value:null},uPx:{value:new THREE.Vector2()}},vertexShader:FS_V,depthTest:false,depthWrite:false,
