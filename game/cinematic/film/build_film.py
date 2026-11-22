@@ -24,6 +24,7 @@ SCENES = {
     "m4": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-portarlen.js", "film/scene-m4.js"], "out": "film-m4-landfall.html"},
     "m6": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-shelf.js", "film/scene-m6.js"], "out": "film-m6-the-shelf.html"},
     "m7": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-ridge.js", "film/scene-m7.js"], "out": "film-m7-the-ridge.html"},
+    "m5": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-saltpans.js", "film/scene-m5.js"], "out": "film-m5-night-shift.html"},
     "m5c": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-saltpans.js", "film/scene-m5c.js"], "out": "film-m5-copper.html"},
 }
 
