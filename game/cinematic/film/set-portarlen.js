@@ -10,22 +10,25 @@
    PORT.h(x,z) ground. PORT.update(t, o): o = {dusk, rift 0..1, grey 0..1 (the cannery), fire 0..1, churn:[{x,z,r,k}]}
    ===================================================================================================================== */
 const PORT=(function(){
-const T=THREE,S={occ:[],fires:[],u:{uT:{value:0},uDusk:{value:0},uRift:{value:1},uCam:{value:new T.Vector3()},uChurn:{value:Array.from({length:16},()=>new T.Vector4())}}};
+const T=THREE,S={opts:{},occ:[],fires:[],u:{uT:{value:0},uDusk:{value:0},uMorn:{value:0},uLevel:{value:0},uCanal:{value:0},uRift:{value:1},uCam:{value:new T.Vector3()},uChurn:{value:Array.from({length:16},()=>new T.Vector4())}}};
 S.RIFT={x:70,z:-78};S.CANNERY={x:125,z:4};S.STREET=-20;
 const NOISE=`float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1,0)),f.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*vn(p);p=p*2.03+vec2(17.1,9.3);a*=.5;}return s;}`;
-const HJ=(x,z)=>{const town=3+Math.max(0,z-20)*.035;if(z>=20)return town;
+const CANAL=(x,z,h)=>{if(!S.opts.canal||x>38)return h;const d=Math.abs(z-45);return d<8?h+(-4-h)*Math.min(1,Math.max(0,(8-d)/2.5)):h;};
+const HJ=(x,z)=>CANAL(x,z,HJ0(x,z));
+const HJ0=(x,z)=>{const town=3+Math.max(0,z-20)*.035;if(z>=20)return town;
   const west=z>=0?3:-5,east=Math.min(3.08,-2.2+(z+90)*.048)+Math.sin(x*.05+z*.03)*.15;const b=Math.min(1,Math.max(0,(x-30)/10));return west*(1-b)+east*b;};
-const HG=`float hgt(vec2 q){float x=q.x,z=q.y;if(z>=20.)return 3.+max(0.,z-20.)*.035;float west=z>=0.?3.:-5.;float east=min(3.08,-2.2+(z+90.)*.048)+sin(x*.05+z*.03)*.15;
-  float b=clamp((x-30.)/10.,0.,1.);return mix(west,east,b);}`;
+const HG=`uniform float uCanal;float hgt0(vec2 q){float x=q.x,z=q.y;if(z>=20.)return 3.+max(0.,z-20.)*.035;float west=z>=0.?3.:-5.;float east=min(3.08,-2.2+(z+90.)*.048)+sin(x*.05+z*.03)*.15;
+  float b=clamp((x-30.)/10.,0.,1.);return mix(west,east,b);}
+float hgt(vec2 q){float h=hgt0(q);if(uCanal<.5||q.x>38.)return h;float d=abs(q.y-45.);return d<8.?mix(h,-4.,clamp((8.-d)/2.5,0.,1.)):h;}`;
 S.h=HJ;
-const SKY=`uniform float uT,uDusk;
-vec3 sky(vec3 d){float y=max(d.y,0.);float n=uDusk;vec3 hz=mix(vec3(.3,.17,.12),vec3(.06,.05,.07),n),top=mix(vec3(.06,.06,.09),vec3(.01,.012,.02),n);vec3 c=mix(hz,top,pow(y,.45));
+const SKY=`uniform float uT,uDusk,uMorn;
+vec3 sky(vec3 d){float y=max(d.y,0.);float n=uDusk;vec3 hz=mix(mix(vec3(.3,.17,.12),vec3(.06,.05,.07),n),vec3(.33,.35,.37),uMorn),top=mix(mix(vec3(.06,.06,.09),vec3(.01,.012,.02),n),vec3(.15,.16,.18),uMorn);vec3 c=mix(hz,top,pow(y,.45));
   vec3 sd=normalize(vec3(-.86,.02,-.45));float sa=max(0.,dot(d,sd));
   vec2 q=d.xz/(y+.08);float cl=fbm(q*.8+vec2(uT*.005,0.))*.7+fbm(q*2.8-vec2(uT*.008,0.))*.3;float cov=smoothstep(.38,.72,cl)*smoothstep(-.02,.12,y);
   vec3 warm=vec3(1.,.35,.12)*(pow(sa,4.)*.8+pow(sa,24.)*1.2)*exp(-y*6.)*(1.-n*.85);
-  c+=warm*(1.-cov*.55);c=mix(c,mix(vec3(.07,.05,.06),vec3(.35,.14,.08)*(1.-n*.8),pow(sa,2.5)*.8),cov*.85);
+  warm*=1.-uMorn;c+=warm*(1.-cov*.55);c=mix(c,mix(mix(vec3(.07,.05,.06),vec3(.35,.14,.08)*(1.-n*.8),pow(sa,2.5)*.8),vec3(.24,.25,.27),uMorn),cov*.85);
   return c;}`;
 S.build=function(scene0){const g=new T.Group();scene0.add(g);S.group=g;
   const sky=new T.Mesh(new T.SphereGeometry(9000,48,24),new T.ShaderMaterial({uniforms:S.u,side:T.BackSide,depthWrite:false,fog:false,
@@ -41,7 +44,7 @@ S.build=function(scene0){const g=new T.Group();scene0.add(g);S.group=g;
     void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vN=normal;vec4 mvPosition=viewMatrix*w;gl_Position=projectionMatrix*mvPosition;
     #include <fog_vertex>
     }`,
-    fragmentShader:`varying vec3 vW;varying vec3 vN;uniform float uT,uDusk;uniform vec4 uChurn[16];${NOISE}
+    fragmentShader:`varying vec3 vW;varying vec3 vN;uniform float uT,uDusk,uMorn,uLevel;uniform vec4 uChurn[16];${NOISE}
     #include <fog_pars_fragment>
     void main(){vec2 p=vW.xz;vec3 n=normalize(vN);float town=step(20.,p.y);float road=town*smoothstep(8.,6.,abs(p.x+20.));
       vec3 mud=mix(vec3(.16,.14,.12),vec3(.24,.21,.17),fbm(p*.1))*(.8+.3*fbm(p*1.5));float wet=smoothstep(.8,-.3,vW.y);mud*=1.-wet*.45;
@@ -49,7 +52,8 @@ S.build=function(scene0){const g=new T.Group();scene0.add(g);S.group=g;
       vec3 col=mix(mud,stone,step(20.,p.y)*(1.-road)+(1.-step(40.,p.x))*step(-.1,p.y)*step(p.y,20.));col=mix(col,tar,road);
       float cob=step(.9,fract(p.x*.5))+step(.9,fract(p.y*.5));col*=1.-cob*.12*town*(1.-road);
       float ch=0.;for(int i=0;i<16;i++){vec4 c=uChurn[i];if(c.w<=0.)continue;float d=length(p-c.xy);ch+=c.w*exp(-d*d/(c.z*c.z));}col*=1.-clamp(ch,0.,1.)*(.3+.3*fbm(p*2.+uT));
-      vec3 sd=normalize(vec3(-.86,.18,-.45));float dif=max(0.,dot(n,sd));vec3 L=mix(vec3(.13,.12,.14),vec3(.05,.055,.075),uDusk)*(.6+.4*n.y)+vec3(1.,.45,.2)*dif*.55*(1.-uDusk);
+      col*=1.-.4*smoothstep(uLevel+.6,uLevel-.2,vW.y)*step(.5,uLevel);
+      vec3 sd=normalize(mix(vec3(-.86,.18,-.45),vec3(.4,.8,.3),uMorn));float dif=max(0.,dot(n,sd));vec3 L=mix(mix(vec3(.13,.12,.14),vec3(.05,.055,.075),uDusk),vec3(.26,.27,.29),uMorn)*(.6+.4*n.y)+mix(vec3(1.,.45,.2)*.55*(1.-uDusk),vec3(.7,.72,.75)*.35,uMorn)*dif;
       gl_FragColor=vec4(col*L*1.6,1.);
       #include <fog_fragment>
     }`});
@@ -58,7 +62,7 @@ S.build=function(scene0){const g=new T.Group();scene0.add(g);S.group=g;
   const sm=new T.ShaderMaterial({uniforms:S.u,fog:false,transparent:true,depthWrite:false,
     vertexShader:`varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`,
     fragmentShader:`varying vec3 vW;uniform vec3 uCam;uniform float uRift;uniform vec4 uChurn[16];${NOISE}${SKY}${HG}
-    void main(){vec2 p=vW.xz;float dist=length(uCam-vW);float dep=-hgt(p);if(dep<-.05)discard;
+    uniform float uLevel;void main(){vec2 p=vW.xz;float dist=length(uCam-vW);float dep=uLevel-hgt(p);if(dep<-.05)discard;
       vec2 g=vec2(cos(p.y*.11+uT*1.3)*.07,0.)+vec2(sin(p.x*.17+uT*1.9)*.03,cos(p.y*.21-uT*1.7)*.03);
       float ch=0.;for(int i=0;i<16;i++){vec4 c=uChurn[i];if(c.w<=0.)continue;float d=length(p-c.xy);ch+=c.w*exp(-d*d/(c.z*c.z));}
       float fd=smoothstep(700.,40.,dist);vec2 nz=(vec2(vn(p*.7+uT*.5),vn(p*.7-uT*.45+9.))-.5)*(.3+ch*1.4)*fd;
@@ -67,9 +71,9 @@ S.build=function(scene0){const g=new T.Group();scene0.add(g);S.group=g;
       vec2 rq=p-vec2(${S.RIFT.x}.,${S.RIFT.z}.);float rd=length(rq);float crack=exp(-pow(abs(rq.y+sin(rq.x*.12)*4.),2.)*.06)*smoothstep(26.,4.,abs(rq.x));
       col+=vec3(1.,.32,.06)*(crack*1.6+exp(-rd*.06)*.5)*uRift*(.8+.2*sin(uT*5.+rd*.3))*smoothstep(0.,1.5,dep);
       float foam=smoothstep(.5,0.,dep)*(.4+.6*fbm(p*.5+vec2(0.,uT*.5)))+ch*smoothstep(.55,.8,fbm(p*.4+uT*.8))*.7;col=mix(col,vec3(.3,.26,.25)*(1.-uDusk*.6),clamp(foam,0.,1.)*.7);
-      float fog=1.-exp(-dist*.0012);col=mix(col,mix(vec3(.13,.09,.08),vec3(.03,.03,.04),uDusk),fog*.85);
+      float fog=1.-exp(-dist*.0012);col=mix(col,mix(mix(vec3(.13,.09,.08),vec3(.03,.03,.04),uDusk),vec3(.26,.27,.28),uMorn),fog*.85);
       gl_FragColor=vec4(col,smoothstep(-.05,.3,dep));}`});
-  const sg=new T.PlaneGeometry(8000,8000);sg.rotateX(-Math.PI/2);const sea=new T.Mesh(sg,sm);sea.frustumCulled=false;sea.renderOrder=1;sea.onBeforeRender=(r,s,cam)=>S.u.uCam.value.copy(cam.position);g.add(sea);
+  const sg=new T.PlaneGeometry(8000,8000);sg.rotateX(-Math.PI/2);const sea=new T.Mesh(sg,sm);S.sea=sea;sea.frustumCulled=false;sea.renderOrder=1;sea.onBeforeRender=(r,s,cam)=>S.u.uCam.value.copy(cam.position);g.add(sea);
   S.riftLight=new T.PointLight(0xff5a1a,120,120,1.4);S.riftLight.position.set(S.RIFT.x,2,S.RIFT.z);g.add(S.riftLight);
   /* the quay wall, its lamps and bollards */
   const stone=new T.MeshStandardMaterial({color:0x4a4744,roughness:.95}),dark=new T.MeshStandardMaterial({color:0x1d1d1f,roughness:.85}),wood=new T.MeshStandardMaterial({color:0x4a3f36,roughness:.9});
@@ -115,9 +119,17 @@ S.build=function(scene0){const g=new T.Group();scene0.add(g);S.group=g;
       vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp((8.+a*40.)*600./max(1.,-mv.z),2.,220.);vA=uK*(1.-a)*smoothstep(0.,.1,a)*.22;}`,
     fragmentShader:`varying float vA;void main(){vec2 d=gl_PointCoord-.5;float r=length(d)*2.;if(r>1.)discard;gl_FragColor=vec4(vec3(.05,.045,.045),vA*(1.-r));}`}));smoke.frustumCulled=false;g.add(smoke);
   g.add(S.hemi=new T.HemisphereLight(0x4a4660,0x1a1410,.6));S.sun=new T.DirectionalLight(0xff8a50,.7);S.sun.position.set(-800,120,-400);g.add(S.sun);
+  if(S.opts.rain){const n=7000,rp=new Float32Array(n*3),rs=new Float32Array(n);for(let i=0;i<n;i++){rp.set([(rnd()-.5)*90,rnd()*45,(rnd()-.5)*90],i*3);rs[i]=rnd();}
+    const rg=new T.BufferGeometry();rg.setAttribute('position',new T.BufferAttribute(rp,3));rg.setAttribute('aS',new T.BufferAttribute(rs,1));S.rainU={uT:S.u.uT,uC:{value:new T.Vector3()}};
+    const rain=new T.Points(rg,new T.ShaderMaterial({uniforms:S.rainU,transparent:true,depthWrite:false,fog:false,vertexShader:`attribute float aS;uniform float uT;uniform vec3 uC;varying float vA;
+      void main(){vec3 p=position;p.y=mod(p.y-uT*(16.+aS*6.),45.);p.x+=p.y*.12;p=uC+mod(p-uC+vec3(45.,0.,45.),vec3(90.,1000.,90.))-vec3(45.,0.,45.);p.y+=uC.y-20.;
+        vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(60./max(1.,-mv.z),1.,3.);vA=.35*smoothstep(60.,5.,-mv.z);}`,
+      fragmentShader:`varying float vA;void main(){gl_FragColor=vec4(vec3(.7,.72,.75),vA);}`}));rain.frustumCulled=false;rain.onBeforeRender=(r,s,cam)=>S.rainU.uC.value.copy(cam.position);g.add(rain);}
+  S.u.uCanal.value=S.opts.canal?1:0;
   S.fog=new T.FogExp2(0x2a1e1c,.0021);scene0.fog=S.fog;return S;};
-S.update=function(t,o){o=o||{};S.u.uT.value=t;const dk=o.dusk||0;S.u.uDusk.value=dk;const rk=o.rift==null?1:o.rift;S.u.uRift.value=rk;S.riftLight.intensity=120*rk*(.85+.15*Math.sin(t*6));
-  S.sun.intensity=.7*(1-dk);S.hemi.intensity=.6-.25*dk;S.fog.color.setRGB(.165-.12*dk,.12-.08*dk,.11-.07*dk);
+S.update=function(t,o){o=o||{};S.u.uT.value=t;const dk=o.dusk||0;S.u.uDusk.value=dk;const mo=o.morn||0;S.u.uMorn.value=mo;const lv=o.level||0;S.u.uLevel.value=lv;S.sea.position.y=lv;const rk=o.rift==null?1:o.rift;S.u.uRift.value=rk;S.riftLight.intensity=120*rk*(.85+.15*Math.sin(t*6));
+  S.sun.intensity=.7*(1-dk)*(1-mo)+.45*mo;S.hemi.intensity=.6-.25*dk+.25*mo;S.fog.color.setRGB(.165-.12*dk+.16*mo,.12-.08*dk+.2*mo,.11-.07*dk+.22*mo);if(mo>.5){S.sun.color.setRGB(.85,.88,.95);S.sun.position.set(300,600,200);S.fog.density=.0028;}
+  S.lamps.forEach(L=>L.intensity=18*(1-mo*.7));
   const C=S.u.uChurn.value;for(let i=0;i<16;i++){const c=o.churn&&o.churn[i];if(c)C[i].set(c.x,c.z,c.r,c.k);else C[i].w=0;}
   const gr=o.grey||0;S.canMat.color.setRGB(.415-.08*gr,.227+.1*gr,.172+.13*gr);S.canRoof.color.setRGB(.31+.03*gr,.33+.0*gr,.345-.02*gr);S.cannery.scale.y=1-gr*.35;S.cannery.rotation.z=gr*.05;
   S.canWin.forEach((w,i)=>w.visible=gr<.2+i*.08);

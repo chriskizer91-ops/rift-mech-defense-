@@ -19,6 +19,7 @@ KIT = ["cin-audio.js", "film/film-sfx.js", "cin-look.js", "cin-wraith.js", "cin-
 SCENES = {
     "m1": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-strand.js", "film/scene-m1.js"], "out": "film-m1-first-light.html"},
     "brief": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-strand.js", "film/set-city.js", "film/scene-brief.js"], "out": "film-brief.html"},
+    "m2": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-portarlen.js", "film/scene-m2.js"], "out": "film-m2-high-water.html"},
     "m3": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-quarry.js", "film/scene-m3.js"], "out": "film-m3-the-dig.html"},
     "m4": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-portarlen.js", "film/scene-m4.js"], "out": "film-m4-landfall.html"},
     "m7": {"files": ["../creatures/creatures.js", "cin-signal.js", "film/set-ridge.js", "film/scene-m7.js"], "out": "film-m7-the-ridge.html"},
