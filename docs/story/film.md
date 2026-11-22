@@ -10,10 +10,11 @@ Christopher said yes on 21 Nov. Session D coordinates the film. This file is the
 - Everything is rendered 3D in the reveal's look (OVERWATCH's feed: optical, sensor, thermal, the dots, the static). No images needed.
 - No clips from video generators: Christopher tested a Gemini clip on 21 Nov and dropped it (it clashes with the style).
 
-## Built so far (21 Nov, with sound)
-Intel Brief 00 1:20 · First Light 2:20 · High Water 3:02 · The Dig 2:52 · Landfall 2:55 · Copper 1:02 · The Shelf 3:04 ·
-The Ridge 3:00 · the reveal 2:44. About 22 of 31 minutes. Still to make: the rest of Night Shift (5a, 5b, 5d), the Signal
-battle (8b) and the ending (8c). Every voice line is recorded.
+## Built so far (22 Nov, with sound)
+Intel Brief 00 1:20 · First Light 2:20 · High Water 3:02 · The Dig 2:52 · Landfall 2:55 · Night Shift 3:16 (has Copper in it) ·
+The Shelf 3:04 · The Ridge 3:00 · the reveal 2:44 · The Signal fight and the ending 4:06. **28:39 in all: every piece of chapter 1.**
+Next: one watch of the whole cut in order, then short connecting cards and fixes. Not used: M8F_01 and M8F_02 (they say
+"four rifts"; the reveal closes the fourth, so the fight starts with three). Re-record them with "three" if wanted.
 
 ## The pieces (target times)
 | # | Piece | Where | What happens | Time |
@@ -74,6 +75,8 @@ Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.m
   gain stays at the swarm's own level (1 to 1.6); don't scale it by dot count. A re-rendered stretch goes into a finished
   video with `splice.py` (frames N..M, sound untouched). Keep buildings off the line between a camera and the boss.
   A light held near a camera (a flare) lights the whole roof: keep it dim (intensity about 4) and shrink its glow up close.
+  A camera at a mech's head sits inside the model: put it 3 m in front. Each `FX.gun`/`FX.blast` adds a light to every frame;
+  pass `dark` for all but the ones the camera sees.
 - **Test scenes:** `brief` (Intel Brief 00, 1:20, narrated montage), `m1` (First Light, 2:20, battle), `m5c` (Copper, 1:02,
   the quiet loss; the dots turn red on OVERWATCH's words "Two. Five. All of them.").
   `m3` (The Dig, 2:52, boss fight: the rift streams until ANVIL caves it in, BRUTE eats the trucks, thermal finds the core,
@@ -84,6 +87,8 @@ Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.m
   high street. `set-portarlen.js` with `opts={canal,rain}` and `update({morn, level})` floods the low town).
   `m6` (The Shelf, 3:04: tide and lull. Three rifts on the shelf, the Arc chains between dots, ANVIL caves A and B, the
   tide comes in, HULK rises from C; set `set-shelf.js`).
+  `m5` (Night Shift, 3:16: the whole mission; the Copper stretch is `m5c` moved by 91 s. Fire only on the lock.)
+  `m8` (The Signal fight and the ending, 4:06: the reveal's Arlen Bay, `cin-world.js` and `cin-signal.js` on the kit).
 
 ## What each session needs to give (asks on the board)
 - **A (creatures):** spawn a creature at a point with a goal or a path, and step it by a fixed time step with a seed, so a run
