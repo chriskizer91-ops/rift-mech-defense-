@@ -101,7 +101,7 @@ S.build=function(scene0){const g=new T.Group();scene0.add(g);S.group=g;
     if(rnd()<.55){const wm=new T.Mesh(new T.PlaneGeometry(1.3,1.5),new T.MeshBasicMaterial({color:new T.Color(1,.7,.4).multiplyScalar(.6+rnd()*.6)}));
       const side=x<S.STREET?1:-1;wm.position.set(x+side*(w/2+.03),y+h*.6,z+(rnd()-.5)*d*.5);wm.rotation.y=side*Math.PI/2;g.add(wm);S.windows.push(wm);}};
   for(let z=30;z<330;z+=0){const d=8+rnd()*6;for(const side of [-1,1]){if(Math.abs(z-80)<6||Math.abs(z-140)<6)continue;const w=9+rnd()*5,h=7+rnd()*7;house(S.STREET+side*(8+w/2),z+d/2,w,d,h);}z+=d+.6;}
-  for(let i=0;i<120;i++){const x=-260+rnd()*520,z=40+rnd()*300;if(Math.abs(x-S.STREET)<30)continue;if(x>60&&z<60)continue;house(x,z,8+rnd()*6,8+rnd()*6,6+rnd()*8,rnd()*.4);}
+  for(let i=0;i<120;i++){const x=-260+rnd()*520,z=40+rnd()*300;if(Math.abs(x-S.STREET)<30)continue;if(x>60&&z<60)continue;if(x>-2&&x<90&&z<96)continue;house(x,z,8+rnd()*6,8+rnd()*6,6+rnd()*8,rnd()*.4);}
   /* Pike's sandbags across the street at z = 70 */
   for(let i=0;i<9;i++)box(1.6,.9,.9,new T.MeshStandardMaterial({color:0x6a6048,roughness:1}),S.STREET-7+i*1.7,HJ(S.STREET,70)+.45+(i%2)*.2,70);
   /* fires (for the end): lights, glow, smoke */

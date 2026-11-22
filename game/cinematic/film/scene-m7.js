@@ -63,7 +63,7 @@ function simStep(){const t=SIM.t,sw=SIM.sw,Ti=SIM.T;const sv=Math.random;Math.ra
     else{SIM.cool[k]-=DT;if(SIM.cool[k]<=0){let best=null,bd=1e9;for(const c of sw.list){if(c.dead||c.gone)continue;const d=Math.hypot(c.pos.x-m.x,c.pos.z-m.z)*(c===Ti?(lock?.4:3):1);if(d<bd&&d<700){bd=d;best=c;}}
         if(best&&!(k===1&&t>LANCE-1.4&&t<LANCE+.3)&&(best!==Ti||lock)){SIM.tgt[k]=best;SIM.burst[k]=6*.085;SIM.ev.push({t,k:'burst',m:k,x:m.x,z:m.z});SIM.cool[k]=1.1+srnd()*.9;}else SIM.cool[k]=.2;}}}}
   if(Ti&&!Ti.dead&&t>=LANCE&&t<LANCE+DT*1.2){const m=mech(1,t);const mz=muzzle(m,1);const at=Ti.corePos.clone();FFX.shot(t,mz,at,3.6);FFX.flash(t,mz,3.2);
-    sw.hit(Ti,at,8,Math.ceil(Ti.count/10)+20);SIM.ev.push({t,k:'lance',x:at.x,z:at.z});if(Ti.dead)SIM.ev.push({t,k:'die',x:at.x,z:at.z,id:'titan'});}
+    sw.hit(Ti,at,90,Ti.count+10);SIM.ev.push({t,k:'lance',x:at.x,z:at.z});if(Ti.dead)SIM.ev.push({t,k:'die',x:at.x,z:at.z,id:'titan'});}
   if(t>150&&t<150+DT*1.2)for(const c of sw.list)if(!c.dead){sw.hit(c,sw.center(c),60,c.count);}
   Math.random=sv;SIM.t+=DT;}
 function simTo(t){if(t<SIM.t-DT*.5)simReset();let n=0;while(SIM.t+DT<=t+1e-9){simStep();if(++n>20000)break;}}
@@ -127,7 +127,7 @@ function apply(t,o,cam,px){const sw=SIM.sw;const mv=[0,1,2,3].map(k=>mech(k,t));
   const ch=[];if(sw)for(const c of sw.list)if(!c.dead&&!c.gone&&ch.length<16)ch.push({x:c.pos.x,z:c.pos.z,r:c.rig.id==='titan'?40:c.rig.id==='hulk'?16:4,k:1});
   RIDGE.update(t,{churn:ch,gloom:o.gloom});
   if(sw){sw.pxScale(px);sw.mat.uniforms.uT.value=t;sw.mat.uniforms.uGain.value=(LOOK.HALF?1:2.5)*.7;sw.setThermal(o.mode>.5);if(!sw.thermal)sw.mat.uniforms.uSizeMul.value=1.4;
-    else sw.mat.uniforms.uGain.value*=clamp(700/Math.max(1,SIM.T&&!SIM.T.dead?SIM.T.count:900),.02,.3);}
+    else sw.mat.uniforms.uGain.value*=1.6;}
   const AU=SIG.allyMat.uniforms;AU.uT.value=t;AU.uScale.value=px;AU.uGain.value=1.1;FFX.update(t,cam,px);}
 /* ---------------------------------------------------------------- sound */
 function cue(S,A,F){const P=S.params;

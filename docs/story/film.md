@@ -64,6 +64,10 @@ Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.m
 - **Sound:** `film-sfx.js` adds surf, gulls, boat motors, the autocannon, the dot-shatter fizz, the Lance, the Arc, the view
   switch, and chord instruments (strings, brass, choir, piano) with a battle pulse. Sounds are built about a second before
   they play (Chrome processes every scheduled node, so a battle scheduled up front was 4× too slow to play live).
+- **Gotchas found the hard way:** A's swarm writes each dot's brightness for thermal during the sim step, so a still made
+  by jumping to a time can look different from the recorded frame (stills now warm up through a few frames first). Thermal
+  gain stays at the swarm's own level (1 to 1.6); don't scale it by dot count. A re-rendered stretch goes into a finished
+  video with `splice.py` (frames N..M, sound untouched). Keep buildings off the line between a camera and the boss.
 - **Test scenes:** `brief` (Intel Brief 00, 1:20, narrated montage), `m1` (First Light, 2:20, battle), `m5c` (Copper, 1:02,
   the quiet loss; the dots turn red on OVERWATCH's words "Two. Five. All of them.").
   `m3` (The Dig, 2:52, boss fight: the rift streams until ANVIL caves it in, BRUTE eats the trucks, thermal finds the core,

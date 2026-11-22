@@ -101,7 +101,7 @@ const SHOTS=[
  {t0:87,t1:100,name:'PIKE · QUAY',cuts:[[87,{p:V(28,6.2,17),l:V(CN.x,9,CN.z-6),fov:40,real:1}],[95.4,{p:V(28,6.2,17),l:V(CN.x-8,12,CN.z+8),fov:44}]]},
  {t0:100,t1:106,name:'WRAITH · SENSOR',f:(u,t)=>{const m=mech(1,t);return {p:V(m.x+3,m.y+10.5,m.z+7),l:boss(),fov:lerp(40,46,u)};}},
  {t0:106,t1:118,name:'WRAITH · THERMAL',f:(u,t)=>{const m=mech(1,t);return {p:V(m.x+3,m.y+10,m.z+7),l:boss(),fov:lerp(42,36,u),mode:1,real:.8};}},
- {t0:118,t1:130,name:'HALE · SENSOR',f:(u,t)=>{const m=mech(3,t);return {p:V(m.x-6,m.y+4,m.z+12),l:boss().add(V(0,6,0)),fov:44,shake:.04};}},
+ {t0:118,t1:130,name:'KESTREL · SENSOR',f:(u,t)=>{const m=mech(0,t);return {p:V(m.x-5,m.y+4,m.z+11),l:boss().add(V(0,6,0)),fov:48,shake:.04};}},
  {t0:130,t1:141,name:'WRAITH · THERMAL',f:(u,t)=>{const m=mech(1,t);const b=SIM.B&&!SIM.B.dead?SIM.B.corePos:boss();return {p:V(m.x+2.8,m.y+9.6,m.z+6.6),l:b,fov:lerp(30,22,ease(u)),mode:1,real:.8,shake:t>LANCE&&t<LANCE+1.6?.6*(1-ss(LANCE,LANCE+1.6,t)):0};}},
  {t0:141,t1:150,name:'WRAITH · SENSOR',f:(u,t)=>{const m=mech(1,t);return {p:V(m.x+3,m.y+11,m.z+9),l:V(90,6,40),fov:44};}},
  {t0:150,t1:DUR,name:'OVERWATCH · DRONE',f:u=>({p:vl(V(0,18,96),V(-60,120,220),ease(u)),l:vl(V(40,4,30),V(60,0,-40),ease(u)),fov:46,real:1})}];
@@ -139,7 +139,7 @@ function apply(t,o,cam,px){const sw=SIM.sw;const mv=[0,1,2,3].map(k=>mech(k,t));
   const ch=[];if(sw)for(const c of sw.list)if(!c.dead&&!c.gone&&ch.length<16)ch.push({x:c.pos.x,z:c.pos.z,r:c.rig.id==='behemoth'?22:2.5+c.rig.size*.4,k:c.rig.id==='behemoth'?1:.7});
   PORT.update(t,{dusk:o.dusk,rift:o.rift,grey:o.grey,fire:o.fire,churn:ch});
   FOLK.forEach((G,i)=>{G.rotation.y=Math.PI+Math.sin(t*1.3+i)*.4;});
-  if(sw){sw.pxScale(px);sw.mat.uniforms.uT.value=t;sw.mat.uniforms.uGain.value=LOOK.HALF?1:2.5;sw.setThermal(o.mode>.5);if(!sw.thermal)sw.mat.uniforms.uSizeMul.value=1.6;else sw.mat.uniforms.uGain.value*=clamp(220/Math.max(1,SIM.B&&!SIM.B.dead?SIM.B.count:900),.012,.3);}
+  if(sw){sw.pxScale(px);sw.mat.uniforms.uT.value=t;sw.mat.uniforms.uGain.value=LOOK.HALF?1:2.5;sw.setThermal(o.mode>.5);if(!sw.thermal)sw.mat.uniforms.uSizeMul.value=1.6;else sw.mat.uniforms.uGain.value*=1.0;}
   STU.uA.value.set(R.x,1,R.z);STU.uB.value.copy(boss());STU.uT.value=t;STU.uK.value=o.rift*(t>28?1:ss(20,28,t));STU.uScale.value=px;
   const AU=SIG.allyMat.uniforms;AU.uT.value=t;AU.uScale.value=px;AU.uGain.value=1.1;FFX.update(t,cam,px);FX.update(t,cam,px);}
 /* ---------------------------------------------------------------- sound */

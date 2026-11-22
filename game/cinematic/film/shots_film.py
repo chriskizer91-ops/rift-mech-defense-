@@ -23,7 +23,7 @@ with sync_playwright() as p:
     pg.goto(url)
     pg.wait_for_function("window.CIN && window.CIN.ready", timeout=180000)
     for t in times:
-        pg.evaluate(f"window.CIN.at({t})")
+        pg.evaluate(f"window.CIN.at({max(0,t-.3)});window.CIN.at({max(0,t-.15)});window.CIN.at({t})")   # warm up: some state (the swarm's thermal brightness) is written during the sim step
         pg.wait_for_timeout(150)
         pg.screenshot(path=str(out / f"t{t:04.1f}.png"))
         print("shot", t)
