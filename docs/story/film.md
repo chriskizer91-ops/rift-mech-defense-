@@ -10,6 +10,11 @@ Christopher said yes on 21 Nov. Session D coordinates the film. This file is the
 - Everything is rendered 3D in the reveal's look (OVERWATCH's feed: optical, sensor, thermal, the dots, the static). No images needed.
 - No clips from video generators: Christopher tested a Gemini clip on 21 Nov and dropped it (it clashes with the style).
 
+## Built so far (21 Nov, with sound)
+Intel Brief 00 1:20 · First Light 2:20 · High Water 3:02 · The Dig 2:52 · Landfall 2:55 · Copper 1:02 · The Shelf 3:04 ·
+The Ridge 3:00 · the reveal 2:44. About 22 of 31 minutes. Still to make: the rest of Night Shift (5a, 5b, 5d), the Signal
+battle (8b) and the ending (8c). Every voice line is recorded.
+
 ## The pieces (target times)
 | # | Piece | Where | What happens | Time |
 |---|---|---|---|---|
@@ -67,8 +72,8 @@ Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.m
 - **Gotchas found the hard way:** A's swarm writes each dot's brightness for thermal during the sim step, so a still made
   by jumping to a time can look different from the recorded frame (stills now warm up through a few frames first). Thermal
   gain stays at the swarm's own level (1 to 1.6); don't scale it by dot count. A re-rendered stretch goes into a finished
-  video with `splice.py` (frames N..M, sound untouched). Keep buildings off the line between a camera and the boss. A light held near a camera (a flare) lights the whole roof: keep
-  it dim (intensity about 4) and shrink its glow when the camera is close.
+  video with `splice.py` (frames N..M, sound untouched). Keep buildings off the line between a camera and the boss.
+  A light held near a camera (a flare) lights the whole roof: keep it dim (intensity about 4) and shrink its glow up close.
 - **Test scenes:** `brief` (Intel Brief 00, 1:20, narrated montage), `m1` (First Light, 2:20, battle), `m5c` (Copper, 1:02,
   the quiet loss; the dots turn red on OVERWATCH's words "Two. Five. All of them.").
   `m3` (The Dig, 2:52, boss fight: the rift streams until ANVIL caves it in, BRUTE eats the trucks, thermal finds the core,
