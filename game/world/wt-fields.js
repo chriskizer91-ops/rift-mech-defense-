@@ -143,6 +143,8 @@ function setup(){
 /* the swarm's routes: out of a rift, across the fields toward the farm (they turn on the Wraith when it's close) */
 function route(c,rift){const M=rift||MOUTHS[Math.floor(rnd()*MOUTHS.length)];const p=[{x:M.x-M.nx*12,z:M.z-M.nz*12},{x:M.x+M.nx*14+(rnd()-.5)*6,z:M.z+M.nz*14+(rnd()-.5)*6}];
   const tx=FARM.x+(rnd()-.5)*160,tz=FARM.z+(rnd()-.5)*160;for(let k=1;k<=4;k++){const f=k/4,ox=(rnd()-.5)*90*(1-f);p.push({x:lerp(p[1].x,tx,f)+ox,z:lerp(p[1].z,tz,f)+(rnd()-.5)*90*(1-f)});}return p;}
+/* for other maps: the line, the nearest-line lookup and the patchwork of fields */
+MAPS.lib={line,index,near,fieldAt};
 MAPS.fields={S,X0,C:2,ground0,setup,SPAWN:{x:330,z:-330,yaw:-.46},MOUTHS,name:'Field 1',RIVER,TRACKS,FLOOD,FARM,TREES,route,
   tex:{sand:'sand',mud:'mud',dirt:'dirt',asph:'track',pave:'gravel',rock:'rock',meadow:'meadow',plough:'plough',wheat:'wheat'},fog:[260,900],
   swarm:{sea:false}};

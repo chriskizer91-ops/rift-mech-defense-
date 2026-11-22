@@ -18,7 +18,7 @@ const LOOK={tex:{},base:null,splat:null,u:{uT:{value:0},uRiftP:{value:Array.from
 function lookTextures(){lookGLSL();
   const A=window.WT_ASSETS.tex,L=new THREE.TextureLoader();
   for(const k in A){const t=L.load(A[k]);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;LOOK.tex[k]=t;}
-  for(const k of ['fx','smoke'])LOOK.tex[k].wrapS=LOOK.tex[k].wrapT=THREE.ClampToEdgeWrapping;
+  for(const k of ['fx','smoke'])if(LOOK.tex[k])LOOK.tex[k].wrapS=LOOK.tex[k].wrapT=THREE.ClampToEdgeWrapping;
   /* the ground as made: height, crack, wet, the water's level (half floats, filtered) and what it's made of */
   const N=MAP.N,hb=new Uint16Array(N*N*4);for(let k=0;k<N*N;k++){hb[k*4]=soilHalf(MAP.hB[k]);hb[k*4+1]=soilHalf(MAP.crk[k]);hb[k*4+2]=soilHalf(MAP.wet[k]);hb[k*4+3]=soilHalf(MAP.wl[k]);}
   const B=LOOK.base=new THREE.DataTexture(hb,N,N,THREE.RGBAFormat,THREE.HalfFloatType);B.minFilter=B.magFilter=THREE.LinearFilter;B.needsUpdate=true;
@@ -32,7 +32,7 @@ function lookRing(x,z,a){const r=LOOK.ring[LOOK.ringI];r.set(x,z,LOOK.u.uT.value
 
 /* ---------- shader pieces shared by the ground and the water ---------- */
 let GLSL_HEAD='';
-function lookGLSL(){const f=v=>v.toFixed(3);const M=MAP.def.MOUTHS[0];
+function lookGLSL(){const f=v=>v.toFixed(3);const M=MAP.def.MOUTHS[0]||{w:6,h:8,s0:-5.5,s1:1.4};
 GLSL_HEAD=`uniform sampler2D tBase,tSoil,tSplat,tSplat2;uniform float uT;uniform vec4 uRiftP[4],uRiftO[4],uWin;uniform vec3 uSun;
 vec2 bUV(vec2 p){return ((p-(${f(MAP.X0)}))/${f(MAP.C)}+.5)/${MAP.N}.;}
 vec4 bAll(vec2 p){return texture(tBase,bUV(p));}

@@ -5,12 +5,13 @@
    map (fields, water, tracks, rock, trees, buildings, the cracks); over it each frame: the rift mouths (red ring open,
    grey cross sealed), the swarm's contacts (red; the sensor sees them even when the real view doesn't), the Wraith
    (green arrow) and the camera's view (two lines). Tap it to change its range.
-   For other sessions: miniInit(canvas) once the map is built, then miniDraw(px, pz, camYaw, contacts) where contacts is
-   a list of {x, z, n} (n: its dot count).
+   For other sessions: miniInit(canvas) once the map is built, then miniDraw(px, pz, camYaw, contacts, dt, opt) where
+   contacts is a list of {x, z, n} (n: its dot count); opt (all optional): heading (the Wraith's yaw), rifts [{x, z, open}],
+   allies [{x, z}] (green), marks [{x, z, c}] (a ring in colour c, e.g. the pier).
    ===================================================================================================================== */
 const MINI={cv:null,cx:null,base:null,mpp:4,ranges:[150,300,600],ri:0,t:0};
 function miniInit(cv){MINI.cv=cv;MINI.cx=cv.getContext('2d');
-  if(MAPID!=='fields'){MINI.ranges=[60,120,200];}
+  if(MAP.S<600){MINI.ranges=[60,120,200];}
   const mpp=MINI.mpp=MAP.S>600?4:1,n=Math.round(MAP.S/mpp),c=document.createElement('canvas');c.width=c.height=n;const g=c.getContext('2d'),im=g.createImageData(n,n),d=im.data,K={};
   for(let j=0;j<n;j++)for(let i=0;i<n;i++){const x=MAP.X0+(i+.5)*mpp,z=MAP.X0+(j+.5)*mpp;baseKind(x,z,K);const h=K.h,dep=K.wl-h;let r,gg,b;
     if(dep>0){const k=Math.min(1,dep/4);r=40-20*k;gg=78-30*k;b=96-20*k;}
@@ -25,7 +26,7 @@ function miniInit(cv){MINI.cv=cv;MINI.cx=cv.getContext('2d');
   const T=MAP.def.TREES;if(T){g.fillStyle='rgba(28,48,24,.85)';for(const t of T){g.beginPath();g.arc((t.x-MAP.X0)/mpp,(t.z-MAP.X0)/mpp,Math.max(1,3.5/mpp),0,TAU);g.fill();}}
   g.fillStyle='#2a2622';for(const b of BUILD)g.fillRect((b.x0-MAP.X0)/mpp,(b.z0-MAP.X0)/mpp,(b.x1-b.x0)/mpp,(b.z1-b.z0)/mpp);
   MINI.base=c;cv.addEventListener('pointerdown',e=>{MINI.ri=(MINI.ri+1)%MINI.ranges.length;e.stopPropagation();});}
-function miniDraw(px,pz,yaw,contacts,dt){if(!MINI.cx)return;MINI.t+=dt||0;
+function miniDraw(px,pz,yaw,contacts,dt,opt){if(!MINI.cx)return;MINI.t+=dt||0;opt=opt||{};
   const cv=MINI.cv,dpr=Math.min(2,devicePixelRatio||1),S=cv.clientWidth;if(cv.width!==Math.round(S*dpr)){cv.width=cv.height=Math.round(S*dpr);}
   const g=MINI.cx,R=cv.width/2,range=MINI.ranges[MINI.ri],k=R/range;   /* pixels a metre */
   g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);g.save();g.beginPath();g.arc(R,R,R-1,0,TAU);g.clip();
@@ -34,15 +35,18 @@ function miniDraw(px,pz,yaw,contacts,dt){if(!MINI.cx)return;MINI.t+=dt||0;
   g.translate(R,R);g.rotate(yaw);g.scale(k,k);g.translate(-px,-pz);
   g.globalAlpha=.92;g.imageSmoothingEnabled=true;g.drawImage(MINI.base,MAP.X0,MAP.X0,MAP.S,MAP.S);g.globalAlpha=1;
   /* rifts */
-  for(const Rf of RIFTS){const M=Rf.M,s=1/k;g.lineWidth=2*s;
-    if(Rf.state==='sealed'){g.strokeStyle='#9aa39f';g.beginPath();g.moveTo(M.x-5*s,M.zf-5*s);g.lineTo(M.x+5*s,M.zf+5*s);g.moveTo(M.x+5*s,M.zf-5*s);g.lineTo(M.x-5*s,M.zf+5*s);g.stroke();}
-    else{const p=1+.25*Math.sin(MINI.t*4);g.strokeStyle='#ff3b26';g.beginPath();g.arc(M.x,M.zf,7*s*p,0,TAU);g.stroke();g.fillStyle='#ff3b2655';g.fill();}}
+  const rifts=opt.rifts||(typeof RIFTS!=='undefined'?RIFTS.map(r=>({x:r.M.x,z:r.M.zf,open:r.state!=='sealed'})):[]);
+  for(const Rf of rifts){const s=1/k;g.lineWidth=2*s;
+    if(!Rf.open){g.strokeStyle='#9aa39f';g.beginPath();g.moveTo(Rf.x-5*s,Rf.z-5*s);g.lineTo(Rf.x+5*s,Rf.z+5*s);g.moveTo(Rf.x+5*s,Rf.z-5*s);g.lineTo(Rf.x-5*s,Rf.z+5*s);g.stroke();}
+    else{const p=1+.25*Math.sin(MINI.t*4);g.strokeStyle='#ff3b26';g.beginPath();g.arc(Rf.x,Rf.z,7*s*p,0,TAU);g.stroke();g.fillStyle='#ff3b2655';g.fill();}}
+  for(const m of opt.marks||[]){const s=1/k;g.lineWidth=2*s;g.strokeStyle=m.c||'#4fe0b8';g.beginPath();g.arc(m.x,m.z,(m.r||6)*s,0,TAU);g.stroke();}
+  g.fillStyle='#4fe0b8';for(const a of opt.allies||[]){g.beginPath();g.arc(a.x,a.z,2.2/k,0,TAU);g.fill();}
   /* contacts */
   g.fillStyle='#ff4a2a';for(const c of contacts){const r=Math.max(1.6,Math.sqrt(c.n)*.7)/k;g.beginPath();g.arc(c.x,c.z,r,0,TAU);g.fill();}
   g.restore();
   /* the view and the Wraith, fixed: up is ahead */
   g.save();g.translate(R,R);g.strokeStyle='#4fe0b866';g.lineWidth=1.2*dpr;g.beginPath();g.moveTo(0,0);g.lineTo(-R*.55,-R);g.moveTo(0,0);g.lineTo(R*.55,-R);g.stroke();
-  const hd=(MECH.P?MECH.P.legYaw:0)-yaw;g.rotate(-hd);g.fillStyle='#4fe0b8';g.beginPath();g.moveTo(0,-7*dpr);g.lineTo(5*dpr,6*dpr);g.lineTo(0,3*dpr);g.lineTo(-5*dpr,6*dpr);g.closePath();g.fill();g.restore();
+  const hd=(opt.heading!=null?opt.heading:typeof MECH!=='undefined'&&MECH.P?MECH.P.legYaw:0)-yaw;g.rotate(-hd);g.fillStyle='#4fe0b8';g.beginPath();g.moveTo(0,-7*dpr);g.lineTo(5*dpr,6*dpr);g.lineTo(0,3*dpr);g.lineTo(-5*dpr,6*dpr);g.closePath();g.fill();g.restore();
   /* north on the rim, the range */
   const na=yaw;g.fillStyle='#cfe2dc';g.font=`800 ${9*dpr}px system-ui,sans-serif`;g.textAlign='center';g.textBaseline='middle';
   g.fillText('N',R+Math.sin(na)*(R-8*dpr),R-Math.cos(na)*(R-8*dpr));

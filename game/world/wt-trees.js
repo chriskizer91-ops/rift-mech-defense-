@@ -16,7 +16,8 @@ function treeCutFollow(cam,P,W,H,PR){_mp.set(P.x,P.y+3.2,P.z).project(cam);CUT.u
   CUT.uCutR.value=Math.min(W,H)*PR*.3;}
 /* a model with its own materials (the trees carry vertex colours, no pictures) */
 function glbRaw(key){const A=window.WT_ASSETS.glb[key];
-  return Promise.resolve(b64bytes(A.b64))
+  const u8=s=>{if(Uint8Array.fromBase64)return Uint8Array.fromBase64(s);const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;};
+  return Promise.resolve(u8(A.b64))
    .then(b=>new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer())
    .then(buf=>new Promise((ok,no)=>new THREE.GLTFLoader().parse(buf,'',g=>ok(g.scene),no)));}
 const _tm=new THREE.Matrix4(),_tq=new THREE.Quaternion(),_tv=new THREE.Vector3(),_ts=new THREE.Vector3(),_ty=new THREE.Vector3(0,1,0);
