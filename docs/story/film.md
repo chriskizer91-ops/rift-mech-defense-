@@ -58,7 +58,7 @@ and a set. `build_film.py <name>` makes `builds/film-<name>.html`. Stills: `shot
 Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.mp4`.
 - **Sets:** `set-strand.js` (Greywater Strand at dawn: beach, surf, pier, boats, the sunk truck), `set-city.js` (a city in
   static; the cracked seafloor from orbit), `set-saltpans.js` (the Saltpans at night, the channel). The reveal's Arlen Bay is
-  `cin-world.js`.
+  `cin-world.js`. Also `set-quarry.js`, `set-portarlen.js` (dusk or flooded morning), `set-ridge.js`, `set-shelf.js`.
 - **Battles:** A's creature module drives the swarm (seeded, stepped at 1/60 s, so every run is the same). The Wraiths fire
   by script; every round is logged, and the log drives the tracers, the sand, and the sound.
 - **Sound:** `film-sfx.js` adds surf, gulls, boat motors, the autocannon, the dot-shatter fizz, the Lance, the Arc, the view
@@ -67,13 +67,18 @@ Video with sound: `PAGE=<page> DUR=<s> python3 -I game/cinematic/record.py OUT.m
 - **Gotchas found the hard way:** A's swarm writes each dot's brightness for thermal during the sim step, so a still made
   by jumping to a time can look different from the recorded frame (stills now warm up through a few frames first). Thermal
   gain stays at the swarm's own level (1 to 1.6); don't scale it by dot count. A re-rendered stretch goes into a finished
-  video with `splice.py` (frames N..M, sound untouched). Keep buildings off the line between a camera and the boss.
+  video with `splice.py` (frames N..M, sound untouched). Keep buildings off the line between a camera and the boss. A light held near a camera (a flare) lights the whole roof: keep
+  it dim (intensity about 4) and shrink its glow when the camera is close.
 - **Test scenes:** `brief` (Intel Brief 00, 1:20, narrated montage), `m1` (First Light, 2:20, battle), `m5c` (Copper, 1:02,
   the quiet loss; the dots turn red on OVERWATCH's words "Two. Five. All of them.").
   `m3` (The Dig, 2:52, boss fight: the rift streams until ANVIL caves it in, BRUTE eats the trucks, thermal finds the core,
   the Lance). Sets: `set-quarry.js` (Kessel Cut).
   `m4` (Landfall, 2:55: BEHEMOTH fed by the harbour rift, comes ashore through the cannery; set `set-portarlen.js`),
   `m7` (The Ridge, 3:00: TITAN, 50,000, fire only on the lock, four tendrils go for the squads; set `set-ridge.js`).
+  `m2` (High Water, 3:02: rescue and escort. Lantern's six on the cannery roof, Wraith hovers the canal, the skiff to the
+  high street. `set-portarlen.js` with `opts={canal,rain}` and `update({morn, level})` floods the low town).
+  `m6` (The Shelf, 3:04: tide and lull. Three rifts on the shelf, the Arc chains between dots, ANVIL caves A and B, the
+  tide comes in, HULK rises from C; set `set-shelf.js`).
 
 ## What each session needs to give (asks on the board)
 - **A (creatures):** spawn a creature at a point with a goal or a path, and step it by a fixed time step with a seed, so a run

@@ -107,7 +107,7 @@ const SHOTS=[
  {t0:112,t1:126,name:'HALE · SENSOR',f:(u,t)=>{const m=mech(3,t);const s=skiffAt(t).p;return {p:V(m.x+4,m.y+11,m.z+10),l:s.clone().lerp(V(-40,LV,-20),.4),fov:52};}},
  {t0:126,t1:143,name:'OVERWATCH · TACTICAL',f:u=>({p:vl(V(20,220,90),V(-10,200,100),u),l:V(-10,0,50),fov:58})},
  {t0:143,t1:160,name:'PIKE · HIGH STREET',f:u=>({p:vl(V(-19,PORT.h(-19,92)+1.8,92),V(-19,PORT.h(-19,90)+1.9,90),u),l:V(-20,4,62),fov:50,real:1})},
- {t0:160,t1:DUR,name:'OVERWATCH · DRONE',f:u=>({p:vl(V(-40,22,110),V(-70,110,230),ease(u)),l:vl(V(-10,5,60),V(40,0,-20),ease(u)),fov:48,real:1})}];
+ {t0:160,t1:DUR,name:'OVERWATCH · DRONE',f:u=>({p:vl(V(-30,46,124),V(-70,110,230),ease(u)),l:vl(V(-17,3,70),V(40,0,-20),ease(u)),fov:48,real:1})}];
 /* ---------------------------------------------------------------- tracks */
 const per=(t,vals)=>vals[FILM.shotIndex(t)];
 function tracks(t){simTo(t);const o={};
@@ -133,7 +133,7 @@ function apply(t,o,cam,px){const sw=SIM.sw;const mv=[0,1,2,3].map(k=>mech(k,t));
   const sk=skiffAt(t);skiffG.position.copy(sk.p);skiffG.position.y=LV-.2+Math.sin(t*1.6)*.08;skiffG.rotation.set(Math.sin(t*1.3)*.03,0,Math.sin(t*1.7)*.04);
   /* Lantern's flare, waved on the roof */
   const fp=person(5,t).p;flare.visible=flareL.visible=o.flare>0;flare.position.set(fp.x+.4+Math.sin(t*3)*.5,fp.y+2.3+Math.abs(Math.sin(t*3))*.4,fp.z);flareL.position.copy(flare.position);
-  flare.scale.setScalar(2.6*(.85+.3*Math.sin(t*37)*Math.sin(t*23)));flareL.intensity=40*(.8+.2*Math.sin(t*31));
+  const fd=cam.position.distanceTo(flare.position);flare.scale.setScalar(2.6*Math.min(1,Math.max(.3,fd/26))*(.85+.3*Math.sin(t*37)*Math.sin(t*23)));flareL.intensity=4*(.8+.2*Math.sin(t*31));
   const ch=[];mv.forEach(m=>ch.push({x:m.x,z:m.z,r:m.hov>.3?9:3,k:m.hov>.3?1.4:.6}));if(sw)for(const c of sw.list)if(!c.dead&&!c.gone&&ch.length<16)ch.push({x:c.pos.x,z:c.pos.z,r:2.5,k:.5});
   PORT.update(t,{morn:1,level:LV,rift:0,grey:0,fire:0,churn:ch});
   if(sw){sw.pxScale(px);sw.mat.uniforms.uT.value=t;sw.mat.uniforms.uGain.value=LOOK.HALF?1:2.5;sw.setThermal(false);sw.mat.uniforms.uSizeMul.value=1.6;}
@@ -189,7 +189,7 @@ function build(scene,F){buildMT();PORT.build(scene);FFX.init(scene);for(const o 
   /* the flare and the jets */
   const glowTex=(function(){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.3,'rgba(255,255,255,.4)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);return new T.CanvasTexture(c);})();
   flare=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:new T.Color(1,.15,.08),blending:T.AdditiveBlending,depthWrite:false,transparent:true,fog:false}));scene.add(flare);
-  flareL=new T.PointLight(0xff2a14,40,60,1.5);scene.add(flareL);
+  flareL=new T.PointLight(0xff2a14,4,34,1.5);scene.add(flareL);
   jets=[0,1,2,3].map(()=>[0,1].map(()=>{const s=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:new T.Color(.6,.8,1),blending:T.AdditiveBlending,depthWrite:false,transparent:true,fog:false}));s.visible=false;scene.add(s);return s;}));
   simReset();
   return TEAM.build(scene,[]).then(tm=>{for(const M of tm.list)M.root.traverse(o=>{if(o.isMesh)o.layers.enable(2);});});}
