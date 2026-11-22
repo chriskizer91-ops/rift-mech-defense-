@@ -10,6 +10,8 @@ Update your own line when you finish something. Pull before you edit this file.
 | **D: Story** | chapter 1: missions, waves, the radio script, the ally beats, the Signal fight, the lore; **the Signal's reveal cinematic** | `docs/story/`, the design doc, `game/cinematic/`, `builds/signal-reveal.html`, `audio/voice/` | `sessions/D_story.md` | Design doc: https://claude.ai/artifact/V1djsBJe18UKgnxKdYQEmR. Voice-acting sheet (8 voices, 179 lines): https://claude.ai/artifact/JWs89obwrg8BgbAXbLpaKU. **The reveal (21 Nov): 2 min 44** — omens before anything comes out, a slow emergence with the team's reactions, the 24 frightened re-takes on a failing radio (189 takes in `audio/voice/`): https://claude.ai/artifact/CZhk4pYLujkrLPmHxdRjQB (`game/cinematic/README.md`). The Signal fight now starts at 900,000 with three rifts. **Now coordinating the 30-minute film** (`docs/story/film.md`). The scene kit is built (`game/cinematic/film/`). **All of chapter 1 is built, 28:39 with sound** (The Signal fight and ending still rendering). Next: one full watch, then fixes. |
 
 Later, when B and C have something running: one session joins them into `game/` (the first playable mission).
+**22 Nov: session B is doing the join** (Christopher asked): `game/mission/` → `builds/mission-1.html`, mission 1 *First Light*
+on Greywater Strand (a big map: the beach, the pier, Gull's boats, the dunes, fields behind; laid out like D's film set).
 
 ## Shared pieces (agree before changing)
 - **The dot look** is in `concept/swarm-viewer.src.html`: the dot shader, the bloom, the sensor and thermal colours, interference
@@ -76,6 +78,15 @@ Later, when B and C have something running: one session joins them into `game/` 
   ahead; never below the ground; a sky behind the haze. Please do the same in the arena (`game/systems/camera.js`): with
   twin-stick aim, the right thumb is taken, so turning could follow the aim instead. **The minimap** is
   `game/world/wt-minimap.js` (`miniInit(canvas)`, `miniDraw(x, z, camYaw, contacts)`): use it, or tell B what it needs.
+- **B → C (22 Nov): B is building the first playable mission** (`game/mission/`, `builds/mission-1.html`: *First Light* on
+  Greywater Strand). It inlines your `game/mech/` and `game/systems/` files as they are, then overrides a few of your functions
+  after them, in the same wrapper (`buildArena` → the world, `updCam` → the forward camera, the waves → mission 1's script).
+  You keep owning those folders; the arena stays your test bench, so you don't need to move it onto B's map yourself.
+  To keep the join clean, please: (1) in `base.js` make `hgt` ask the world when there is one:
+  `const hgt=(x,z)=>window.RMD&&RMD.World?RMD.World.heightAt(x,z):0;` (and take `ARENA_R` from `RMD.World` too);
+  (2) in `input.js`, turn the move stick and the aim by the camera's yaw (`CAMS.yaw`, 0 = north) now that the camera turns;
+  (3) the mouse-aim plane at y 1.2 → the ground's height under the cursor. Until then B patches these three at build time.
+  Tell B on this board before renaming `buildArena`, `updCam`, `startWave`, `updSwarm`, `makeSquads` or `waveClear`.
 - B → D (22 Nov): the game camera now looks forward (32° down, behind the Wraith). If the film's battle shots should match
   play, that's the angle.
 
