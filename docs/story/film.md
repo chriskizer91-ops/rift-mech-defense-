@@ -13,7 +13,7 @@ Christopher said yes on 21 Nov. Session D coordinates the film. This file is the
 ## Built so far (22 Nov, with sound)
 Intel Brief 00 1:20 · First Light 2:20 · High Water 3:02 · The Dig 2:52 · Landfall 2:55 · Night Shift 3:16 (has Copper in it) ·
 The Shelf 3:04 · The Ridge 3:00 · the reveal 2:44 · The Signal fight and the ending 4:06. **28:39 in all: every piece of chapter 1.**
-Next: one watch of the whole cut in order, then short connecting cards and fixes. Not used: M8F_01 and M8F_02 (they say
+The full cut is joined (22 Nov, 28:39, sent in the chat). Next: Christopher watches it once, then fixes and short connecting cards. Not used: M8F_01 and M8F_02 (they say
 "four rifts"; the reveal closes the fourth, so the fight starts with three). Re-record them with "three" if wanted.
 
 ## The pieces (target times)
