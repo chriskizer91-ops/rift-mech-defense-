@@ -143,17 +143,29 @@ function matTerrainView(mode){
         else{ht=.24+.07*clamp(dot(n,uSun),0.,1.)+.03*vn(xz*.15)+.05*sp.b-.07*B.b+.04*sp.a;}
         ht+=soilHeat(S)*.8+S.g*.03;
         gl_FragColor=vec4(0.,0.,0.,ht);}`)});}
+/* trees and buildings between the camera and the Wraith are cut away round it (dithered), so a lower camera still sees it;
+   so is anything within 18 m of the camera */
+const CUT={uMech:{value:new THREE.Vector3(-1e4,-1e4,0)},uCutR:{value:120}};
+function cutout(m){m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,CUT);
+  sh.fragmentShader='uniform vec3 uMech;uniform float uCutR;\n'+sh.fragmentShader.replace('void main() {',`void main() {
+    {float d=length(gl_FragCoord.xy-uMech.xy);if(gl_FragCoord.z<uMech.z&&d<uCutR){float k=smoothstep(uCutR,uCutR*.55,d);
+      float b=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(b<k)discard;}
+     float vd=length(vViewPosition);if(vd<18.){float b=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(b<smoothstep(18.,10.,vd))discard;}}`);};}
+const CUT_GLSL=`uniform vec3 uMech;uniform float uCutR;
+void cutAway(float vd){float b=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));
+  float d=length(gl_FragCoord.xy-uMech.xy);if(gl_FragCoord.z<uMech.z&&d<uCutR&&b<smoothstep(uCutR,uCutR*.55,d))discard;
+  if(vd<18.&&b<smoothstep(18.,10.,vd))discard;}`;
 /* buildings, rocks, wrecks and the Wraith in the sensor and thermal views */
 const MESH_VERT=`varying vec3 vWp,vN;void main(){vec4 lp=vec4(position,1.);vec3 ln=normal;
 #ifdef USE_INSTANCING
 lp=instanceMatrix*lp;ln=mat3(instanceMatrix)*ln;
 #endif
 vec4 wq=modelMatrix*lp;vWp=wq.xyz;vN=normalize(mat3(modelMatrix)*ln);gl_Position=projectionMatrix*viewMatrix*wq;}`;
-function matMeshView(mode,o){o=o||{};const u={uHeat:{value:o.heat||.3},uAlly:{value:o.ally?1:0},uK:{value:o.k||1},uT:LOOK.u.uT};
+function matMeshView(mode,o){o=o||{};const u=Object.assign({uHeat:{value:o.heat||.3},uAlly:{value:o.ally?1:0},uK:{value:o.k||1},uT:LOOK.u.uT},CUT);
   return new THREE.ShaderMaterial({uniforms:u,vertexShader:MESH_VERT,side:o.side||THREE.FrontSide,
-    fragmentShader:`varying vec3 vWp,vN;uniform float uHeat,uAlly,uK,uT;
+    fragmentShader:CUT_GLSL+`varying vec3 vWp,vN;uniform float uHeat,uAlly,uK,uT;
       float gridL(vec2 p,float s,float w){vec2 f=abs(fract(p/s-.5)-.5)*s,fw=max(fwidth(p),vec2(1e-4));vec2 l=1.-smoothstep(fw*w*.5,fw*w*1.5,f);return max(l.x,l.y);}
-      void main(){vec3 N=normalize(vN),V=normalize(cameraPosition-vWp);float fr=pow(1.-abs(dot(N,V)),2.);`+(mode===1?`
+      void main(){`+(o.cut?'cutAway(distance(cameraPosition,vWp));':'')+`vec3 N=normalize(vN),V=normalize(cameraPosition-vWp);float fr=pow(1.-abs(dot(N,V)),2.);`+(mode===1?`
         if(uAlly>.5){gl_FragColor=vec4(0.,.03,(.16+fr*.7)*uK,0.);return;}
         float g=(.035+fr*.32+gridL(vWp.xz+vWp.y,4.,1.)*.05+gridL(vec2(vWp.y,0.),3.,1.)*.08*(1.-abs(N.y)))*uK;
         gl_FragColor=vec4(0.,g,0.,0.);}`:`

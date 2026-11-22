@@ -6,6 +6,8 @@ Only Christopher's decisions go here (20 Nov 2026 unless dated). Proposals live 
 - **Not a sequel.** An alternate-universe Ironhowl. Working name **Rift Mech Defense**; the player's side is the
   **International Rift Mech Defense** (IRMD). The name is loose and may change.
 - **Top-down** (high three-quarter camera), over-the-top arcade, a visually rich, rewarding 3D world.
+- **The combat camera is not straight down (22 Nov).** It sits lower and behind the Wraith and looks ahead, so you can see what's
+  coming across the fields; it can be turned. There is a **minimap** showing what's nearby.
 - **The mech is Ironhowl 4's Wraith**, with Ironhowl 4's mech mechanics, weapon systems and controls. Other Ironhowl 4
   systems can be pulled across where they fit.
 - **Chapter 1 is about an hour of play:** consecutive, more and more intense waves, a little story between them, building to

@@ -21,7 +21,7 @@ canvas{position:fixed;inset:0;display:block;width:100%;height:100%}
 #tr .bar i{display:block;height:100%;background:#4fe0b8;width:0}
 #tr .bar.bad i{background:#ff4a2a}
 #tr .bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:#ffb29a}
-#cap{left:0;right:0;bottom:calc(150px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,16px);color:#f0f6f4;text-transform:none;letter-spacing:.03em;
+#cap{left:0;right:0;bottom:calc(196px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,16px);color:#f0f6f4;text-transform:none;letter-spacing:.03em;
   text-shadow:0 0 6px #000,0 0 14px #000;padding:0 18px;min-height:1.3em;transition:opacity .4s}
 #cap b{color:#4fe0b8;font-weight:800;letter-spacing:.12em;font-size:.8em}
 #note{left:0;right:0;top:42%;text-align:center;font-size:13px;color:#ffb29a;letter-spacing:.14em}
@@ -42,6 +42,7 @@ button.red{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 1
 #load small{color:#6fae9f;font-size:9px;letter-spacing:.2em}
 #err{position:fixed;left:6px;right:6px;bottom:6px;color:#ff8070;font:600 10px monospace;z-index:9;white-space:pre-wrap;pointer-events:none}
 #fps{font-size:9px;color:#7fa89e;margin-top:4px}
+#mini{position:fixed;left:max(10px,env(safe-area-inset-left));top:calc(78px + env(safe-area-inset-top));width:clamp(112px,30vw,170px);height:clamp(112px,30vw,170px);border-radius:50%;touch-action:none}
 </style></head><body>
 <div id="load">LINKING SENSOR…<small>WORLD TEST · COAST 1</small></div>
 <div class="hud" id="tl"><div class="org">Intl. Rift Mech Defense · World test</div>
@@ -55,10 +56,12 @@ button.red{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 1
   <div id="fps"></div></div>
 <div class="hud" id="cap"></div>
 <div class="hud" id="note"></div>
-<div class="hud" id="hint">Left thumb: walk · hold HOVER to fly · keys: WASD, Space, 1 2 3, B</div>
+<div class="hud" id="hint">Left thumb: walk · right thumb: turn the camera · hold HOVER to fly · keys: WASD, Space, 1 2 3, B, C</div>
+<canvas id="mini"></canvas>
 <div id="stick"><i></i></div>
 <div id="ui">
   <div class="row"><button id="v0" class="on">Real</button><button id="v1">Sensor</button><button id="v2">Thermal</button></div>
+  <div class="row"><button id="bCam">Camera<small>Forward</small></button></div>
   <div class="row"><button id="bArt" class="red">Artillery<small>on the rift</small></button><button id="bHover">Hover</button></div>
 </div>
 <div id="err"></div>
@@ -73,5 +76,6 @@ button.red{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 1
 <!--JS:wt-fx.js-->
 <!--JS:wt-dots.js-->
 <!--JS:wt-trees.js-->
+<!--JS:wt-minimap.js-->
 <!--JS:wt-main.js-->
 </body></html>

@@ -14,7 +14,11 @@ PAGE = ROOT / "builds/world-test.html"
 
 SHOTS_COAST = [
     # name, js, wait
-    ("real_beach", "WT.place(-6,9,0);WT.setView(0);WT.sim(.5)", 2),
+    ("real_beach", "WT.setCam(2);WT.place(-6,9,0);WT.setView(0);WT.sim(.5)", 2),
+    ("cam_forward", "WT.setCam(0);WT.place(-6,9,0);WT.sim(.3)", 2),
+    ("cam_forward_sensor", "WT.setView(1);WT.sim(1.5)", 3),
+    ("cam_low", "WT.setView(0);WT.setCam(1);WT.sim(.3)", 2),
+    ("cam_back_high", "WT.setCam(2);WT.sim(.1)", 1),
     ("walk_prints", "WT.place(-34,11,0);WT.sim(5,1,0);WT.sim(1,0,0);WT.zoomTo(-22)", 2),
     ("thermal_sea", "WT.zoomTo(10);WT.place(-20,-60,0);WT.setView(2);WT.sim(.3)", 3),
     ("wade", "WT.setView(0);WT.zoomTo(-6);WT.place(-20,-8,0);WT.sim(4.2,.15,-1)", 2),
@@ -36,7 +40,11 @@ SHOTS_COAST = [
 ]
 
 SHOTS_FIELD = [
-    ("f_spawn", "WT.setView(0);WT.sim(.5)", 2),
+    ("f_spawn", "WT.setView(0);WT.setCam(0);WT.sim(.5)", 2),
+    ("f_cam_low", "WT.setCam(1);WT.sim(.3)", 2),
+    ("f_cam_ahead", "WT.setCam(0);WT.place(150,-60,-.8);WT.sim(.3)", 2),
+    ("f_cam_sensor", "WT.setView(1);WT.sim(1.5)", 3),
+    ("f_cam_high", "WT.setView(0);WT.setCam(2);WT.place(330,-330,-.46);WT.sim(.3)", 2),
     ("f_overview", "WT.zoomTo(420);scene.fog.far=2400;WT.sim(.3)", 4),
     ("f_overview_sensor", "WT.setView(1);WT.sim(2)", 3),
     ("f_spawn_sensor", "WT.zoomTo(20);WT.sim(1)", 3),

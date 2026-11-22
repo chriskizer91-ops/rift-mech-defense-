@@ -21,7 +21,7 @@ canvas{position:fixed;inset:0;display:block;width:100%;height:100%}
 #tr .bar i{display:block;height:100%;background:#4fe0b8;width:0}
 #tr .bar.bad i{background:#ff4a2a}
 #tr .bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:#ffb29a}
-#cap{left:0;right:0;bottom:calc(150px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,16px);color:#f0f6f4;text-transform:none;letter-spacing:.03em;
+#cap{left:0;right:0;bottom:calc(196px + env(safe-area-inset-bottom));text-align:center;font-size:clamp(13px,3.6vw,16px);color:#f0f6f4;text-transform:none;letter-spacing:.03em;
   text-shadow:0 0 6px #000,0 0 14px #000;padding:0 18px;min-height:1.3em;transition:opacity .4s}
 #cap b{color:#4fe0b8;font-weight:800;letter-spacing:.12em;font-size:.8em}
 #note{left:0;right:0;top:42%;text-align:center;font-size:13px;color:#ffb29a;letter-spacing:.14em}
@@ -42,6 +42,7 @@ button.red{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 1
 #load small{color:#6fae9f;font-size:9px;letter-spacing:.2em}
 #err{position:fixed;left:6px;right:6px;bottom:6px;color:#ff8070;font:600 10px monospace;z-index:9;white-space:pre-wrap;pointer-events:none}
 #fps{font-size:9px;color:#7fa89e;margin-top:4px}
+#mini{position:fixed;left:max(10px,env(safe-area-inset-left));top:calc(78px + env(safe-area-inset-top));width:clamp(112px,30vw,170px);height:clamp(112px,30vw,170px);border-radius:50%;touch-action:none}
 </style></head><body>
 <div id="load">LINKING SENSOR…<small>WORLD TEST · COAST 1</small></div>
 <div class="hud" id="tl"><div class="org">Intl. Rift Mech Defense · World test</div>
@@ -55,10 +56,12 @@ button.red{color:#fff;background:#3a0d07ee;border-color:#ff4a2a;box-shadow:0 0 1
   <div id="fps"></div></div>
 <div class="hud" id="cap"></div>
 <div class="hud" id="note"></div>
-<div class="hud" id="hint">Left thumb: walk · hold HOVER to fly · keys: WASD, Space, 1 2 3, B</div>
+<div class="hud" id="hint">Left thumb: walk · right thumb: turn the camera · hold HOVER to fly · keys: WASD, Space, 1 2 3, B, C</div>
+<canvas id="mini"></canvas>
 <div id="stick"><i></i></div>
 <div id="ui">
   <div class="row"><button id="v0" class="on">Real</button><button id="v1">Sensor</button><button id="v2">Thermal</button></div>
+  <div class="row"><button id="bCam">Camera<small>Forward</small></button></div>
   <div class="row"><button id="bArt" class="red">Artillery<small>on the rift</small></button><button id="bHover">Hover</button></div>
 </div>
 <div id="err"></div>
@@ -5473,17 +5476,29 @@ function matTerrainView(mode){
         else{ht=.24+.07*clamp(dot(n,uSun),0.,1.)+.03*vn(xz*.15)+.05*sp.b-.07*B.b+.04*sp.a;}
         ht+=soilHeat(S)*.8+S.g*.03;
         gl_FragColor=vec4(0.,0.,0.,ht);}`)});}
+/* trees and buildings between the camera and the Wraith are cut away round it (dithered), so a lower camera still sees it;
+   so is anything within 18 m of the camera */
+const CUT={uMech:{value:new THREE.Vector3(-1e4,-1e4,0)},uCutR:{value:120}};
+function cutout(m){m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,CUT);
+  sh.fragmentShader='uniform vec3 uMech;uniform float uCutR;\n'+sh.fragmentShader.replace('void main() {',`void main() {
+    {float d=length(gl_FragCoord.xy-uMech.xy);if(gl_FragCoord.z<uMech.z&&d<uCutR){float k=smoothstep(uCutR,uCutR*.55,d);
+      float b=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(b<k)discard;}
+     float vd=length(vViewPosition);if(vd<18.){float b=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(b<smoothstep(18.,10.,vd))discard;}}`);};}
+const CUT_GLSL=`uniform vec3 uMech;uniform float uCutR;
+void cutAway(float vd){float b=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));
+  float d=length(gl_FragCoord.xy-uMech.xy);if(gl_FragCoord.z<uMech.z&&d<uCutR&&b<smoothstep(uCutR,uCutR*.55,d))discard;
+  if(vd<18.&&b<smoothstep(18.,10.,vd))discard;}`;
 /* buildings, rocks, wrecks and the Wraith in the sensor and thermal views */
 const MESH_VERT=`varying vec3 vWp,vN;void main(){vec4 lp=vec4(position,1.);vec3 ln=normal;
 #ifdef USE_INSTANCING
 lp=instanceMatrix*lp;ln=mat3(instanceMatrix)*ln;
 #endif
 vec4 wq=modelMatrix*lp;vWp=wq.xyz;vN=normalize(mat3(modelMatrix)*ln);gl_Position=projectionMatrix*viewMatrix*wq;}`;
-function matMeshView(mode,o){o=o||{};const u={uHeat:{value:o.heat||.3},uAlly:{value:o.ally?1:0},uK:{value:o.k||1},uT:LOOK.u.uT};
+function matMeshView(mode,o){o=o||{};const u=Object.assign({uHeat:{value:o.heat||.3},uAlly:{value:o.ally?1:0},uK:{value:o.k||1},uT:LOOK.u.uT},CUT);
   return new THREE.ShaderMaterial({uniforms:u,vertexShader:MESH_VERT,side:o.side||THREE.FrontSide,
-    fragmentShader:`varying vec3 vWp,vN;uniform float uHeat,uAlly,uK,uT;
+    fragmentShader:CUT_GLSL+`varying vec3 vWp,vN;uniform float uHeat,uAlly,uK,uT;
       float gridL(vec2 p,float s,float w){vec2 f=abs(fract(p/s-.5)-.5)*s,fw=max(fwidth(p),vec2(1e-4));vec2 l=1.-smoothstep(fw*w*.5,fw*w*1.5,f);return max(l.x,l.y);}
-      void main(){vec3 N=normalize(vN),V=normalize(cameraPosition-vWp);float fr=pow(1.-abs(dot(N,V)),2.);`+(mode===1?`
+      void main(){`+(o.cut?'cutAway(distance(cameraPosition,vWp));':'')+`vec3 N=normalize(vN),V=normalize(cameraPosition-vWp);float fr=pow(1.-abs(dot(N,V)),2.);`+(mode===1?`
         if(uAlly>.5){gl_FragColor=vec4(0.,.03,(.16+fr*.7)*uK,0.);return;}
         float g=(.035+fr*.32+gridL(vWp.xz+vWp.y,4.,1.)*.05+gridL(vec2(vWp.y,0.),3.,1.)*.08*(1.-abs(N.y)))*uK;
         gl_FragColor=vec4(0.,g,0.,0.);}`:`
@@ -5942,9 +5957,12 @@ function swarmStep(dt,t,P){
 const TREE={near:[],far:[],shown:0,cx:1e9,cz:1e9,NEAR:30,FAR:1000};
 function treesInit(scene){if(WT.phone){TREE.NEAR=16;TREE.FAR=520;}const L=MAP.def.TREES;if(!L||!L.length||!window.WT_ASSETS.glb.oak)return;
   const parts=(sc,cap,list)=>{sc.updateMatrixWorld(true);sc.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone();g.applyMatrix4(o.matrixWorld);
-    const m=o.material;m.vertexColors=!!g.attributes.color;const im=new THREE.InstancedMesh(g,m,cap);im.count=0;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
-    const fol=/fol/i.test(m.name||'');im.userData.mats=[m,matMeshView(1,{k:fol?.5:.8}),matMeshView(2,{heat:fol?.17:.22})];VIEWED.push(im);scene.add(im);list.push(im);});};
+    const m=o.material;m.vertexColors=!!g.attributes.color;cutout(m);const im=new THREE.InstancedMesh(g,m,cap);im.count=0;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
+    const fol=/fol/i.test(m.name||'');im.userData.mats=[m,matMeshView(1,{k:fol?.5:.8,cut:1}),matMeshView(2,{heat:fol?.17:.22,cut:1})];VIEWED.push(im);scene.add(im);list.push(im);});};
   Promise.all(['oak','oakfar'].map(k=>glbRaw(k))).then(([n,f])=>{parts(n,TREE.NEAR,TREE.near);parts(f,TREE.FAR,TREE.far);for(const im of TREE.far)im.castShadow=false;TREE.cx=1e9;if(WT.view)setView(WT.view);});}
+const _mp=new THREE.Vector3();
+function treeCutFollow(cam,P,W,H,PR){_mp.set(P.x,P.y+3.2,P.z).project(cam);CUT.uMech.value.set((_mp.x*.5+.5)*W*PR,(_mp.y*.5+.5)*H*PR,_mp.z*.5+.5-.0005);
+  CUT.uCutR.value=Math.min(W,H)*PR*.3;}
 /* a model with its own materials (the trees carry vertex colours, no pictures) */
 function glbRaw(key){const A=window.WT_ASSETS.glb[key];
   return Promise.resolve(b64bytes(A.b64))
@@ -5961,6 +5979,59 @@ function treesFollow(x,z){if(!TREE.near.length||Math.hypot(x-TREE.cx,z-TREE.cz)<
   TREE.shown=nN+nF;}
 /* trunks the Wraith walks into */
 function treeBump(x,z,r){if(!MAP.def.TREES)return [x,z];for(const t of MAP.def.TREES){const dx=x-t.x,dz=z-t.z;if(Math.abs(dx)>3||Math.abs(dz)>3)continue;const d=Math.hypot(dx,dz),m=r+.5;if(d<m&&d>1e-4){x=t.x+dx/d*m;z=t.z+dz/d*m;}}return [x,z];}
+
+</script>
+<script>
+'use strict';
+/* =====================================================================================================================
+   RIFT MECH DEFENSE · THE MINIMAP (game/world/wt-minimap.js)
+   A round map in the top-left corner, turned with the camera so what's ahead is up. The ground is painted once from the
+   map (fields, water, tracks, rock, trees, buildings, the cracks); over it each frame: the rift mouths (red ring open,
+   grey cross sealed), the swarm's contacts (red; the sensor sees them even when the real view doesn't), the Wraith
+   (green arrow) and the camera's view (two lines). Tap it to change its range.
+   For other sessions: miniInit(canvas) once the map is built, then miniDraw(px, pz, camYaw, contacts) where contacts is
+   a list of {x, z, n} (n: its dot count).
+   ===================================================================================================================== */
+const MINI={cv:null,cx:null,base:null,mpp:4,ranges:[150,300,600],ri:0,t:0};
+function miniInit(cv){MINI.cv=cv;MINI.cx=cv.getContext('2d');
+  if(MAPID!=='fields'){MINI.ranges=[60,120,200];}
+  const mpp=MINI.mpp=MAP.S>600?4:1,n=Math.round(MAP.S/mpp),c=document.createElement('canvas');c.width=c.height=n;const g=c.getContext('2d'),im=g.createImageData(n,n),d=im.data,K={};
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const x=MAP.X0+(i+.5)*mpp,z=MAP.X0+(j+.5)*mpp;baseKind(x,z,K);const h=K.h,dep=K.wl-h;let r,gg,b;
+    if(dep>0){const k=Math.min(1,dep/4);r=40-20*k;gg=78-30*k;b=96-20*k;}
+    else{r=96;gg=88;b=70;                                                               /* dirt */
+      const mix=(w,R,G,B)=>{r+=(R-r)*w;gg+=(G-gg)*w;b+=(B-b)*w;};
+      mix(K.meadow,70,96,48);mix(K.plough,104,78,56);mix(K.wheat,150,126,70);mix(K.sand,170,150,110);mix(K.mud,74,62,48);mix(K.asph,92,90,86);mix(K.pave,118,114,104);
+      if(K.slope>.9)mix(Math.min(1,(K.slope-.9)*2),112,108,102);
+      const sh=Math.max(.7,Math.min(1.2,1+(baseH(x-2,z-2)-baseH(x+2,z+2))*.12));r*=sh;gg*=sh;b*=sh;}
+    const c2=MAP.crk[Math.round((z-MAP.X0)/MAP.C)*MAP.N+Math.round((x-MAP.X0)/MAP.C)]||0;if(c2>.2){r+=(255-r)*c2;gg+=(110-gg)*c2;b*=1-c2;}
+    const q=(j*n+i)*4;d[q]=r;d[q+1]=gg;d[q+2]=b;d[q+3]=255;}
+  g.putImageData(im,0,0);
+  const T=MAP.def.TREES;if(T){g.fillStyle='rgba(28,48,24,.85)';for(const t of T){g.beginPath();g.arc((t.x-MAP.X0)/mpp,(t.z-MAP.X0)/mpp,Math.max(1,3.5/mpp),0,TAU);g.fill();}}
+  g.fillStyle='#2a2622';for(const b of BUILD)g.fillRect((b.x0-MAP.X0)/mpp,(b.z0-MAP.X0)/mpp,(b.x1-b.x0)/mpp,(b.z1-b.z0)/mpp);
+  MINI.base=c;cv.addEventListener('pointerdown',e=>{MINI.ri=(MINI.ri+1)%MINI.ranges.length;e.stopPropagation();});}
+function miniDraw(px,pz,yaw,contacts,dt){if(!MINI.cx)return;MINI.t+=dt||0;
+  const cv=MINI.cv,dpr=Math.min(2,devicePixelRatio||1),S=cv.clientWidth;if(cv.width!==Math.round(S*dpr)){cv.width=cv.height=Math.round(S*dpr);}
+  const g=MINI.cx,R=cv.width/2,range=MINI.ranges[MINI.ri],k=R/range;   /* pixels a metre */
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);g.save();g.beginPath();g.arc(R,R,R-1,0,TAU);g.clip();
+  g.fillStyle='#0b1110';g.fillRect(0,0,cv.width,cv.height);
+  /* the world turned so the camera's forward is up: forward is (-sin yaw, -cos yaw) */
+  g.translate(R,R);g.rotate(yaw);g.scale(k,k);g.translate(-px,-pz);
+  g.globalAlpha=.92;g.imageSmoothingEnabled=true;g.drawImage(MINI.base,MAP.X0,MAP.X0,MAP.S,MAP.S);g.globalAlpha=1;
+  /* rifts */
+  for(const Rf of RIFTS){const M=Rf.M,s=1/k;g.lineWidth=2*s;
+    if(Rf.state==='sealed'){g.strokeStyle='#9aa39f';g.beginPath();g.moveTo(M.x-5*s,M.zf-5*s);g.lineTo(M.x+5*s,M.zf+5*s);g.moveTo(M.x+5*s,M.zf-5*s);g.lineTo(M.x-5*s,M.zf+5*s);g.stroke();}
+    else{const p=1+.25*Math.sin(MINI.t*4);g.strokeStyle='#ff3b26';g.beginPath();g.arc(M.x,M.zf,7*s*p,0,TAU);g.stroke();g.fillStyle='#ff3b2655';g.fill();}}
+  /* contacts */
+  g.fillStyle='#ff4a2a';for(const c of contacts){const r=Math.max(1.6,Math.sqrt(c.n)*.7)/k;g.beginPath();g.arc(c.x,c.z,r,0,TAU);g.fill();}
+  g.restore();
+  /* the view and the Wraith, fixed: up is ahead */
+  g.save();g.translate(R,R);g.strokeStyle='#4fe0b866';g.lineWidth=1.2*dpr;g.beginPath();g.moveTo(0,0);g.lineTo(-R*.55,-R);g.moveTo(0,0);g.lineTo(R*.55,-R);g.stroke();
+  const hd=(MECH.P?MECH.P.legYaw:0)-yaw;g.rotate(-hd);g.fillStyle='#4fe0b8';g.beginPath();g.moveTo(0,-7*dpr);g.lineTo(5*dpr,6*dpr);g.lineTo(0,3*dpr);g.lineTo(-5*dpr,6*dpr);g.closePath();g.fill();g.restore();
+  /* north on the rim, the range */
+  const na=yaw;g.fillStyle='#cfe2dc';g.font=`800 ${9*dpr}px system-ui,sans-serif`;g.textAlign='center';g.textBaseline='middle';
+  g.fillText('N',R+Math.sin(na)*(R-8*dpr),R-Math.cos(na)*(R-8*dpr));
+  g.fillStyle='#8fd0c0';g.font=`700 ${8*dpr}px system-ui,sans-serif`;g.fillText(range+' M',R,cv.height-9*dpr);
+  g.strokeStyle='#2c4a43';g.lineWidth=1.5*dpr;g.beginPath();g.arc(R,R,R-1,0,TAU);g.stroke();}
 
 </script>
 <script>
@@ -5992,6 +6063,12 @@ const fsCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1),fsScene=new THREE.Scene(
 const sun=new THREE.DirectionalLight(new THREE.Color(1,.88,.74),3.1);sun.castShadow=true;
 sun.shadow.mapSize.set(WT.phone?1536:2048,WT.phone?1536:2048);Object.assign(sun.shadow.camera,{left:-42,right:42,top:42,bottom:-42,near:1,far:200});sun.shadow.bias=-.0004;sun.shadow.normalBias=.04;
 scene.add(sun,sun.target);
+/* a sky behind the hazy horizon (the lower camera sees it) */
+const sky=(()=>{const g=new THREE.SphereGeometry(1400,32,16),c=[],p=g.attributes.position;
+  for(let i=0;i<p.count;i++){const y=p.getY(i)/1400,k=Math.pow(Math.max(0,y),.55),a=new THREE.Color(.52,.58,.62),b=new THREE.Color(.27,.4,.58);a.lerp(b,k);c.push(a.r,a.g,a.b);}
+  g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false}));
+  m.renderOrder=-10;m.frustumCulled=false;return m;})();
+scene.add(sky);
 const hemi=new THREE.HemisphereLight(new THREE.Color(.62,.68,.74),new THREE.Color(.32,.26,.2),.3);scene.add(hemi);
 /* a small sky for reflections (the Wraith's metal, the water) */
 (function(){const s=new THREE.Scene(),g=new THREE.SphereGeometry(10,32,16),c=[];const p=g.attributes.position;
@@ -6014,7 +6091,7 @@ let ground,water;
 function buildWorld(){
   buildMap();soilInit();lookTextures();scene.fog=new THREE.Fog(FOG,MAP.def.fog[0],MAP.def.fog[1]);
   /* the ground: one grid that follows the Wraith, 25 cm apart under it and wider further out (Mud Lab's patch) */
-  const E=Math.min(MAP.S/2,MAP.def.fog[1]*.75);
+  const E=MAP.def.fog[1]*.8;
   const grid=(n,c)=>{const h=n/2,A=c*h,B=E-A,P=[],I=[];const w=q=>{const u=q/h-1;return A*u+B*u*u*u;};
     for(let j=0;j<=n;j++)for(let i=0;i<=n;i++)P.push(w(i),0,w(j));
     for(let j=0;j<n;j++)for(let i=0;i<n;i++){const p=j*(n+1)+i,q=p+1,r=p+n+1,s=r+1;I.push(p,r,s,p,s,q);}
@@ -6027,7 +6104,8 @@ function buildWorld(){
   const T=LOOK.tex,std=(map,o)=>new THREE.MeshStandardMaterial(Object.assign({map,roughness:.88,metalness:.05},o||{}));
   const mats={fac1:std(T.fac1,{roughness:.8}),fac2:std(T.fac2,{roughness:.6,metalness:.15}),roof:std(T.roof,{color:0x8a8580}),rock:std(T.rock,{color:0xb8b0a4,roughness:.95}),
     wreck:std(T.metal,{color:0x7a7c80,roughness:.6,metalness:.5}),barn:std(T.barn||T.fac1,{roughness:.85})};
-  const S1=matMeshView(1),S1r=matMeshView(1,{k:.8}),T1=matMeshView(2,{heat:.3}),T1r=matMeshView(2,{heat:.22}),T1w=matMeshView(2,{heat:.27});
+  for(const k of ['fac1','fac2','roof','barn'])cutout(mats[k]);
+  const S1=matMeshView(1,{cut:1}),S1r=matMeshView(1,{k:.8}),T1=matMeshView(2,{heat:.3,cut:1}),T1r=matMeshView(2,{heat:.22}),T1w=matMeshView(2,{heat:.27});
   mats.rockS=S1r;mats.rockT=T1r;
   /* buildings: boxes, the facade picture 12 m to a tile */
   const geo={1:[],2:[],3:[]},roofs=[];
@@ -6053,18 +6131,22 @@ function buildWorld(){
   fxInit(scene);swarmInit(scene);
   /* steam where the cracks reach up near the surface */
   WT.steam=[];RS=5;for(let k=0;k<6000&&WT.steam.length<18;k++){const N=MAP.N,i=Math.floor(rnd()*N),j=Math.floor(rnd()*N);if(MAP.crk[j*N+i]>.6)WT.steam.push({x:MAP.X0+i*MAP.C,z:MAP.X0+j*MAP.C,t:rnd()*3});}
-  treesInit(scene);
+  treesInit(scene);miniInit($('mini'));
 }
 function setView(v){WT.view=v;for(const m of VIEWED){const s=m.userData.mats;if(s&&s[v])m.material=s[v];}
   if(MECH.M)for(const m of MECH.M.meshes)if(m.userData.mats)m.material=m.userData.mats[v];
-  water.visible=v===0;FX.mesh.visible=v===0;SWARM.pts.visible=v>0;scene.fog=v===0?new THREE.Fog(FOG,MAP.def.fog[0],MAP.def.fog[1]):null;scene.background=v===0?FOG.clone():null;
+  water.visible=v===0;FX.mesh.visible=v===0;sky.visible=v===0;SWARM.pts.visible=v>0;scene.fog=v===0?new THREE.Fog(FOG,MAP.def.fog[0],MAP.def.fog[1]):null;scene.background=v===0?FOG.clone():null;
   R.shadowMap.autoUpdate=v===0;
   for(let i=0;i<3;i++)$('v'+i).classList.toggle('on',i===v);$('nm').textContent=['REAL','SENSOR','THERMAL'][v];$('sen').style.display=v?'block':'none';
   $('cl').textContent=v===0?MAP.def.name+' · the Static, day 3':v===1?'Threat overlay · red: hostile · green: you':'Thermal · magma hot · sea cold';}
 
 /* ---------- input: left thumb walks (anywhere on the left of the screen), HOVER held, keys ---------- */
 const stick={id:null,x0:0,y0:0,x:0,y:0};const keys=new Set();
-cv.addEventListener('pointerdown',e=>{if(e.clientX<W*.62&&stick.id===null){stick.id=e.pointerId;stick.x0=e.clientX;stick.y0=e.clientY;stick.x=stick.y=0;
+const look={id:null,x:0};
+cv.addEventListener('pointerdown',e=>{if(e.clientX>=W*.5&&look.id===null&&stick.id!==e.pointerId){look.id=e.pointerId;look.x=e.clientX;cv.setPointerCapture(e.pointerId);return;}});
+cv.addEventListener('pointermove',e=>{if(e.pointerId!==look.id)return;WT.camYaw+=(e.clientX-look.x)*.009;look.x=e.clientX;camDragT=0;});
+const lookEnd=e=>{if(e.pointerId===look.id)look.id=null;};cv.addEventListener('pointerup',lookEnd);cv.addEventListener('pointercancel',lookEnd);
+cv.addEventListener('pointerdown',e=>{if(e.clientX<W*.5&&stick.id===null){stick.id=e.pointerId;stick.x0=e.clientX;stick.y0=e.clientY;stick.x=stick.y=0;
   const s=$('stick');s.style.display='block';s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';cv.setPointerCapture(e.pointerId);}});
 cv.addEventListener('pointermove',e=>{if(e.pointerId!==stick.id)return;let dx=e.clientX-stick.x0,dy=e.clientY-stick.y0;const l=Math.hypot(dx,dy),m=52;if(l>m){dx*=m/l;dy*=m/l;}
   stick.x=dx/m;stick.y=dy/m;$('stick').firstElementChild.style.transform=`translate(${dx}px,${dy}px)`;});
@@ -6078,17 +6160,25 @@ const hov=$('bHover');let hovHeld=false;
 hov.addEventListener('pointerdown',e=>{hovHeld=true;hov.classList.add('on');hov.setPointerCapture(e.pointerId);e.preventDefault();});
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])hov.addEventListener(ev,()=>{hovHeld=false;hov.classList.remove('on');});
 for(let i=0;i<3;i++)$('v'+i).addEventListener('click',()=>setView(i));
-$('bArt').addEventListener('click',artButton);
+$('bArt').addEventListener('click',artButton);$('bCam').addEventListener('click',camButton);
+function camButton(){WT.cam=(WT.cam+1)%CAMS.length;WT.zoom=0;$('bCam').innerHTML='Camera<small>'+CAMS[WT.cam].name+'</small>';}
 function artButton(){if(!riftOpenN()){riftReset();caption('<b>OVERWATCH</b> Rifts reset (test).',2);}else if(RIFTS.some(r=>r.state==='shelling'||r.state==='falling'))note('BARRAGE ALREADY ON ITS WAY',1.2);else riftBarrage();}
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys.add(k);if(k==='1'||k==='2'||k==='3')setView(+k-1);if(k==='v')setView((WT.view+1)%3);if(k==='b')artButton();if(k===' ')e.preventDefault();});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys.add(k);if(k==='1'||k==='2'||k==='3')setView(+k-1);if(k==='v')setView((WT.view+1)%3);if(k==='b')artButton();if(k==='c')camButton();if(k===' ')e.preventDefault();});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 addEventListener('blur',()=>keys.clear());
-function readInput(){if(WT.script)return WT.script;let mx=stick.x,mz=stick.y;
-  if(keys.has('a')||keys.has('arrowleft'))mx-=1;if(keys.has('d')||keys.has('arrowright'))mx+=1;if(keys.has('w')||keys.has('arrowup'))mz-=1;if(keys.has('s')||keys.has('arrowdown'))mz+=1;
-  const l=Math.hypot(mx,mz);if(l>1){mx/=l;mz/=l;}return {mx,mz,hover:hovHeld||keys.has(' ')};}
+function readInput(){if(WT.script)return WT.script;let sx=stick.x,sy=stick.y;
+  if(keys.has('a')||keys.has('arrowleft'))sx-=1;if(keys.has('d')||keys.has('arrowright'))sx+=1;if(keys.has('w')||keys.has('arrowup'))sy-=1;if(keys.has('s')||keys.has('arrowdown'))sy+=1;
+  const l=Math.hypot(sx,sy);if(l>1){sx/=l;sy/=l;}
+  /* the stick is the screen's: up walks the way the camera looks */
+  const fx=-Math.sin(WT.camYaw),fz=-Math.cos(WT.camYaw),rx=Math.cos(WT.camYaw),rz=-Math.sin(WT.camYaw);
+  return {mx:rx*sx-fx*sy,mz:rz*sx-fz*sy,hover:hovHeld||keys.has(' ')};}
 
 /* ---------- one step of the world ---------- */
-const camT=new THREE.Vector3(),camP=new THREE.Vector3();let jetT=0,firstNote=true;
+const camT=new THREE.Vector3(),camP=new THREE.Vector3();
+/* the camera (Christopher, 22 Nov: not straight down; lower, behind the Wraith, looking ahead, and it can turn).
+   pitch: how far it looks down; D: how far back (m); ahead: how far in front of the Wraith it looks (m) */
+const CAMS=[{name:'Forward',pitch:.56,D:34,ahead:9},{name:'Low',pitch:.34,D:22,ahead:7},{name:'High',pitch:.9,D:50,ahead:7}];
+WT.cam=0;WT.camYaw=0;let camDragT=9;let jetT=0,firstNote=true;
 function step(dt){
   SOIL.clock+=dt;LOOK.u.uT.value=SOIL.clock;dotMat.uniforms.uT.value=SOIL.clock;
   const P=MECH.P,M=MECH.M;
@@ -6120,14 +6210,21 @@ function step(dt){
   if(noteT>0){noteT-=dt;if(noteT<=0)$('note').innerHTML='';}
 }
 function placeCam(dt,snap){const P=MECH.P;if(!P)return;
-  const land=W>H;const D=(land?40:50)+WT.zoom,pit=land?.86:.9;
-  const tx=P.x,ty=Math.max(P.y,waterL(P.x,P.z))+1.5,tz=P.z-(land?4:7);
+  const C=CAMS[WT.cam],land=W>H,D=Math.max(8,C.D*(land?.85:1)+WT.zoom),pit=C.pitch,ahead=C.ahead*(land?.8:1)*Math.min(1,D/C.D);
+  /* it swings round behind the Wraith on its own while it walks ahead (not while you turn it, nor when it walks sideways) */
+  camDragT+=dt;const hs=Math.hypot(P.vx,P.vz);
+  if(camDragT>1.2&&hs>2&&!snap){const d=angD(P.legYaw,WT.camYaw);if(Math.abs(d)<.9)WT.camYaw+=d*damp(.9,dt);}
+  const fx=-Math.sin(WT.camYaw),fz=-Math.cos(WT.camYaw);
+  const tx=P.x+fx*ahead,tz=P.z+fz*ahead,ty=Math.max(Math.max(P.y,waterL(P.x,P.z))+1.5,Math.max(hgt(tx,tz),waterL(tx,tz))+1);
   if(snap)camT.set(tx,ty,tz);else camT.lerp(new THREE.Vector3(tx,ty,tz),damp(5,dt));
-  camP.set(camT.x,camT.y+Math.sin(pit)*D,camT.z+Math.cos(pit)*D);
+  const back=Math.cos(pit)*(D+ahead),up=Math.sin(pit)*(D+ahead);
+  camP.set(camT.x-fx*back,camT.y+up,camT.z-fz*back);
+  {const gy=Math.max(hgt(camP.x,camP.z),waterL(camP.x,camP.z))+3;if(camP.y<gy)camP.y=gy;}   /* never under a hill */
   const s=WT.shake;cam.position.set(camP.x+(Math.random()-.5)*s,camP.y+(Math.random()-.5)*s,camP.z+(Math.random()-.5)*s);cam.lookAt(camT);
   /* the ground follows, in 2 m steps; the sun's shadow follows */
   ground.position.set(Math.round(P.x/2)*2,0,Math.round(P.z/2)*2);water.position.copy(ground.position);soilFollow(P.x,P.z);treesFollow(P.x,P.z);
-  const u=LOOK.u.uSun.value;sun.target.position.set(P.x,0,P.z-6);sun.position.set(P.x+u.x*90,u.y*90,P.z-6+u.z*90);}
+  const u=LOOK.u.uSun.value,sx=(P.x+camT.x)/2,sz=(P.z+camT.z)/2;sun.target.position.set(sx,P.y,sz);sun.position.set(sx+u.x*90,P.y+u.y*90,sz+u.z*90);
+  sky.position.copy(cam.position);cam.updateMatrixWorld();treeCutFollow(cam,P,W,H,PR);}
 /* ---------- drawing ---------- */
 let holdUntil=0,interf=0;
 function draw(now){
@@ -6153,7 +6250,7 @@ function draw(now){
   pass(finMat,null);
 }
 /* ---------- the HUD ---------- */
-let hudT=0,fpsN=0,fpsT=0;
+let hudT=0,fpsN=0,fpsT=0,miniT=0;const MC=[];
 function hud(dt){hudT-=dt;if(hudT>0)return;hudT=.15;const P=MECH.P;if(!P)return;
   const hip=hipDepth(),d=P.depth;$('wd').textContent=d<.03?'DRY':d.toFixed(1)+' M'+(P.air?' · HOVER':d>hip?' · TOO DEEP':d>.4?' · WADING':'');
   $('wdi').style.width=Math.min(100,d/(hip*1.4)*100)+'%';$('wdb').classList.toggle('bad',d>hip*.85);$('wdh').style.left=(100/1.4)+'%';
@@ -6167,6 +6264,7 @@ const compass=(dx,dz)=>['N','NE','E','SE','S','SW','W','NW'][Math.round(((Math.a
 /* ---------- the frame ---------- */
 let last=performance.now();
 function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;
+  miniT+=dt;if(miniT>.1&&MECH.P){MC.length=0;for(const c of SWARM.C)if(c.alive&&!c.die)MC.push({x:c.x,z:c.z,n:c.T.n});miniDraw(MECH.P.x,MECH.P.z,WT.camYaw,MC,miniT);miniT=0;}
   fpsN++;fpsT+=dt;if(fpsT>1){WT.fps=fpsN/fpsT;fpsN=0;fpsT=0;}
   step(dt);placeCam(dt);soilUpload(R);hud(dt);draw(now);}
 
@@ -6178,12 +6276,12 @@ WT.ready=buildMech(scene).then(M=>{
   /* one shared thermal material for the Wraith so its heat can follow the jets */
   const th=M.meshes[0].userData.mats[2];for(const m of M.meshes)m.userData.mats[2]=th;
   poseMech(M,{x:MECH.P.x,z:MECH.P.z,gy:MECH.P.y,legYaw:MECH.P.legYaw,aimYaw:MECH.P.legYaw,spd:0,air:false,vy:0,land:0,thrust:0,pitch:0},.016);
-  setView(/sensor/.test(location.hash)?1:/thermal/.test(location.hash)?2:0);placeCam(0,true);
+  WT.camYaw=MECH.P.legYaw;setView(/sensor/.test(location.hash)?1:/thermal/.test(location.hash)?2:0);placeCam(0,true);
   $('load').remove();caption('<b>OVERWATCH</b> Wraith, swarm coming ashore. Switch to SENSOR to see them.',6);
   requestAnimationFrame(loop);return M;});
 /* ---------- for tests ---------- */
-WT.place=(x,z,yaw)=>{const P=MECH.P;P.x=x;P.z=z;P.y=hgt(x,z);if(yaw!=null)P.yaw=P.legYaw=yaw;P.vx=P.vz=0;P.air=false;P.hover=false;placeCam(0,true);};
-WT.setView=setView;WT.barrage=()=>riftBarrage();WT.zoomTo=z=>{WT.zoom=z;placeCam(0,true);};WT.zoomMax=MAPID==='fields'?260:60;
+WT.place=(x,z,yaw)=>{const P=MECH.P;P.x=x;P.z=z;P.y=hgt(x,z);if(yaw!=null){P.yaw=P.legYaw=yaw;WT.camYaw=yaw;}P.vx=P.vz=0;P.air=false;P.hover=false;placeCam(0,true);};
+WT.setView=setView;WT.setCam=i=>{WT.cam=i;WT.zoom=0;placeCam(0,true);};WT.barrage=()=>riftBarrage();WT.zoomTo=z=>{WT.zoom=z;placeCam(0,true);};WT.zoomMax=MAPID==='fields'?260:60;
 WT.sim=(secs,mx,mz,hover)=>{WT.script={mx:mx||0,mz:mz||0,hover:!!hover};const n=Math.round(secs*30);for(let i=0;i<n;i++){step(1/30);if(i%30===0)soilFollow(MECH.P.x,MECH.P.z);}placeCam(0,true);WT.script=null;soilCap=1e9;soilUpload(R);soilCap=12;};
 WT.stats=()=>({fps:WT.fps,tris:R.info.render.triangles,calls:R.info.render.calls,dots:SWARM.shown,prints:SOIL.stat.prints,tiles:SOIL.stat.tiles,craters:SOIL.stat.craters,
   x:MECH.P.x,z:MECH.P.z,y:MECH.P.y,depth:MECH.P.depth,air:MECH.P.air,rift:RIFTS.map(r=>r.state).join(','),trees:TREE.shown});

@@ -8,9 +8,12 @@
 const TREE={near:[],far:[],shown:0,cx:1e9,cz:1e9,NEAR:30,FAR:1000};
 function treesInit(scene){if(WT.phone){TREE.NEAR=16;TREE.FAR=520;}const L=MAP.def.TREES;if(!L||!L.length||!window.WT_ASSETS.glb.oak)return;
   const parts=(sc,cap,list)=>{sc.updateMatrixWorld(true);sc.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone();g.applyMatrix4(o.matrixWorld);
-    const m=o.material;m.vertexColors=!!g.attributes.color;const im=new THREE.InstancedMesh(g,m,cap);im.count=0;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
-    const fol=/fol/i.test(m.name||'');im.userData.mats=[m,matMeshView(1,{k:fol?.5:.8}),matMeshView(2,{heat:fol?.17:.22})];VIEWED.push(im);scene.add(im);list.push(im);});};
+    const m=o.material;m.vertexColors=!!g.attributes.color;cutout(m);const im=new THREE.InstancedMesh(g,m,cap);im.count=0;im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
+    const fol=/fol/i.test(m.name||'');im.userData.mats=[m,matMeshView(1,{k:fol?.5:.8,cut:1}),matMeshView(2,{heat:fol?.17:.22,cut:1})];VIEWED.push(im);scene.add(im);list.push(im);});};
   Promise.all(['oak','oakfar'].map(k=>glbRaw(k))).then(([n,f])=>{parts(n,TREE.NEAR,TREE.near);parts(f,TREE.FAR,TREE.far);for(const im of TREE.far)im.castShadow=false;TREE.cx=1e9;if(WT.view)setView(WT.view);});}
+const _mp=new THREE.Vector3();
+function treeCutFollow(cam,P,W,H,PR){_mp.set(P.x,P.y+3.2,P.z).project(cam);CUT.uMech.value.set((_mp.x*.5+.5)*W*PR,(_mp.y*.5+.5)*H*PR,_mp.z*.5+.5-.0005);
+  CUT.uCutR.value=Math.min(W,H)*PR*.3;}
 /* a model with its own materials (the trees carry vertex colours, no pictures) */
 function glbRaw(key){const A=window.WT_ASSETS.glb[key];
   return Promise.resolve(b64bytes(A.b64))
